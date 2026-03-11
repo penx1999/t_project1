@@ -99,7 +99,7 @@
                 <items>
                     <ColumnListItem type="Active" press=".onItemPress">
                         <cells>
-                            <Text text="{Productallocationobject}"/>
+                            <Text text="{PRODUCTALLOCATIONOBJECT}"/>
                         </cells>
                     </ColumnListItem>
                 </items>

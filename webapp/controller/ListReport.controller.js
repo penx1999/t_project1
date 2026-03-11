@@ -33,7 +33,7 @@ sap.ui.define([
             var oODataModel = this.getOwnerComponent().getModel();
             var aFilters = [];
 
-            aFilters.push(new Filter("Productallocationobject", FilterOperator.EQ, sProdAlloc));
+            aFilters.push(new Filter("PRODUCTALLOCATIONOBJECT", FilterOperator.EQ, sProdAlloc));
 
             var that = this;
 
@@ -108,7 +108,7 @@ sap.ui.define([
         },
 
         _navigateToDetail: function (oItem) {
-            var sId = encodeURIComponent(oItem.Productallocationobject);
+            var sId = encodeURIComponent(oItem.PRODUCTALLOCATIONOBJECT);
 
             if (!this.getOwnerComponent().getModel("detailModel")) {
                 this.getOwnerComponent().setModel(new JSONModel(oItem), "detailModel");
