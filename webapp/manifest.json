@@ -88,8 +88,6 @@
     "routing": {
       "config": {
         "routerClass": "sap.m.routing.Router",
-        "viewType": "XML",
-        "viewPath": "t_project1.view",
         "controlId": "app",
         "controlAggregation": "pages",
         "async": true
@@ -108,14 +106,16 @@
       ],
       "targets": {
         "TargetListReport": {
-          "viewType": "XML",
-          "viewName": "ListReport",
-          "viewLevel": 1
+          "type": "Component",
+          "id": "TargetListReport",
+          "name": "t_project1.view.ListReport",
+          "level": 1
         },
         "TargetDetail": {
-          "viewType": "XML",
-          "viewName": "Detail",
-          "viewLevel": 2
+          "type": "Component",
+          "id": "TargetDetail",
+          "name": "t_project1.view.Detail",
+          "level": 2
         }
       }
     },
