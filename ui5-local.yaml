@@ -37,3 +37,15 @@ server:
           - path: /sap
             url: https://lad.dest
             destination: LAD
+    - name: sap-fe-mockserver
+      beforeMiddleware: csp
+      configuration:
+        mountPath: /
+        services:
+          - urlPath: /sap/opu/odata/sap/ZSD_PAL_APP_GW_SRV
+            metadataPath: ./webapp/localService/metadata.xml
+            mockdataPath: ./webapp/localService/data
+            generateMockData: true
+        annotations:
+          - localPath: ./webapp/annotations/annotation.xml
+            urlPath: /sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Annotations(TechnicalName='ZSD_PAL_APP_GW_SRV_VAN',Version='0001')/$value/
