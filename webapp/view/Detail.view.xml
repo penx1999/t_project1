@@ -1,0 +1,122 @@
+<mvc:View
+    controllerName="t_project1.controller.Detail"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.ui.layout.form"
+    displayBlock="true">
+
+    <Page
+        title="{i18n>detailTitle}"
+        showNavButton="true"
+        navButtonPress=".onNavBack">
+
+        <content>
+            <VBox class="sapUiMediumMargin">
+
+                <!-- Información General -->
+                <Panel headerText="{i18n>generalInfo}" expandable="true" expanded="true">
+                    <content>
+                        <f:SimpleForm editable="false" layout="ResponsiveGridLayout"
+                            labelSpanXL="4" labelSpanL="4" labelSpanM="4" labelSpanS="12"
+                            columnsXL="2" columnsL="2" columnsM="1">
+                            <f:content>
+                                <Label text="{i18n>ProdAllocObj}"/>
+                                <Text text="{detailModel>/ProductAllocationObject}"/>
+
+                                <Label text="{i18n>QuotaSequence}"/>
+                                <Text text="{detailModel>/ProductAllocationSequence}"/>
+
+                                <Label text="{i18n>ActivationStatus}"/>
+                                <ObjectStatus
+                                    text="{detailModel>/ProdAllocationActivationStatus}"
+                                    state="{path: 'detailModel>/ProdAllocationActivationStatus', formatter: '.formatActivationStatus'}"/>
+
+                                <Label text="{i18n>ConstraintStatus}"/>
+                                <Text text="{detailModel>/ProdAllocCharcConstraintStatus}"/>
+
+                                <Label text="{i18n>QuotaQty}"/>
+                                <ObjectNumber
+                                    number="{detailModel>/ProductAllocationQuantity}"
+                                    unit="{detailModel>/QtyUnit}"/>
+
+                                <Label text="{i18n>PeriodStart}"/>
+                                <Text text="{
+                                    path: 'detailModel>/ProdAllocPerdStartUTCDateTime',
+                                    formatter: '.formatDate'
+                                }"/>
+
+                                <Label text="{i18n>PeriodEnd}"/>
+                                <Text text="{
+                                    path: 'detailModel>/ProdAllocPeriodEndUTCDateTime',
+                                    formatter: '.formatDate'
+                                }"/>
+                            </f:content>
+                        </f:SimpleForm>
+                    </content>
+                </Panel>
+
+                <!-- Características de Asignación -->
+                <Panel headerText="{i18n>charcPanel}" expandable="true" expanded="true" class="sapUiSmallMarginTop">
+                    <content>
+                        <f:SimpleForm editable="false" layout="ResponsiveGridLayout"
+                            labelSpanXL="4" labelSpanL="4" labelSpanM="4" labelSpanS="12"
+                            columnsXL="2" columnsL="2" columnsM="1">
+                            <f:content>
+                                <Label text="{i18n>Charact01}"/>
+                                <Text text="{detailModel>/ProdAllocCharc01}"/>
+
+                                <Label text="{i18n>Charact02}"/>
+                                <Text text="{detailModel>/ProdAllocCharc02}"/>
+
+                                <Label text="{i18n>Charact03}"/>
+                                <Text text="{detailModel>/ProdAllocCharc03}"/>
+
+                                <Label text="{i18n>Charact04}"/>
+                                <Text text="{detailModel>/ProdAllocCharc04}"/>
+
+                                <Label text="{i18n>Charact05}"/>
+                                <Text text="{detailModel>/ProdAllocCharc05}"/>
+                            </f:content>
+                        </f:SimpleForm>
+                    </content>
+                </Panel>
+
+                <!-- Información Adicional -->
+                <Panel headerText="{i18n>additionalInfo}" expandable="true" expanded="false" class="sapUiSmallMarginTop">
+                    <content>
+                        <f:SimpleForm editable="false" layout="ResponsiveGridLayout"
+                            labelSpanXL="4" labelSpanL="4" labelSpanM="4" labelSpanS="12"
+                            columnsXL="2" columnsL="2" columnsM="1">
+                            <f:content>
+                                <Label text="{i18n>RfCut}"/>
+                                <Text text="{detailModel>/ZzRfCut}"/>
+
+                                <Label text="{i18n>Collective}"/>
+                                <Text text="{detailModel>/SpecColl}"/>
+
+                                <Label text="{i18n>CreatedAt}"/>
+                                <Text text="{
+                                    path: 'detailModel>/CreatedAt',
+                                    formatter: '.formatDate'
+                                }"/>
+
+                                <Label text="{i18n>CreatedBy}"/>
+                                <Text text="{detailModel>/CreatedBy}"/>
+
+                                <Label text="{i18n>ChangedAt}"/>
+                                <Text text="{
+                                    path: 'detailModel>/ChangedAt',
+                                    formatter: '.formatDate'
+                                }"/>
+
+                                <Label text="{i18n>ChangedBy}"/>
+                                <Text text="{detailModel>/ChangedBy}"/>
+                            </f:content>
+                        </f:SimpleForm>
+                    </content>
+                </Panel>
+
+            </VBox>
+        </content>
+    </Page>
+</mvc:View>

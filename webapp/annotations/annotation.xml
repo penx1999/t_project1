@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+    <edmx:Reference Uri="https://oasis-tcs.github.io/odata-vocabularies/v4/vocabularies/Org.OData.Core.V1.xml">
+        <edmx:Include Alias="Core" Namespace="Org.OData.Core.V1"/>
+    </edmx:Reference>
+    <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/Common.xml">
+        <edmx:Include Alias="Common" Namespace="com.sap.vocabularies.Common.v1"/>
+    </edmx:Reference>
+    <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/UI.xml">
+        <edmx:Include Alias="UI" Namespace="com.sap.vocabularies.UI.v1"/>
+    </edmx:Reference>
+    <edmx:DataServices>
+        <Schema Namespace="ZSD_QUOT_SRV_Annotations"
+            xmlns="http://docs.oasis-open.org/odata/ns/edm">
+
+            <Annotations Target="ZSD_QUOT_SRV.ZSD_QUOT_E1Type">
+
+                <Annotation Term="UI.LineItem">
+                    <Collection>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="ProductAllocationObject"/>
+                            <PropertyValue Property="Label" String="Objeto Asignación"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="ProductAllocationSequence"/>
+                            <PropertyValue Property="Label" String="Secuencia"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="ProdAllocCharc01"/>
+                            <PropertyValue Property="Label" String="Característica 01"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="ProdAllocationActivationStatus"/>
+                            <PropertyValue Property="Label" String="Estado Activación"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="ProductAllocationQuantity"/>
+                            <PropertyValue Property="Label" String="Cantidad Cuota"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="ProdAllocPerdStartUTCDateTime"/>
+                            <PropertyValue Property="Label" String="Inicio Período"/>
+                        </Record>
+                        <Record Type="UI.DataField">
+                            <PropertyValue Property="Value" Path="ProdAllocPeriodEndUTCDateTime"/>
+                            <PropertyValue Property="Label" String="Fin Período"/>
+                        </Record>
+                    </Collection>
+                </Annotation>
+
+                <Annotation Term="UI.SelectionFields">
+                    <Collection>
+                        <PropertyPath>ProductAllocationObject</PropertyPath>
+                        <PropertyPath>ProdAllocPerdStartUTCDateTime</PropertyPath>
+                        <PropertyPath>ProdAllocPeriodEndUTCDateTime</PropertyPath>
+                        <PropertyPath>ProdAllocationActivationStatus</PropertyPath>
+                    </Collection>
+                </Annotation>
+
+                <Annotation Term="UI.HeaderInfo">
+                    <Record>
+                        <PropertyValue Property="TypeName" String="Cuota de Producto"/>
+                        <PropertyValue Property="TypeNamePlural" String="Cuotas de Producto"/>
+                        <PropertyValue Property="Title">
+                            <Record Type="UI.DataField">
+                                <PropertyValue Property="Value" Path="ProductAllocationObject"/>
+                            </Record>
+                        </PropertyValue>
+                        <PropertyValue Property="Description">
+                            <Record Type="UI.DataField">
+                                <PropertyValue Property="Value" Path="ProductAllocationSequence"/>
+                            </Record>
+                        </PropertyValue>
+                    </Record>
+                </Annotation>
+
+            </Annotations>
+
+        </Schema>
+    </edmx:DataServices>
+</edmx:Edmx>

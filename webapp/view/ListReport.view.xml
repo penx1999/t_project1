@@ -1,0 +1,111 @@
+<mvc:View
+    controllerName="t_project1.controller.ListReport"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:core="sap.ui.core"
+    displayBlock="true">
+
+    <f:DynamicPage id="dynamicPageId" headerExpanded="true" toggleHeaderOnTitleClick="true">
+
+        <!-- ═══════════════════════════════════════════════
+             TITLE BAR
+        ═══════════════════════════════════════════════ -->
+        <f:title>
+            <f:DynamicPageTitle>
+                <f:heading>
+                    <Title text="{i18n>appTitle}" level="H2"/>
+                </f:heading>
+                <f:snappedContent>
+                    <Text id="idSnappedCount" text=""/>
+                </f:snappedContent>
+                <f:actions>
+                    <Button
+                        text="{i18n>searchButton}"
+                        type="Emphasized"
+                        icon="sap-icon://search"
+                        press=".onSearch"/>
+                    <Button
+                        text="{i18n>clearButton}"
+                        icon="sap-icon://clear-filter"
+                        press=".onClear"/>
+                </f:actions>
+            </f:DynamicPageTitle>
+        </f:title>
+
+        <!-- ═══════════════════════════════════════════════
+             HEADER  (Filter Bar)
+        ═══════════════════════════════════════════════ -->
+        <f:header>
+            <f:DynamicPageHeader pinnable="true">
+                <VBox class="sapUiSmallMarginBeginEnd sapUiSmallMarginTopBottom">
+                    <FlexBox wrap="Wrap" alignItems="End">
+
+                        <VBox class="sapUiSmallMarginEnd" width="18rem">
+                            <Label text="{i18n>ProdAllocObj}" required="true" labelFor="idProdAlloc"/>
+                            <Input
+                                id="idProdAlloc"
+                                value="{/filterProdAlloc}"
+                                maxLength="40"
+                                placeholder="{i18n>placeholderProdAlloc}"
+                                submit=".onSearch"/>
+                        </VBox>
+
+                    </FlexBox>
+                </VBox>
+            </f:DynamicPageHeader>
+        </f:header>
+
+        <!-- ═══════════════════════════════════════════════
+             CONTENT  (Table)
+        ═══════════════════════════════════════════════ -->
+        <f:content>
+            <Table
+                id="idQuotaTable"
+                items="{/QuotaResults}"
+                noDataText="{i18n>noDataText}"
+                growing="true"
+                growingThreshold="50"
+                growingScrollToLoad="true"
+                mode="MultiSelect"
+                selectionChange=".onSelectionChange"
+                sticky="ColumnHeaders,HeaderToolbar">
+
+                <headerToolbar>
+                    <OverflowToolbar>
+                        <Title text="{i18n>quotaTableTitle}" level="H3"/>
+                        <ToolbarSpacer/>
+                        <Text id="idRecordCount" text=""/>
+                        <Button
+                            icon="sap-icon://detail-view"
+                            text="{i18n>detailButton}"
+                            press=".onNavToDetail"
+                            enabled="{/detailEnabled}"
+                            type="Transparent"/>
+                        <Button
+                            icon="sap-icon://excel-attachment"
+                            text="{i18n>exportButton}"
+                            press=".onExport"
+                            type="Transparent"/>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <columns>
+                    <Column>
+                        <Text text="{i18n>ProdAllocObj}"/>
+                    </Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem type="Active" press=".onItemPress">
+                        <cells>
+                            <Text text="{Productallocationobject}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+
+            </Table>
+        </f:content>
+
+    </f:DynamicPage>
+</mvc:View>
