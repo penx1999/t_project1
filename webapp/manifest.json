@@ -106,15 +106,15 @@
       ],
       "targets": {
         "TargetListReport": {
-          "type": "Component",
-          "id": "TargetListReport",
-          "name": "t_project1.view.ListReport",
+          "type": "View",
+          "viewType": "XML",
+          "viewName": "t_project1.view.ListReport",
           "level": 1
         },
         "TargetDetail": {
-          "type": "Component",
-          "id": "TargetDetail",
-          "name": "t_project1.view.Detail",
+          "type": "View",
+          "viewType": "XML",
+          "viewName": "t_project1.view.Detail",
           "level": 2
         }
       }
