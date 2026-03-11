@@ -78,7 +78,8 @@
         "settings": {
           "defaultBindingMode": "OneWay",
           "defaultCountMode": "Inline",
-          "refreshAfterChange": false
+          "refreshAfterChange": false,
+          "useBatch": false
         }
       }
     },
