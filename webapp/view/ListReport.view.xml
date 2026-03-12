@@ -81,12 +81,14 @@
                             text="{i18n>detailButton}"
                             press=".onNavToDetail"
                             enabled="{/detailEnabled}"
-                            type="Transparent"/>
+                            type="Transparent"
+                            visible="false"/>
                         <Button
                             icon="sap-icon://excel-attachment"
                             text="{i18n>exportButton}"
                             press=".onExport"
-                            type="Transparent"/>
+                            type="Transparent"
+                            visible="false"/>
                     </OverflowToolbar>
                 </headerToolbar>
 
