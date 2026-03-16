@@ -15,16 +15,35 @@ sap.ui.define([
     return Controller.extend("t_project1.controller.Detail", {
 
         onInit: function () {
+            var oToday = new Date();
+            var oNextYear = new Date();
+            oNextYear.setFullYear(oNextYear.getFullYear() + 1);
+
             var oModel = new JSONModel({
                 productAllocationObject: "",
+                tableTitle: "",
                 columns: [],
                 rows: [],
-                busy: false
+                busy: false,
+                fec_ini: this._formatDateValue(oToday),
+                fec_fin: this._formatDateValue(oNextYear)
             });
             this.getView().setModel(oModel, "detailModel");
 
             var oRouter = this.getOwnerComponent().getRouter();
             oRouter.getRoute("RouteDetail").attachPatternMatched(this._onRouteMatched, this);
+        },
+
+        _formatDateValue: function (oDate) {
+            var sDay   = ("0" + oDate.getDate()).slice(-2);
+            var sMon   = ("0" + (oDate.getMonth() + 1)).slice(-2);
+            var sYear  = oDate.getFullYear();
+            return sDay + "/" + sMon + "/" + sYear;
+        },
+
+        _parseDateValue: function (sDate) {
+            var aParts = sDate.split("/");
+            return new Date(parseInt(aParts[2]), parseInt(aParts[1]) - 1, parseInt(aParts[0]));
         },
 
         _onRouteMatched: function (oEvent) {
@@ -35,14 +54,37 @@ sap.ui.define([
             this._loadDynamicFields(sQuotaId);
         },
 
+        onDateChange: function () {
+            var oModel = this.getView().getModel("detailModel");
+            var sQuotaId = oModel.getProperty("/productAllocationObject");
+            if (sQuotaId) {
+                oModel.setProperty("/busy", true);
+                this._loadDynamicFields(sQuotaId);
+            }
+        },
+
         _loadDynamicFields: function (sProductAllocationObject) {
             var oODataModel = this.getOwnerComponent().getModel();
             var oModel = this.getView().getModel("detailModel");
             var oBundle = this.getView().getModel("i18n").getResourceBundle();
             var that = this;
 
+            var sFecIni = oModel.getProperty("/fec_ini");
+            var sFecFin = oModel.getProperty("/fec_fin");
+
+            var aFilters = [
+                new Filter("tablename", FilterOperator.EQ, sProductAllocationObject)
+            ];
+
+            if (sFecIni) {
+                aFilters.push(new Filter("fec_ini", FilterOperator.EQ, sFecIni));
+            }
+            if (sFecFin) {
+                aFilters.push(new Filter("fec_fin", FilterOperator.EQ, sFecFin));
+            }
+
             oODataModel.read("/DynamicFieldSet", {
-                filters: [new Filter("tablename", FilterOperator.EQ, sProductAllocationObject)],
+                filters: aFilters,
                 urlParameters: { "$expand": "DataSetAsoc" },
                 success: function (oData) {
                     var aFields = oData.results || [];
@@ -74,9 +116,11 @@ sap.ui.define([
                     });
 
                     var aRows = Object.values(mRows);
+                    var sTitle = oBundle.getText("tableDataTitle") + " (" + aRows.length + ")";
 
                     oModel.setProperty("/columns", aColumns);
                     oModel.setProperty("/rows", aRows);
+                    oModel.setProperty("/tableTitle", sTitle);
                     oModel.setProperty("/busy", false);
 
                     that._buildTable(aColumns);
@@ -99,21 +143,34 @@ sap.ui.define([
 
             oTable.destroyColumns();
 
-            oTable.addColumn(new Column({ header: new Label({ text: "Período Inicio" }) }));
-            oTable.addColumn(new Column({ header: new Label({ text: "Período Fin" }) }));
+            var sColWidth = "150px";
+
+            oTable.addColumn(new Column({
+                width: sColWidth,
+                header: new Label({ text: "Período Inicio", wrapping: false })
+            }));
+            oTable.addColumn(new Column({
+                width: sColWidth,
+                header: new Label({ text: "Período Fin", wrapping: false })
+            }));
 
             aColumns.forEach(function (oCol) {
-                oTable.addColumn(new Column({ header: new Label({ text: oCol.label }) }));
+                oTable.addColumn(new Column({
+                    width: sColWidth,
+                    header: new Label({ text: oCol.label, wrapping: false })
+                }));
             });
 
-            var oTemplate = oTable.getBindingInfo("items") && oTable.getBindingInfo("items").template;
-            if (oTemplate) { oTemplate.destroy(); }
+            var oExistingInfo = oTable.getBindingInfo("items");
+            if (oExistingInfo && oExistingInfo.template) {
+                oExistingInfo.template.destroy();
+            }
 
             var oCells = [];
-            oCells.push(new Text({ text: "{detailModel>PRODALLOCPERDSTARTUTCDATETIME}" }));
-            oCells.push(new Text({ text: "{detailModel>PRODALLOCPERIODENDUTCDATETIME}" }));
+            oCells.push(new Text({ text: "{detailModel>PRODALLOCPERDSTARTUTCDATETIME}", wrapping: false }));
+            oCells.push(new Text({ text: "{detailModel>PRODALLOCPERIODENDUTCDATETIME}", wrapping: false }));
             aColumns.forEach(function (oCol) {
-                oCells.push(new Text({ text: "{detailModel>" + oCol.name + "}" }));
+                oCells.push(new Text({ text: "{detailModel>" + oCol.name + "}", wrapping: false }));
             });
 
             oTable.bindItems({

@@ -2,30 +2,108 @@
     controllerName="t_project1.controller.Detail"
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
+    xmlns:f="sap.ui.layout.form"
+    xmlns:core="sap.ui.core"
     displayBlock="true">
 
     <Page
-        title="{i18n>detailTitle}"
         showNavButton="true"
-        navButtonPress=".onNavBack">
+        navButtonPress=".onNavBack"
+        class="sapUiNoContentPadding">
+
+        <customHeader>
+            <Bar>
+                <contentLeft>
+                    <Button icon="sap-icon://nav-back" press=".onNavBack"/>
+                </contentLeft>
+                <contentMiddle>
+                    <Title text="{detailModel>/productAllocationObject}" level="H4"/>
+                </contentMiddle>
+            </Bar>
+        </customHeader>
 
         <content>
-            <VBox class="sapUiMediumMargin">
 
-                <Title text="{detailModel>/productAllocationObject}" level="H3" class="sapUiSmallMarginBottom"/>
+            <!-- Object Header -->
+            <ObjectHeader
+                title="{detailModel>/productAllocationObject}"
+                titleLevel="H2"
+                backgroundDesign="Translucent"
+                class="sapUiSmallMarginBottom">
+            </ObjectHeader>
 
-                <Table
-                    id="idDynamicTable"
-                    noDataText="{i18n>noDataText}"
-                    growing="true"
-                    growingThreshold="50"
-                    busy="{detailModel>/busy}"
-                    sticky="ColumnHeaders">
-                    <columns/>
-                    <items/>
-                </Table>
+            <!-- Selection Range Panel -->
+            <Panel
+                headerText="{i18n>selectionRange}"
+                expandable="false"
+                expanded="true"
+                class="sapUiSmallMarginBeginEnd sapUiSmallMarginBottom">
+                <content>
+                    <f:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        labelSpanXL="3" labelSpanL="3" labelSpanM="4" labelSpanS="12"
+                        columnsXL="2" columnsL="2" columnsM="1"
+                        class="sapUiSmallMargin">
+                        <f:content>
+                            <Label text="{i18n>dateFrom}" labelFor="idDateFrom"/>
+                            <DatePicker
+                                id="idDateFrom"
+                                value="{
+                                    path: 'detailModel>/fec_ini',
+                                    type: 'sap.ui.model.type.Date',
+                                    formatOptions: { pattern: 'dd/MM/yyyy' }
+                                }"
+                                displayFormat="dd/MM/yyyy"
+                                valueFormat="dd/MM/yyyy"
+                                change=".onDateChange"
+                                width="180px"/>
 
-            </VBox>
+                            <Label text="{i18n>dateTo}" labelFor="idDateTo"/>
+                            <DatePicker
+                                id="idDateTo"
+                                value="{
+                                    path: 'detailModel>/fec_fin',
+                                    type: 'sap.ui.model.type.Date',
+                                    formatOptions: { pattern: 'dd/MM/yyyy' }
+                                }"
+                                displayFormat="dd/MM/yyyy"
+                                valueFormat="dd/MM/yyyy"
+                                change=".onDateChange"
+                                width="180px"/>
+                        </f:content>
+                    </f:SimpleForm>
+                </content>
+            </Panel>
+
+            <!-- Dynamic Data Table -->
+            <Panel
+                headerText="{detailModel>/tableTitle}"
+                expandable="false"
+                expanded="true"
+                class="sapUiSmallMarginBeginEnd">
+                <content>
+                    <ScrollContainer
+                        horizontal="true"
+                        vertical="false"
+                        width="100%">
+                        <Table
+                            id="idDynamicTable"
+                            noDataText="{i18n>noDataText}"
+                            growing="false"
+                            busy="{detailModel>/busy}"
+                            busyIndicatorDelay="0"
+                            alternateRowColors="true"
+                            sticky="ColumnHeaders"
+                            fixedLayout="true"
+                            class="sapUiSmallMarginBottom">
+                            <columns/>
+                            <items/>
+                        </Table>
+                    </ScrollContainer>
+                </content>
+            </Panel>
+
         </content>
     </Page>
 </mvc:View>
