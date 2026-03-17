@@ -105,23 +105,26 @@ sap.ui.define([
                         };
                     });
 
-                    var mRows = {};
+                    var iMaxRows = 0;
                     aFields.forEach(function (oField) {
                         var aData = (oField.DataSetAsoc && oField.DataSetAsoc.results) ? oField.DataSetAsoc.results : [];
-                        aData.forEach(function (oEntry) {
-                            var sUUID = oEntry.CHARCVALUECOMBINATIONUUID;
-                            if (!mRows[sUUID]) {
-                                mRows[sUUID] = {
-                                    CHARCVALUECOMBINATIONUUID: sUUID,
-                                    PRODALLOCPERDSTARTUTCDATETIME: oEntry.PRODALLOCPERDSTARTUTCDATETIME,
-                                    PRODALLOCPERIODENDUTCDATETIME: oEntry.PRODALLOCPERIODENDUTCDATETIME
-                                };
-                            }
-                            mRows[sUUID][oField.name] = oEntry.Value;
-                        });
+                        if (aData.length > iMaxRows) { iMaxRows = aData.length; }
                     });
 
-                    var aRows = Object.values(mRows);
+                    var aRows = [];
+                    for (var i = 0; i < iMaxRows; i++) { aRows.push({}); }
+
+                    aFields.forEach(function (oField) {
+                        var aData = (oField.DataSetAsoc && oField.DataSetAsoc.results) ? oField.DataSetAsoc.results : [];
+                        aData.forEach(function (oEntry, iIdx) {
+                            if (!aRows[iIdx].PRODALLOCPERDSTARTUTCDATETIME) {
+                                aRows[iIdx].PRODALLOCPERDSTARTUTCDATETIME = oEntry.PRODALLOCPERDSTARTUTCDATETIME;
+                                aRows[iIdx].PRODALLOCPERIODENDUTCDATETIME = oEntry.PRODALLOCPERIODENDUTCDATETIME;
+                                aRows[iIdx].CHARCVALUECOMBINATIONUUID     = oEntry.CHARCVALUECOMBINATIONUUID;
+                            }
+                            aRows[iIdx][oField.name] = oEntry.Value;
+                        });
+                    });
                     var sTitle = oBundle.getText("tableDataTitle") + " (" + aRows.length + ")";
 
                     oModel.setProperty("/columns", aColumns);
