@@ -2,6 +2,7 @@
     controllerName="t_project1.controller.Detail"
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
+    xmlns:t="sap.ui.table"
     displayBlock="true">
 
     <Page
@@ -72,19 +73,22 @@
                 expanded="true"
                 class="sapUiSmallMarginBeginEnd">
                 <content>
-                    <Table
+                    <t:Table
                         id="idDynamicTable"
-                        noDataText="{i18n>noDataText}"
-                        growing="false"
+                        noData="{i18n>noDataText}"
                         busy="{detailModel>/busy}"
                         busyIndicatorDelay="0"
                         alternateRowColors="true"
-                        sticky="ColumnHeaders"
-                        fixedLayout="false"
+                        visibleRowCountMode="Auto"
+                        minAutoRowCount="5"
+                        selectionMode="None"
+                        navigationMode="Scrollbar"
+                        columnHeaderHeight="32"
+                        rowHeight="32"
+                        width="100%"
                         class="sapUiSmallMarginBottom">
-                        <columns/>
-                        <items/>
-                    </Table>
+                        <t:columns/>
+                    </t:Table>
                 </content>
             </Panel>
 

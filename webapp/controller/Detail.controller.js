@@ -5,11 +5,10 @@ sap.ui.define([
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
     "sap/m/MessageBox",
-    "sap/m/Column",
     "sap/m/Text",
-    "sap/m/ColumnListItem",
-    "sap/m/Label"
-], function (Controller, History, JSONModel, Filter, FilterOperator, MessageBox, Column, Text, ColumnListItem, Label) {
+    "sap/m/Label",
+    "sap/ui/table/Column"
+], function (Controller, History, JSONModel, Filter, FilterOperator, MessageBox, Text, Label, UIColumn) {
     "use strict";
 
     return Controller.extend("t_project1.controller.Detail", {
@@ -151,28 +150,28 @@ sap.ui.define([
             oTable.destroyColumns();
 
             var sColWidth = "150px";
+            var iFixedCount = 0;
+            var bStatusFound = false;
 
-            aColumns.forEach(function (oCol) {
-                oTable.addColumn(new Column({
+            aColumns.forEach(function (oCol, iIdx) {
+                if (!bStatusFound && oCol.name.toUpperCase() !== "STATUS") {
+                    iFixedCount = iIdx + 1;
+                } else {
+                    bStatusFound = true;
+                }
+
+                oTable.addColumn(new UIColumn({
                     width: sColWidth,
-                    header: new Label({ text: oCol.label, wrapping: false })
+                    label: new Label({ text: oCol.label, wrapping: false }),
+                    template: new Text({ text: "{detailModel>" + oCol.name + "}", wrapping: false }),
+                    resizable: true,
+                    autoResizable: true
                 }));
             });
 
-            var oExistingInfo = oTable.getBindingInfo("items");
-            if (oExistingInfo && oExistingInfo.template) {
-                oExistingInfo.template.destroy();
-            }
+            oTable.setFixedColumnCount(iFixedCount);
 
-            var oCells = [];
-            aColumns.forEach(function (oCol) {
-                oCells.push(new Text({ text: "{detailModel>" + oCol.name + "}", wrapping: false }));
-            });
-
-            oTable.bindItems({
-                path: "detailModel>/rows",
-                template: new ColumnListItem({ cells: oCells })
-            });
+            oTable.bindRows("detailModel>/rows");
         },
 
         onNavBack: function () {

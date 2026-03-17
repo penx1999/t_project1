@@ -15,6 +15,7 @@ framework:
     - name: sap.ui.comp
     - name: sap.ui.generic.app
     - name: sap.suite.ui.generic.template
+    - name: sap.ui.table
     - name: themelib_sap_horizon
 server:
   customMiddleware:
