@@ -6,10 +6,19 @@ sap.ui.define([
     "sap/ui/model/FilterOperator",
     "sap/m/MessageBox",
     "sap/m/Text",
+    "sap/m/Input",
     "sap/m/Label",
     "sap/ui/table/Column"
-], function (Controller, History, JSONModel, Filter, FilterOperator, MessageBox, Text, Label, UIColumn) {
+], function (Controller, History, JSONModel, Filter, FilterOperator, MessageBox, Text, Input, Label, UIColumn) {
     "use strict";
+
+    var EDITABLE_FIELDS = [
+        "ZZRFCUT",
+        "PRODALLOCSTATUS",
+        "PRODALLOCCONSTRAINTSTATUS",
+        "PRODALLOCCOMMENT",
+        "PRODALLOCQUANTITY_PA"
+    ];
 
     return Controller.extend("t_project1.controller.Detail", {
 
@@ -165,10 +174,16 @@ sap.ui.define([
             jQuery.sap.log.info("Detail._buildTable: columns=" + JSON.stringify(aColumns.map(function(c){ return c.name; })) + " | iStatusIdx=" + iStatusIdx + " | iFixedCount=" + iFixedCount);
 
             aColumns.forEach(function (oCol) {
+                var bEditable = EDITABLE_FIELDS.indexOf(oCol.name.toUpperCase()) !== -1 ||
+                                EDITABLE_FIELDS.indexOf(oCol.name) !== -1;
+                var oTemplate = bEditable
+                    ? new Input({ value: "{detailModel>" + oCol.name + "}", width: "100%" })
+                    : new Text({ text: "{detailModel>" + oCol.name + "}", wrapping: false });
+
                 oTable.addColumn(new UIColumn({
                     width: sColWidth,
                     label: new Label({ text: oCol.label, wrapping: false }),
-                    template: new Text({ text: "{detailModel>" + oCol.name + "}", wrapping: false }),
+                    template: oTemplate,
                     resizable: true,
                     autoResizable: true
                 }));
