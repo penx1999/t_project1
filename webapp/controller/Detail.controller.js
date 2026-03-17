@@ -152,16 +152,19 @@ sap.ui.define([
             oTable.destroyColumns();
 
             var sColWidth = "150px";
-            var iFixedCount = 0;
-            var bStatusFound = false;
 
+            var iStatusIdx = -1;
             aColumns.forEach(function (oCol, iIdx) {
-                if (!bStatusFound && oCol.name.toUpperCase() !== "STATUS") {
-                    iFixedCount = iIdx + 1;
-                } else {
-                    bStatusFound = true;
+                if (iStatusIdx === -1 && oCol.name.toUpperCase().indexOf("STATUS") !== -1) {
+                    iStatusIdx = iIdx;
                 }
+            });
 
+            var iFixedCount = (iStatusIdx > 0) ? iStatusIdx : 0;
+
+            jQuery.sap.log.info("Detail._buildTable: columns=" + JSON.stringify(aColumns.map(function(c){ return c.name; })) + " | iStatusIdx=" + iStatusIdx + " | iFixedCount=" + iFixedCount);
+
+            aColumns.forEach(function (oCol) {
                 oTable.addColumn(new UIColumn({
                     width: sColWidth,
                     label: new Label({ text: oCol.label, wrapping: false }),
@@ -172,7 +175,6 @@ sap.ui.define([
             });
 
             oTable.setFixedColumnCount(iFixedCount);
-
             oTable.bindRows("detailModel>/rows");
         },
 
