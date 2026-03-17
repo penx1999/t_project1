@@ -46,6 +46,12 @@ sap.ui.define([
             return new Date(parseInt(aParts[2]), parseInt(aParts[1]) - 1, parseInt(aParts[0]));
         },
 
+        _toODataDate: function (sDate) {
+            if (!sDate) { return ""; }
+            var aParts = sDate.split("/");
+            return aParts[2] + aParts[1] + aParts[0];
+        },
+
         _onRouteMatched: function (oEvent) {
             var sQuotaId = decodeURIComponent(oEvent.getParameter("arguments").quotaId);
             var oModel = this.getView().getModel("detailModel");
@@ -77,10 +83,10 @@ sap.ui.define([
             ];
 
             if (sFecIni) {
-                aFilters.push(new Filter("fec_ini", FilterOperator.EQ, sFecIni));
+                aFilters.push(new Filter("fec_ini", FilterOperator.EQ, this._toODataDate(sFecIni)));
             }
             if (sFecFin) {
-                aFilters.push(new Filter("fec_fin", FilterOperator.EQ, sFecFin));
+                aFilters.push(new Filter("fec_fin", FilterOperator.EQ, this._toODataDate(sFecFin)));
             }
 
             oODataModel.read("/DynamicFieldSet", {
