@@ -27,8 +27,7 @@
             <ObjectHeader
                 title="{detailModel>/productAllocationObject}"
                 titleLevel="H2"
-                backgroundDesign="Translucent"
-                class="sapUiSmallMarginBottom">
+                backgroundDesign="Translucent">
             </ObjectHeader>
 
             <!-- Selection Range Panel -->
@@ -36,7 +35,7 @@
                 headerText="{i18n>selectionRange}"
                 expandable="false"
                 expanded="true"
-                class="sapUiSmallMarginBeginEnd sapUiSmallMarginBottom">
+                width="100%">
                 <content>
                     <HBox alignItems="Center" class="sapUiSmallMargin">
                         <DatePicker
@@ -71,7 +70,7 @@
                 headerText="{detailModel>/tableTitle}"
                 expandable="false"
                 expanded="true"
-                class="sapUiSmallMarginBeginEnd">
+                width="100%">
                 <content>
                     <t:Table
                         id="idDynamicTable"
