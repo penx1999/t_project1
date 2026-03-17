@@ -40,11 +40,7 @@
                     <HBox alignItems="Center" class="sapUiSmallMargin">
                         <DatePicker
                             id="idDateFrom"
-                            value="{
-                                path: 'detailModel>/fec_ini',
-                                type: 'sap.ui.model.type.Date',
-                                formatOptions: { pattern: 'dd/MM/yyyy' }
-                            }"
+                            value="{detailModel>/fec_ini}"
                             displayFormat="dd/MM/yyyy"
                             valueFormat="dd/MM/yyyy"
                             change=".onDateChange"
@@ -52,11 +48,7 @@
                         <Text text=" – " class="sapUiSmallMarginBeginEnd"/>
                         <DatePicker
                             id="idDateTo"
-                            value="{
-                                path: 'detailModel>/fec_fin',
-                                type: 'sap.ui.model.type.Date',
-                                formatOptions: { pattern: 'dd/MM/yyyy' }
-                            }"
+                            value="{detailModel>/fec_fin}"
                             displayFormat="dd/MM/yyyy"
                             valueFormat="dd/MM/yyyy"
                             change=".onDateChange"
@@ -81,9 +73,7 @@
                         visibleRowCountMode="Fixed"
                         visibleRowCount="{detailModel>/rowCount}"
                         selectionMode="None"
-                        navigationMode="Scrollbar"
                         columnHeaderHeight="32"
-                        rowHeight="32"
                         width="100%"
                         class="sapUiSmallMarginBottom">
                         <t:columns/>
