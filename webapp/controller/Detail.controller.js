@@ -23,6 +23,7 @@ sap.ui.define([
                 tableTitle: "",
                 columns: [],
                 rows: [],
+                rowCount: 5,
                 busy: false,
                 fec_ini: this._formatDateValue(oToday),
                 fec_fin: this._formatDateValue(oNextYear)
@@ -126,6 +127,7 @@ sap.ui.define([
 
                     oModel.setProperty("/columns", aColumns);
                     oModel.setProperty("/rows", aRows);
+                    oModel.setProperty("/rowCount", aRows.length || 1);
                     oModel.setProperty("/tableTitle", sTitle);
                     oModel.setProperty("/busy", false);
 
