@@ -117,10 +117,12 @@ sap.ui.define([
                     aFields.forEach(function (oField) {
                         var aData = (oField.DataSetAsoc && oField.DataSetAsoc.results) ? oField.DataSetAsoc.results : [];
                         aData.forEach(function (oEntry, iIdx) {
-                            if (!aRows[iIdx].PRODALLOCPERDSTARTUTCDATETIME) {
-                                aRows[iIdx].PRODALLOCPERDSTARTUTCDATETIME = oEntry.PRODALLOCPERDSTARTUTCDATETIME;
-                                aRows[iIdx].PRODALLOCPERIODENDUTCDATETIME = oEntry.PRODALLOCPERIODENDUTCDATETIME;
-                                aRows[iIdx].CHARCVALUECOMBINATIONUUID     = oEntry.CHARCVALUECOMBINATIONUUID;
+                            if (!aRows[iIdx].PERIODO) {
+                                var sRaw = (oEntry.PRODALLOCPERDSTARTUTCDATETIME || "").trim();
+                                var sMes  = sRaw.substring(4, 6);
+                                var sAnio = sRaw.substring(0, 4);
+                                aRows[iIdx].PERIODO = (sMes && sAnio) ? sMes + "." + sAnio : "";
+                                aRows[iIdx].CHARCVALUECOMBINATIONUUID = oEntry.CHARCVALUECOMBINATIONUUID;
                             }
                             aRows[iIdx][oField.name] = oEntry.Value;
                         });
@@ -155,12 +157,8 @@ sap.ui.define([
             var sColWidth = "150px";
 
             oTable.addColumn(new Column({
-                width: sColWidth,
-                header: new Label({ text: "Período Inicio", wrapping: false })
-            }));
-            oTable.addColumn(new Column({
-                width: sColWidth,
-                header: new Label({ text: "Período Fin", wrapping: false })
+                width: "100px",
+                header: new Label({ text: "Período", wrapping: false })
             }));
 
             aColumns.forEach(function (oCol) {
@@ -176,8 +174,7 @@ sap.ui.define([
             }
 
             var oCells = [];
-            oCells.push(new Text({ text: "{detailModel>PRODALLOCPERDSTARTUTCDATETIME}", wrapping: false }));
-            oCells.push(new Text({ text: "{detailModel>PRODALLOCPERIODENDUTCDATETIME}", wrapping: false }));
+            oCells.push(new Text({ text: "{detailModel>PERIODO}", wrapping: false }));
             aColumns.forEach(function (oCol) {
                 oCells.push(new Text({ text: "{detailModel>" + oCol.name + "}", wrapping: false }));
             });
