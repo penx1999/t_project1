@@ -2,8 +2,6 @@
     controllerName="t_project1.controller.Detail"
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
-    xmlns:f="sap.ui.layout.form"
-    xmlns:core="sap.ui.core"
     displayBlock="true">
 
     <Page
@@ -39,40 +37,31 @@
                 expanded="true"
                 class="sapUiSmallMarginBeginEnd sapUiSmallMarginBottom">
                 <content>
-                    <f:SimpleForm
-                        editable="true"
-                        layout="ResponsiveGridLayout"
-                        labelSpanXL="3" labelSpanL="3" labelSpanM="4" labelSpanS="12"
-                        columnsXL="2" columnsL="2" columnsM="1"
-                        class="sapUiSmallMargin">
-                        <f:content>
-                            <Label text="{i18n>dateFrom}" labelFor="idDateFrom"/>
-                            <DatePicker
-                                id="idDateFrom"
-                                value="{
-                                    path: 'detailModel>/fec_ini',
-                                    type: 'sap.ui.model.type.Date',
-                                    formatOptions: { pattern: 'dd/MM/yyyy' }
-                                }"
-                                displayFormat="dd/MM/yyyy"
-                                valueFormat="dd/MM/yyyy"
-                                change=".onDateChange"
-                                width="180px"/>
-
-                            <Label text="{i18n>dateTo}" labelFor="idDateTo"/>
-                            <DatePicker
-                                id="idDateTo"
-                                value="{
-                                    path: 'detailModel>/fec_fin',
-                                    type: 'sap.ui.model.type.Date',
-                                    formatOptions: { pattern: 'dd/MM/yyyy' }
-                                }"
-                                displayFormat="dd/MM/yyyy"
-                                valueFormat="dd/MM/yyyy"
-                                change=".onDateChange"
-                                width="180px"/>
-                        </f:content>
-                    </f:SimpleForm>
+                    <HBox alignItems="Center" class="sapUiSmallMargin">
+                        <DatePicker
+                            id="idDateFrom"
+                            value="{
+                                path: 'detailModel>/fec_ini',
+                                type: 'sap.ui.model.type.Date',
+                                formatOptions: { pattern: 'dd/MM/yyyy' }
+                            }"
+                            displayFormat="dd/MM/yyyy"
+                            valueFormat="dd/MM/yyyy"
+                            change=".onDateChange"
+                            width="140px"/>
+                        <Text text=" – " class="sapUiSmallMarginBeginEnd"/>
+                        <DatePicker
+                            id="idDateTo"
+                            value="{
+                                path: 'detailModel>/fec_fin',
+                                type: 'sap.ui.model.type.Date',
+                                formatOptions: { pattern: 'dd/MM/yyyy' }
+                            }"
+                            displayFormat="dd/MM/yyyy"
+                            valueFormat="dd/MM/yyyy"
+                            change=".onDateChange"
+                            width="140px"/>
+                    </HBox>
                 </content>
             </Panel>
 
@@ -83,24 +72,19 @@
                 expanded="true"
                 class="sapUiSmallMarginBeginEnd">
                 <content>
-                    <ScrollContainer
-                        horizontal="true"
-                        vertical="false"
-                        width="100%">
-                        <Table
-                            id="idDynamicTable"
-                            noDataText="{i18n>noDataText}"
-                            growing="false"
-                            busy="{detailModel>/busy}"
-                            busyIndicatorDelay="0"
-                            alternateRowColors="true"
-                            sticky="ColumnHeaders"
-                            fixedLayout="true"
-                            class="sapUiSmallMarginBottom">
-                            <columns/>
-                            <items/>
-                        </Table>
-                    </ScrollContainer>
+                    <Table
+                        id="idDynamicTable"
+                        noDataText="{i18n>noDataText}"
+                        growing="false"
+                        busy="{detailModel>/busy}"
+                        busyIndicatorDelay="0"
+                        alternateRowColors="true"
+                        sticky="ColumnHeaders"
+                        fixedLayout="false"
+                        class="sapUiSmallMarginBottom">
+                        <columns/>
+                        <items/>
+                    </Table>
                 </content>
             </Panel>
 
