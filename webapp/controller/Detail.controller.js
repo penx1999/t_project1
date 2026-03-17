@@ -14,10 +14,10 @@ sap.ui.define([
 
     var EDITABLE_FIELDS = [
         "ZZRFCUT",
-        "PRODALLOCSTATUS",
-        "PRODALLOCCONSTRAINTSTATUS",
-        "PRODALLOCCOMMENT",
-        "PRODALLOCQUANTITY_PA"
+        "PRODALLOCATIONACTIVATIONSTATUS",
+        "PRODALLOCCHARCCONSTRAINTSTATUS",
+        "PRODALLOCCHARCVALUECOMBNCMNT",
+        "PRODUCTALLOCATIONQUANTITY"
     ];
 
     return Controller.extend("t_project1.controller.Detail", {
