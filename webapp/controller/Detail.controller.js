@@ -444,37 +444,32 @@ sap.ui.define([
 
         _executePut: function (aPayload) {
             var oODataModel = this.getOwnerComponent().getModel();
-            var that = this;
+            var sServiceUrl = oODataModel.sServiceUrl;
+            var sToken = oODataModel.getSecurityToken();
+            var sProductAllocationObject = this.getView().getModel("detailModel").getProperty("/productAllocationObject") || "TEST FR MAGG CET";
+            var sPath = sServiceUrl + "/DynamicFieldSet?$expand=DataSetAsoc&$filter=tablename%20eq%20%27" + encodeURIComponent(sProductAllocationObject) + "%27";
 
+            console.log("PUT URL:", sPath);
             console.log("PUT Payload:", JSON.stringify(aPayload, null, 2));
 
-            var aPromises = [];
-
-            aPayload.forEach(function (oFieldSet) {
-                var aDataSetAsoc = oFieldSet.DataSetAsoc || [];
-                aDataSetAsoc.forEach(function (oDataItem) {
-                    if (oDataItem.key) {
-                        var sPath = "/DynamicDataSet('" + oDataItem.key + "')";
-                        console.log("PUT Path:", sPath, "Data:", oDataItem);
-
-                        var oPromise = new Promise(function (resolve, reject) {
-                            oODataModel.update(sPath, oDataItem, {
-                                method: "PUT",
-                                merge: false,
-                                success: function () {
-                                    resolve();
-                                },
-                                error: function (oError) {
-                                    reject(oError);
-                                }
-                            });
-                        });
-                        aPromises.push(oPromise);
+            return new Promise(function (resolve, reject) {
+                jQuery.ajax({
+                    url: sPath,
+                    type: "PUT",
+                    contentType: "application/json",
+                    data: JSON.stringify({ d: { results: aPayload } }),
+                    headers: {
+                        "X-CSRF-Token": sToken,
+                        "Accept": "application/json"
+                    },
+                    success: function () {
+                        resolve();
+                    },
+                    error: function (oError) {
+                        reject(oError);
                     }
                 });
             });
-
-            return Promise.all(aPromises);
         }
 
     });
