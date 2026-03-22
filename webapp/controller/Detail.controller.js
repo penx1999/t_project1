@@ -211,6 +211,7 @@ sap.ui.define([
                     oTemplate = new Input({
                         value: "{detailModel>" + oCol.name + "}",
                         width: "100%",
+                        change: that._onFieldChange.bind(that),
                         liveChange: that._onFieldChange.bind(that)
                     });
                 } else {
@@ -228,6 +229,21 @@ sap.ui.define([
 
             oTable.setFixedColumnCount(iFixedCount);
             oTable.bindRows("detailModel>/rows");
+
+            var oModel = this.getView().getModel("detailModel");
+            oModel.attachPropertyChange(this._onModelPropertyChange, this);
+        },
+
+        _onModelPropertyChange: function (oEvent) {
+            var sPath = oEvent.getParameter("path");
+            if (sPath && sPath.indexOf("/rows") === 0) {
+                var oModel = this.getView().getModel("detailModel");
+                var aRows = oModel.getProperty("/rows");
+                var bHasChanges = this._detectChanges(aRows);
+                if (oModel.getProperty("/hasChanges") !== bHasChanges) {
+                    oModel.setProperty("/hasChanges", bHasChanges);
+                }
+            }
         },
 
         onNavBack: function () {
@@ -240,10 +256,12 @@ sap.ui.define([
             }
         },
 
-        _onFieldChange: function () {
+        _onFieldChange: function (oEvent) {
+            jQuery.sap.log.info("Detail._onFieldChange triggered");
             var oModel = this.getView().getModel("detailModel");
             var aRows = oModel.getProperty("/rows");
             var bHasChanges = this._detectChanges(aRows);
+            jQuery.sap.log.info("Detail._onFieldChange: hasChanges=" + bHasChanges);
             oModel.setProperty("/hasChanges", bHasChanges);
         },
 
