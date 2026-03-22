@@ -444,32 +444,35 @@ sap.ui.define([
 
         _executePut: function (aPayload) {
             var oODataModel = this.getOwnerComponent().getModel();
-            var sServiceUrl = oODataModel.sServiceUrl;
-            var sToken = oODataModel.getSecurityToken();
-            var sProductAllocationObject = this.getView().getModel("detailModel").getProperty("/productAllocationObject") || "TEST FR MAGG CET";
-            var sPath = sServiceUrl + "/DynamicFieldSet('.')";
 
             console.log("=== PUT REQUEST ===");
-            console.log("PUT URL:", sPath);
+            console.log("PUT Path: /DynamicFieldSet('.')");
             console.log("PUT Payload:", JSON.stringify(aPayload, null, 2));
             console.log("===================");
 
+            var oData = {
+                name: ".",
+                tablename: "PAL",
+                DataSetAsoc: []
+            };
+
+            aPayload.forEach(function (oFieldSet) {
+                var aDataItems = oFieldSet.DataSetAsoc || [];
+                aDataItems.forEach(function (oItem) {
+                    oData.DataSetAsoc.push(oItem);
+                });
+            });
+
+            console.log("Flattened DataSetAsoc:", JSON.stringify(oData, null, 2));
+
             return new Promise(function (resolve, reject) {
-                jQuery.ajax({
-                    url: sPath,
-                    type: "PUT",
-                    contentType: "application/json;charset=utf-8",
-                    data: JSON.stringify(aPayload),
-                    headers: {
-                        "X-CSRF-Token": sToken,
-                        "Accept": "application/json",
-                        "DataServiceVersion": "2.0",
-                        "MaxDataServiceVersion": "2.0"
-                    },
+                oODataModel.update("/DynamicFieldSet('.')", oData, {
                     success: function () {
+                        console.log("PUT Success");
                         resolve();
                     },
                     error: function (oError) {
+                        console.log("PUT Error:", oError);
                         reject(oError);
                     }
                 });
