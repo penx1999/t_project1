@@ -449,8 +449,10 @@ sap.ui.define([
             var sProductAllocationObject = this.getView().getModel("detailModel").getProperty("/productAllocationObject") || "TEST FR MAGG CET";
             var sPath = sServiceUrl + "/DynamicFieldSet('.')";
 
+            console.log("=== PUT REQUEST ===");
             console.log("PUT URL:", sPath);
             console.log("PUT Payload:", JSON.stringify(aPayload, null, 2));
+            console.log("===================");
 
             return new Promise(function (resolve, reject) {
                 jQuery.ajax({
