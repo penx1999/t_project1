@@ -379,39 +379,46 @@ sap.ui.define([
 
         _buildPayloadArray: function (aChangedRows, sFecIni) {
             var that = this;
+            var oModel = this.getView().getModel("detailModel");
+            var aColumns = oModel.getProperty("/columns") || [];
             var oFieldsMap = {};
+
+            aColumns.forEach(function (oCol) {
+                var sFieldName = oCol.name;
+                var oFieldMeta = that._oFieldMetadata[sFieldName] || {};
+
+                oFieldsMap[sFieldName] = {
+                    name: sFieldName,
+                    tablename: oFieldMeta.tabname || "PAL",
+                    description: oCol.label || "",
+                    position: oFieldMeta.position || "",
+                    key: "",
+                    type: "C",
+                    length: "",
+                    fec_ini: that._toODataDate(sFecIni) || "",
+                    fec_fin: "",
+                    DataSetAsoc: []
+                };
+            });
 
             aChangedRows.forEach(function (oChangedRow) {
                 var iRowIndex = oChangedRow.rowIndex;
                 var oRowData = oChangedRow.rowData;
 
-                oChangedRow.changedFields.forEach(function (oChangedField) {
-                    var sFieldName = oChangedField.name;
+                aColumns.forEach(function (oCol) {
+                    var sFieldName = oCol.name;
                     var sCellKey = iRowIndex + "_" + sFieldName;
                     var oCellMeta = that._oCellKeys[sCellKey] || {};
-                    var oFieldMeta = that._oFieldMetadata[sFieldName] || {};
 
-                    if (!oFieldsMap[sFieldName]) {
-                        oFieldsMap[sFieldName] = {
-                            name: sFieldName,
-                            tablename: oFieldMeta.tabname || oCellMeta.tabname || "PAL",
-                            description: "",
-                            position: oFieldMeta.position || oCellMeta.position || "",
-                            key: "",
-                            type: "C",
-                            length: "",
-                            fec_ini: that._toODataDate(sFecIni) || "",
-                            fec_fin: "",
-                            DataSetAsoc: []
-                        };
-                    }
+                    var sCurrentValue = oRowData[sFieldName] || "";
+                    var sOldValue = oRowData[sFieldName + "_old"] || sCurrentValue;
 
                     var oDataItem = {
                         key: oCellMeta.key || "",
                         tabname: oCellMeta.tabname || "PAL",
                         name: sFieldName,
-                        Value: oChangedField.newValue || "",
-                        Value_old: oChangedField.oldValue || "",
+                        Value: sCurrentValue,
+                        Value_old: sOldValue,
                         position: oCellMeta.position || "",
                         prodallocationtimeseriesuuid: oCellMeta.prodallocationtimeseriesuuid || oRowData.prodallocationtimeseriesuuid || "",
                         productallocationobject: oCellMeta.productallocationobject || oRowData.productallocationobject || "",
@@ -427,7 +434,7 @@ sap.ui.define([
 
             var aPayload = [];
             for (var sKey in oFieldsMap) {
-                if (oFieldsMap.hasOwnProperty(sKey)) {
+                if (oFieldsMap.hasOwnProperty(sKey) && oFieldsMap[sKey].DataSetAsoc.length > 0) {
                     aPayload.push(oFieldsMap[sKey]);
                 }
             }
