@@ -210,16 +210,15 @@ sap.ui.define([
                 if (bEditable) {
                     oTemplate = new Input({
                         value: "{detailModel>" + oCol.name + "}",
-                        width: "100%",
                         change: that._onFieldChange.bind(that),
                         liveChange: that._onFieldChange.bind(that)
-                    });
+                    }).addStyleClass("sapUiSizeCompact");
                 } else {
                     oTemplate = new Text({ text: "{detailModel>" + oCol.name + "}", wrapping: false });
                 }
 
                 oTable.addColumn(new UIColumn({
-                    width: "auto",
+                    width: "150px",
                     label: new Label({ text: oCol.label, wrapping: false }),
                     template: oTemplate,
                     resizable: true,
