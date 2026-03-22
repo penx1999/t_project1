@@ -186,6 +186,8 @@ sap.ui.define([
             var oTable = this.byId("idDynamicTable");
             if (!oTable) { return; }
 
+            var that = this;
+
             oTable.destroyColumns();
 
             var sColWidth = "150px";
