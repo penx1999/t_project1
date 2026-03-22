@@ -130,6 +130,8 @@ sap.ui.define([
 
                     that._oFieldMetadata = {};
 
+                    that._oCellKeys = {};
+
                     aFields.forEach(function (oField) {
                         var aData = (oField.DataSetAsoc && oField.DataSetAsoc.results) ? oField.DataSetAsoc.results : [];
                         aData.forEach(function (oEntry, iIdx) {
@@ -148,10 +150,22 @@ sap.ui.define([
                             aRows[iIdx][oField.name] = oEntry.Value;
                             aRows[iIdx][oField.name + "_old"] = oEntry.Value_old || oEntry.Value;
 
+                            var sCellKey = iIdx + "_" + oField.name;
+                            that._oCellKeys[sCellKey] = {
+                                key: oEntry.key,
+                                tabname: oEntry.tabname || oField.tablename || "",
+                                position: oField.position || "",
+                                prodallocationtimeseriesuuid: oEntry.prodallocationtimeseriesuuid,
+                                productallocationobject: oEntry.productallocationobject,
+                                CHARCVALUECOMBINATIONUUID: oEntry.CHARCVALUECOMBINATIONUUID,
+                                PRODALLOCPERDSTARTUTCDATETIME: oEntry.PRODALLOCPERDSTARTUTCDATETIME,
+                                PRODALLOCPERIODENDUTCDATETIME: oEntry.PRODALLOCPERIODENDUTCDATETIME
+                            };
+
                             if (!that._oFieldMetadata[oField.name]) {
                                 that._oFieldMetadata[oField.name] = {
-                                    tabname: oEntry.tabname || oField.tabname || "",
-                                    position: oEntry.position || oField.position || ""
+                                    tabname: oEntry.tabname || oField.tablename || "",
+                                    position: oField.position || ""
                                 };
                             }
                         });
@@ -333,21 +347,17 @@ sap.ui.define([
                 return;
             }
 
-            var sProductAllocationObject = oModel.getProperty("/productAllocationObject");
             var sFecIni = oModel.getProperty("/fec_ini");
 
             oModel.setProperty("/busy", true);
             MessageToast.show(oBundle.getText("msgSaving"));
 
             var that = this;
-            var aPromises = [];
+            var aPayloadItems = this._buildPayloadArray(aChangedRows, sFecIni);
 
-            aChangedRows.forEach(function (oChangedRow) {
-                var oPayload = that._buildPayload(sProductAllocationObject, oChangedRow.rowData, oChangedRow.originalData, sFecIni);
-                aPromises.push(that._executePut(oPayload));
-            });
+            console.log("PUT Payload Array:", JSON.stringify(aPayloadItems, null, 2));
 
-            Promise.all(aPromises)
+            this._executePut(aPayloadItems)
                 .then(function () {
                     oModel.setProperty("/busy", false);
                     oModel.setProperty("/hasChanges", false);
@@ -365,54 +375,73 @@ sap.ui.define([
                 });
         },
 
-        _buildPayload: function (sKey, oRowData, oOriginalData, sFecIni) {
-            var oModel = this.getView().getModel("detailModel");
-            var aColumns = oModel.getProperty("/columns");
-            var oPayload = {
-                key: sKey,
-                productallocationobject: sKey,
-                prodallocationtimeseriesuuid: oRowData.prodallocationtimeseriesuuid || "",
-                CHARCVALUECOMBINATIONUUID: oRowData.CHARCVALUECOMBINATIONUUID || "",
-                PRODALLOCPERDSTARTUTCDATETIME: oRowData.PRODALLOCPERDSTARTUTCDATETIME || "",
-                PRODALLOCPERIODENDUTCDATETIME: oRowData.PRODALLOCPERIODENDUTCDATETIME || "",
-                fec_ini: this._toODataDate(sFecIni)
-            };
+        _buildPayloadArray: function (aChangedRows, sFecIni) {
+            var that = this;
+            var aPayloadItems = [];
 
-            aColumns.forEach(function (oCol) {
-                var sFieldName = oCol.name;
-                oPayload[sFieldName] = oRowData[sFieldName] !== undefined ? oRowData[sFieldName] : "";
-                oPayload[sFieldName + "_old"] = oOriginalData[sFieldName] !== undefined ? oOriginalData[sFieldName] : "";
-            });
+            aChangedRows.forEach(function (oChangedRow) {
+                var iRowIndex = oChangedRow.rowIndex;
+                var oRowData = oChangedRow.rowData;
+                var oOriginalData = oChangedRow.originalData;
 
-            return oPayload;
-        },
+                oChangedRow.changedFields.forEach(function (oChangedField) {
+                    var sFieldName = oChangedField.name;
+                    var sCellKey = iRowIndex + "_" + sFieldName;
+                    var oCellMeta = that._oCellKeys[sCellKey] || {};
 
-        _executePut: function (oPayload) {
-            var oODataModel = this.getOwnerComponent().getModel();
-            var sServiceUrl = oODataModel.sServiceUrl;
-            var sPath = sServiceUrl + "/DynamicDataSet(key='" + encodeURIComponent(oPayload.key) + "')";
-            var sToken = oODataModel.getSecurityToken();
+                    var oItem = {
+                        key: oCellMeta.key || "",
+                        tabname: oCellMeta.tabname || "",
+                        name: sFieldName,
+                        Value: oChangedField.newValue || "",
+                        Value_old: oChangedField.oldValue || "",
+                        position: oCellMeta.position || "",
+                        prodallocationtimeseriesuuid: oCellMeta.prodallocationtimeseriesuuid || oRowData.prodallocationtimeseriesuuid || "",
+                        productallocationobject: oCellMeta.productallocationobject || "",
+                        CHARCVALUECOMBINATIONUUID: oCellMeta.CHARCVALUECOMBINATIONUUID || oRowData.CHARCVALUECOMBINATIONUUID || "",
+                        PRODALLOCPERDSTARTUTCDATETIME: oCellMeta.PRODALLOCPERDSTARTUTCDATETIME || oRowData.PRODALLOCPERDSTARTUTCDATETIME || "",
+                        PRODALLOCPERIODENDUTCDATETIME: oCellMeta.PRODALLOCPERIODENDUTCDATETIME || oRowData.PRODALLOCPERIODENDUTCDATETIME || "",
+                        fec_ini: that._toODataDate(sFecIni) || ""
+                    };
 
-            console.log("PUT Payload:", JSON.stringify(oPayload, null, 2));
-            console.log("PUT URL:", sPath);
-
-            return new Promise(function (resolve, reject) {
-                jQuery.ajax({
-                    url: sPath,
-                    type: "PUT",
-                    contentType: "application/json",
-                    data: JSON.stringify(oPayload),
-                    headers: {
-                        "X-CSRF-Token": sToken
-                    },
-                    success: function () {
-                        resolve();
-                    },
-                    error: function (oError) {
-                        reject(oError);
-                    }
+                    aPayloadItems.push(oItem);
                 });
             });
+
+            return aPayloadItems;
+        },
+
+        _executePut: function (aPayloadItems) {
+            var oODataModel = this.getOwnerComponent().getModel();
+            var sServiceUrl = oODataModel.sServiceUrl;
+            var sToken = oODataModel.getSecurityToken();
+
+            var aPromises = aPayloadItems.map(function (oItem) {
+                var sPath = sServiceUrl + "/DynamicDataSet('" + encodeURIComponent(oItem.key) + "')";
+
+                console.log("PUT URL:", sPath);
+                console.log("PUT Item:", JSON.stringify(oItem, null, 2));
+
+                return new Promise(function (resolve, reject) {
+                    jQuery.ajax({
+                        url: sPath,
+                        type: "PUT",
+                        contentType: "application/json",
+                        data: JSON.stringify(oItem),
+                        headers: {
+                            "X-CSRF-Token": sToken
+                        },
+                        success: function () {
+                            resolve();
+                        },
+                        error: function (oError) {
+                            reject(oError);
+                        }
+                    });
+                });
+            });
+
+            return Promise.all(aPromises);
         }
 
     });
