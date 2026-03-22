@@ -377,55 +377,78 @@ sap.ui.define([
 
         _buildPayloadArray: function (aChangedRows, sFecIni) {
             var that = this;
-            var aPayloadItems = [];
+            var oFieldsMap = {};
 
             aChangedRows.forEach(function (oChangedRow) {
                 var iRowIndex = oChangedRow.rowIndex;
                 var oRowData = oChangedRow.rowData;
-                var oOriginalData = oChangedRow.originalData;
 
                 oChangedRow.changedFields.forEach(function (oChangedField) {
                     var sFieldName = oChangedField.name;
                     var sCellKey = iRowIndex + "_" + sFieldName;
                     var oCellMeta = that._oCellKeys[sCellKey] || {};
+                    var oFieldMeta = that._oFieldMetadata[sFieldName] || {};
 
-                    var oItem = {
+                    if (!oFieldsMap[sFieldName]) {
+                        oFieldsMap[sFieldName] = {
+                            name: sFieldName,
+                            tablename: oFieldMeta.tabname || oCellMeta.tabname || "PAL",
+                            description: "",
+                            position: oFieldMeta.position || oCellMeta.position || "",
+                            key: "",
+                            type: "C",
+                            length: "",
+                            fec_ini: that._toODataDate(sFecIni) || "",
+                            fec_fin: "",
+                            DataSetAsoc: []
+                        };
+                    }
+
+                    var oDataItem = {
                         key: oCellMeta.key || "",
-                        tabname: oCellMeta.tabname || "",
+                        tabname: oCellMeta.tabname || "PAL",
                         name: sFieldName,
                         Value: oChangedField.newValue || "",
                         Value_old: oChangedField.oldValue || "",
                         position: oCellMeta.position || "",
                         prodallocationtimeseriesuuid: oCellMeta.prodallocationtimeseriesuuid || oRowData.prodallocationtimeseriesuuid || "",
-                        productallocationobject: oCellMeta.productallocationobject || "",
+                        productallocationobject: oCellMeta.productallocationobject || oRowData.productallocationobject || "",
                         CHARCVALUECOMBINATIONUUID: oCellMeta.CHARCVALUECOMBINATIONUUID || oRowData.CHARCVALUECOMBINATIONUUID || "",
                         PRODALLOCPERDSTARTUTCDATETIME: oCellMeta.PRODALLOCPERDSTARTUTCDATETIME || oRowData.PRODALLOCPERDSTARTUTCDATETIME || "",
                         PRODALLOCPERIODENDUTCDATETIME: oCellMeta.PRODALLOCPERIODENDUTCDATETIME || oRowData.PRODALLOCPERIODENDUTCDATETIME || "",
                         fec_ini: that._toODataDate(sFecIni) || ""
                     };
 
-                    aPayloadItems.push(oItem);
+                    oFieldsMap[sFieldName].DataSetAsoc.push(oDataItem);
                 });
             });
 
-            return aPayloadItems;
+            var aPayload = [];
+            for (var sKey in oFieldsMap) {
+                if (oFieldsMap.hasOwnProperty(sKey)) {
+                    aPayload.push(oFieldsMap[sKey]);
+                }
+            }
+
+            return aPayload;
         },
 
-        _executePut: function (aPayloadItems) {
+        _executePut: function (aPayload) {
             var oODataModel = this.getOwnerComponent().getModel();
             var sServiceUrl = oODataModel.sServiceUrl;
             var sToken = oODataModel.getSecurityToken();
-            var sPath = sServiceUrl + "/DynamicDataSet";
+            var sProductAllocationObject = this.getView().getModel("detailModel").getProperty("/productAllocationObject") || "TEST FR MAGG CET";
+            var sPath = sServiceUrl + "/DynamicFieldSet?$expand=DataSetAsoc&$filter=tablename%20eq%20%27" + encodeURIComponent(sProductAllocationObject) + "%27";
 
             console.log("PUT URL:", sPath);
-            console.log("PUT Payload:", JSON.stringify(aPayloadItems, null, 2));
+            console.log("PUT Payload:", JSON.stringify(aPayload, null, 2));
 
             return new Promise(function (resolve, reject) {
                 jQuery.ajax({
                     url: sPath,
                     type: "PUT",
                     contentType: "application/json",
-                    data: JSON.stringify(aPayloadItems),
+                    data: JSON.stringify(aPayload),
                     headers: {
                         "X-CSRF-Token": sToken
                     },
