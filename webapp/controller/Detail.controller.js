@@ -147,8 +147,10 @@ sap.ui.define([
                             if (!aRows[iIdx].prodallocationtimeseriesuuid) {
                                 aRows[iIdx].prodallocationtimeseriesuuid = oEntry.prodallocationtimeseriesuuid;
                             }
-                            aRows[iIdx][oField.name] = oEntry.Value;
-                            aRows[iIdx][oField.name + "_old"] = oEntry.Value_old || oEntry.Value;
+                            var sValue = (oEntry.Value || "").toString().trim();
+                            var sValueOld = (oEntry.Value_old || oEntry.Value || "").toString().trim();
+                            aRows[iIdx][oField.name] = sValue;
+                            aRows[iIdx][oField.name + "_old"] = sValueOld;
 
                             var sCellKey = iIdx + "_" + oField.name;
                             that._oCellKeys[sCellKey] = {
