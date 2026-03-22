@@ -447,7 +447,7 @@ sap.ui.define([
             var sServiceUrl = oODataModel.sServiceUrl;
             var sToken = oODataModel.getSecurityToken();
             var sProductAllocationObject = this.getView().getModel("detailModel").getProperty("/productAllocationObject") || "TEST FR MAGG CET";
-            var sPath = sServiceUrl + "/DynamicFieldSet?$expand=DataSetAsoc&$filter=tablename%20eq%20%27" + encodeURIComponent(sProductAllocationObject) + "%27";
+            var sPath = sServiceUrl + "/DynamicFieldSet('.')";
 
             console.log("PUT URL:", sPath);
             console.log("PUT Payload:", JSON.stringify(aPayload, null, 2));
