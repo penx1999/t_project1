@@ -459,7 +459,7 @@ sap.ui.define([
                     url: sPath,
                     type: "PUT",
                     contentType: "application/json",
-                    data: JSON.stringify({ d: { results: aPayload } }),
+                    data: JSON.stringify(aPayload),
                     headers: {
                         "X-CSRF-Token": sToken,
                         "Accept": "application/json"
