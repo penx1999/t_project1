@@ -444,31 +444,35 @@ sap.ui.define([
 
         _executePut: function (aPayload) {
             var oODataModel = this.getOwnerComponent().getModel();
-            var sServiceUrl = oODataModel.sServiceUrl;
-            var sToken = oODataModel.getSecurityToken();
-            var sProductAllocationObject = this.getView().getModel("detailModel").getProperty("/productAllocationObject") || "TEST FR MAGG CET";
-            var sPath = sServiceUrl + "/DynamicFieldSet?$expand=DataSetAsoc&$filter=tablename%20eq%20%27" + encodeURIComponent(sProductAllocationObject) + "%27";
+            var that = this;
 
-            console.log("PUT URL:", sPath);
             console.log("PUT Payload:", JSON.stringify(aPayload, null, 2));
 
-            return new Promise(function (resolve, reject) {
-                jQuery.ajax({
-                    url: sPath,
-                    type: "PUT",
-                    contentType: "application/json",
-                    data: JSON.stringify(aPayload),
-                    headers: {
-                        "X-CSRF-Token": sToken
-                    },
-                    success: function () {
-                        resolve();
-                    },
-                    error: function (oError) {
-                        reject(oError);
+            var aPromises = [];
+
+            aPayload.forEach(function (oFieldSet) {
+                var aDataSetAsoc = oFieldSet.DataSetAsoc || [];
+                aDataSetAsoc.forEach(function (oDataItem) {
+                    if (oDataItem.key) {
+                        var sPath = "/DynamicDataSet('" + oDataItem.key + "')";
+                        console.log("PUT Path:", sPath, "Data:", oDataItem);
+
+                        var oPromise = new Promise(function (resolve, reject) {
+                            oODataModel.update(sPath, oDataItem, {
+                                success: function () {
+                                    resolve();
+                                },
+                                error: function (oError) {
+                                    reject(oError);
+                                }
+                            });
+                        });
+                        aPromises.push(oPromise);
                     }
                 });
             });
+
+            return Promise.all(aPromises);
         }
 
     });
