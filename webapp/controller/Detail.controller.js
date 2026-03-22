@@ -458,11 +458,13 @@ sap.ui.define([
                 jQuery.ajax({
                     url: sPath,
                     type: "PUT",
-                    contentType: "application/json",
+                    contentType: "application/json;charset=utf-8",
                     data: JSON.stringify(aPayload),
                     headers: {
                         "X-CSRF-Token": sToken,
-                        "Accept": "application/json"
+                        "Accept": "application/json",
+                        "DataServiceVersion": "2.0",
+                        "MaxDataServiceVersion": "2.0"
                     },
                     success: function () {
                         resolve();
