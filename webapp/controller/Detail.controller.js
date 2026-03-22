@@ -210,6 +210,7 @@ sap.ui.define([
                 if (bEditable) {
                     oTemplate = new Input({
                         value: "{detailModel>" + oCol.name + "}",
+                        width: "100%",
                         change: that._onFieldChange.bind(that),
                         liveChange: that._onFieldChange.bind(that)
                     });
@@ -218,7 +219,7 @@ sap.ui.define([
                 }
 
                 oTable.addColumn(new UIColumn({
-                    width: sColWidth,
+                    width: "auto",
                     label: new Label({ text: oCol.label, wrapping: false }),
                     template: oTemplate,
                     resizable: true,
@@ -343,10 +344,8 @@ sap.ui.define([
             var aPromises = [];
 
             aChangedRows.forEach(function (oChangedRow) {
-                oChangedRow.changedFields.forEach(function (oChangedField) {
-                    var oPayload = that._buildPayload(sProductAllocationObject, oChangedRow.rowData, oChangedField, sFecIni);
-                    aPromises.push(that._executePut(oPayload));
-                });
+                var oPayload = that._buildPayload(sProductAllocationObject, oChangedRow.rowData, oChangedRow.originalData, sFecIni);
+                aPromises.push(that._executePut(oPayload));
             });
 
             Promise.all(aPromises)
@@ -367,23 +366,26 @@ sap.ui.define([
                 });
         },
 
-        _buildPayload: function (sKey, oRowData, oChangedField, sFecIni) {
-            var oMetadata = this._oFieldMetadata[oChangedField.name] || {};
-
-            return {
+        _buildPayload: function (sKey, oRowData, oOriginalData, sFecIni) {
+            var oModel = this.getView().getModel("detailModel");
+            var aColumns = oModel.getProperty("/columns");
+            var oPayload = {
                 key: sKey,
-                tabname: oMetadata.tabname || "",
-                name: oChangedField.name,
-                Value: oChangedField.newValue,
-                Value_old: oChangedField.oldValue,
-                position: oMetadata.position || "",
-                prodallocationtimeseriesuuid: oRowData.prodallocationtimeseriesuuid || "",
                 productallocationobject: sKey,
+                prodallocationtimeseriesuuid: oRowData.prodallocationtimeseriesuuid || "",
                 CHARCVALUECOMBINATIONUUID: oRowData.CHARCVALUECOMBINATIONUUID || "",
                 PRODALLOCPERDSTARTUTCDATETIME: oRowData.PRODALLOCPERDSTARTUTCDATETIME || "",
                 PRODALLOCPERIODENDUTCDATETIME: oRowData.PRODALLOCPERIODENDUTCDATETIME || "",
                 fec_ini: this._toODataDate(sFecIni)
             };
+
+            aColumns.forEach(function (oCol) {
+                var sFieldName = oCol.name;
+                oPayload[sFieldName] = oRowData[sFieldName] !== undefined ? oRowData[sFieldName] : "";
+                oPayload[sFieldName + "_old"] = oOriginalData[sFieldName] !== undefined ? oOriginalData[sFieldName] : "";
+            });
+
+            return oPayload;
         },
 
         _executePut: function (oPayload) {
