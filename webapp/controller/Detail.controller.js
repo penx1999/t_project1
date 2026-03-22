@@ -415,33 +415,34 @@ sap.ui.define([
             var oODataModel = this.getOwnerComponent().getModel();
             var sServiceUrl = oODataModel.sServiceUrl;
             var sToken = oODataModel.getSecurityToken();
+            var sPath = sServiceUrl + "/DynamicDataSet";
 
-            var aPromises = aPayloadItems.map(function (oItem) {
-                var sPath = sServiceUrl + "/DynamicDataSet('" + encodeURIComponent(oItem.key) + "')";
+            var oPayload = {
+                d: {
+                    results: aPayloadItems
+                }
+            };
 
-                console.log("PUT URL:", sPath);
-                console.log("PUT Item:", JSON.stringify(oItem, null, 2));
+            console.log("PUT URL:", sPath);
+            console.log("PUT Payload:", JSON.stringify(oPayload, null, 2));
 
-                return new Promise(function (resolve, reject) {
-                    jQuery.ajax({
-                        url: sPath,
-                        type: "PUT",
-                        contentType: "application/json",
-                        data: JSON.stringify(oItem),
-                        headers: {
-                            "X-CSRF-Token": sToken
-                        },
-                        success: function () {
-                            resolve();
-                        },
-                        error: function (oError) {
-                            reject(oError);
-                        }
-                    });
+            return new Promise(function (resolve, reject) {
+                jQuery.ajax({
+                    url: sPath,
+                    type: "PUT",
+                    contentType: "application/json",
+                    data: JSON.stringify(oPayload),
+                    headers: {
+                        "X-CSRF-Token": sToken
+                    },
+                    success: function () {
+                        resolve();
+                    },
+                    error: function (oError) {
+                        reject(oError);
+                    }
                 });
             });
-
-            return Promise.all(aPromises);
         }
 
     });
