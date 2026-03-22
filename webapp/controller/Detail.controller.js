@@ -388,13 +388,16 @@ sap.ui.define([
         },
 
         _executePut: function (oPayload) {
-            var that = this;
             var oODataModel = this.getOwnerComponent().getModel();
-            var sPath = "/DynamicDataSet(key='" + encodeURIComponent(oPayload.key) + "')";
+            var sServiceUrl = oODataModel.sServiceUrl;
+            var sPath = sServiceUrl + "/DynamicDataSet(key='" + encodeURIComponent(oPayload.key) + "')";
 
             return new Promise(function (resolve, reject) {
-                oODataModel.update(sPath, oPayload, {
-                    method: "PUT",
+                jQuery.ajax({
+                    url: sPath,
+                    type: "PUT",
+                    contentType: "application/json",
+                    data: JSON.stringify(oPayload),
                     success: function () {
                         resolve();
                     },
