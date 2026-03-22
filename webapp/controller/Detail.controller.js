@@ -394,6 +394,7 @@ sap.ui.define([
 
             return new Promise(function (resolve, reject) {
                 oODataModel.update(sPath, oPayload, {
+                    method: "PUT",
                     success: function () {
                         resolve();
                     },
