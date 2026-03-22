@@ -391,6 +391,7 @@ sap.ui.define([
             var oODataModel = this.getOwnerComponent().getModel();
             var sServiceUrl = oODataModel.sServiceUrl;
             var sPath = sServiceUrl + "/DynamicDataSet(key='" + encodeURIComponent(oPayload.key) + "')";
+            var sToken = oODataModel.getSecurityToken();
 
             return new Promise(function (resolve, reject) {
                 jQuery.ajax({
@@ -398,6 +399,9 @@ sap.ui.define([
                     type: "PUT",
                     contentType: "application/json",
                     data: JSON.stringify(oPayload),
+                    headers: {
+                        "X-CSRF-Token": sToken
+                    },
                     success: function () {
                         resolve();
                     },
