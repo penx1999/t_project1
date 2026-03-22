@@ -18,6 +18,15 @@
                 <contentMiddle>
                     <Title text="{detailModel>/productAllocationObject}" level="H4"/>
                 </contentMiddle>
+                <contentRight>
+                    <Button
+                        id="idSaveButton"
+                        text="{i18n>saveButton}"
+                        type="Emphasized"
+                        icon="sap-icon://save"
+                        press=".onSave"
+                        enabled="{detailModel>/hasChanges}"/>
+                </contentRight>
             </Bar>
         </customHeader>
 

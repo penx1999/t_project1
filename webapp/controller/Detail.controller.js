@@ -5,11 +5,12 @@ sap.ui.define([
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
     "sap/m/MessageBox",
+    "sap/m/MessageToast",
     "sap/m/Text",
     "sap/m/Input",
     "sap/m/Label",
     "sap/ui/table/Column"
-], function (Controller, History, JSONModel, Filter, FilterOperator, MessageBox, Text, Input, Label, UIColumn) {
+], function (Controller, History, JSONModel, Filter, FilterOperator, MessageBox, MessageToast, Text, Input, Label, UIColumn) {
     "use strict";
 
     var EDITABLE_FIELDS = [
@@ -21,6 +22,9 @@ sap.ui.define([
     ];
 
     return Controller.extend("t_project1.controller.Detail", {
+
+        _oOriginalData: null,
+        _oFieldMetadata: null,
 
         onInit: function () {
             var oToday = new Date();
@@ -34,6 +38,7 @@ sap.ui.define([
                 rows: [],
                 rowCount: 5,
                 busy: false,
+                hasChanges: false,
                 fec_ini: this._formatDateValue(oToday),
                 fec_fin: this._formatDateValue(oNextYear)
             });
@@ -123,21 +128,44 @@ sap.ui.define([
                     var aRows = [];
                     for (var i = 0; i < iMaxRows; i++) { aRows.push({}); }
 
+                    that._oFieldMetadata = {};
+
                     aFields.forEach(function (oField) {
                         var aData = (oField.DataSetAsoc && oField.DataSetAsoc.results) ? oField.DataSetAsoc.results : [];
                         aData.forEach(function (oEntry, iIdx) {
                             if (!aRows[iIdx].CHARCVALUECOMBINATIONUUID) {
                                 aRows[iIdx].CHARCVALUECOMBINATIONUUID = oEntry.CHARCVALUECOMBINATIONUUID;
                             }
+                            if (!aRows[iIdx].PRODALLOCPERDSTARTUTCDATETIME) {
+                                aRows[iIdx].PRODALLOCPERDSTARTUTCDATETIME = oEntry.PRODALLOCPERDSTARTUTCDATETIME;
+                            }
+                            if (!aRows[iIdx].PRODALLOCPERIODENDUTCDATETIME) {
+                                aRows[iIdx].PRODALLOCPERIODENDUTCDATETIME = oEntry.PRODALLOCPERIODENDUTCDATETIME;
+                            }
+                            if (!aRows[iIdx].prodallocationtimeseriesuuid) {
+                                aRows[iIdx].prodallocationtimeseriesuuid = oEntry.prodallocationtimeseriesuuid;
+                            }
                             aRows[iIdx][oField.name] = oEntry.Value;
+                            aRows[iIdx][oField.name + "_old"] = oEntry.Value_old || oEntry.Value;
+
+                            if (!that._oFieldMetadata[oField.name]) {
+                                that._oFieldMetadata[oField.name] = {
+                                    tabname: oEntry.tabname || oField.tabname || "",
+                                    position: oEntry.position || oField.position || ""
+                                };
+                            }
                         });
                     });
+
+                    that._oOriginalData = JSON.parse(JSON.stringify(aRows));
+
                     var sTitle = oBundle.getText("tableDataTitle") + " (" + aRows.length + ")";
 
                     oModel.setProperty("/columns", aColumns);
                     oModel.setProperty("/rows", aRows);
                     oModel.setProperty("/rowCount", aRows.length || 1);
                     oModel.setProperty("/tableTitle", sTitle);
+                    oModel.setProperty("/hasChanges", false);
                     oModel.setProperty("/busy", false);
 
                     that._buildTable(aColumns);
@@ -176,9 +204,16 @@ sap.ui.define([
             aColumns.forEach(function (oCol) {
                 var bEditable = EDITABLE_FIELDS.indexOf(oCol.name.toUpperCase()) !== -1 ||
                                 EDITABLE_FIELDS.indexOf(oCol.name) !== -1;
-                var oTemplate = bEditable
-                    ? new Input({ value: "{detailModel>" + oCol.name + "}", width: "100%" })
-                    : new Text({ text: "{detailModel>" + oCol.name + "}", wrapping: false });
+                var oTemplate;
+                if (bEditable) {
+                    oTemplate = new Input({
+                        value: "{detailModel>" + oCol.name + "}",
+                        width: "100%",
+                        liveChange: that._onFieldChange.bind(that)
+                    });
+                } else {
+                    oTemplate = new Text({ text: "{detailModel>" + oCol.name + "}", wrapping: false });
+                }
 
                 oTable.addColumn(new UIColumn({
                     width: sColWidth,
@@ -201,6 +236,152 @@ sap.ui.define([
             } else {
                 this.getOwnerComponent().getRouter().navTo("RouteListReport", {}, true);
             }
+        },
+
+        _onFieldChange: function () {
+            var oModel = this.getView().getModel("detailModel");
+            var aRows = oModel.getProperty("/rows");
+            var bHasChanges = this._detectChanges(aRows);
+            oModel.setProperty("/hasChanges", bHasChanges);
+        },
+
+        _detectChanges: function (aRows) {
+            if (!this._oOriginalData || !aRows) {
+                return false;
+            }
+
+            for (var i = 0; i < aRows.length; i++) {
+                var oRow = aRows[i];
+                var oOriginal = this._oOriginalData[i];
+                if (!oOriginal) { continue; }
+
+                for (var j = 0; j < EDITABLE_FIELDS.length; j++) {
+                    var sField = EDITABLE_FIELDS[j];
+                    if (oRow[sField] !== oOriginal[sField]) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        },
+
+        _getChangedRows: function () {
+            var oModel = this.getView().getModel("detailModel");
+            var aRows = oModel.getProperty("/rows");
+            var aChangedRows = [];
+
+            if (!this._oOriginalData || !aRows) {
+                return aChangedRows;
+            }
+
+            for (var i = 0; i < aRows.length; i++) {
+                var oRow = aRows[i];
+                var oOriginal = this._oOriginalData[i];
+                if (!oOriginal) { continue; }
+
+                var aChangedFields = [];
+                for (var j = 0; j < EDITABLE_FIELDS.length; j++) {
+                    var sField = EDITABLE_FIELDS[j];
+                    if (oRow[sField] !== oOriginal[sField]) {
+                        aChangedFields.push({
+                            name: sField,
+                            newValue: oRow[sField],
+                            oldValue: oOriginal[sField]
+                        });
+                    }
+                }
+
+                if (aChangedFields.length > 0) {
+                    aChangedRows.push({
+                        rowIndex: i,
+                        rowData: oRow,
+                        originalData: oOriginal,
+                        changedFields: aChangedFields
+                    });
+                }
+            }
+
+            return aChangedRows;
+        },
+
+        onSave: function () {
+            var oModel = this.getView().getModel("detailModel");
+            var oBundle = this.getView().getModel("i18n").getResourceBundle();
+            var aChangedRows = this._getChangedRows();
+
+            if (aChangedRows.length === 0) {
+                MessageToast.show(oBundle.getText("msgNoChanges"));
+                return;
+            }
+
+            var sProductAllocationObject = oModel.getProperty("/productAllocationObject");
+            var sFecIni = oModel.getProperty("/fec_ini");
+
+            oModel.setProperty("/busy", true);
+            MessageToast.show(oBundle.getText("msgSaving"));
+
+            var that = this;
+            var aPromises = [];
+
+            aChangedRows.forEach(function (oChangedRow) {
+                oChangedRow.changedFields.forEach(function (oChangedField) {
+                    var oPayload = that._buildPayload(sProductAllocationObject, oChangedRow.rowData, oChangedField, sFecIni);
+                    aPromises.push(that._executePut(oPayload));
+                });
+            });
+
+            Promise.all(aPromises)
+                .then(function () {
+                    oModel.setProperty("/busy", false);
+                    oModel.setProperty("/hasChanges", false);
+                    that._oOriginalData = JSON.parse(JSON.stringify(oModel.getProperty("/rows")));
+                    MessageToast.show(oBundle.getText("msgSaveSuccess"));
+                })
+                .catch(function (oError) {
+                    oModel.setProperty("/busy", false);
+                    var sMsg = oBundle.getText("msgSaveError");
+                    try {
+                        var oResp = JSON.parse(oError.responseText);
+                        sMsg = oResp.error.message.value || sMsg;
+                    } catch (e) {}
+                    MessageBox.error(sMsg);
+                });
+        },
+
+        _buildPayload: function (sKey, oRowData, oChangedField, sFecIni) {
+            var oMetadata = this._oFieldMetadata[oChangedField.name] || {};
+
+            return {
+                key: sKey,
+                tabname: oMetadata.tabname || "",
+                name: oChangedField.name,
+                Value: oChangedField.newValue,
+                Value_old: oChangedField.oldValue,
+                position: oMetadata.position || "",
+                prodallocationtimeseriesuuid: oRowData.prodallocationtimeseriesuuid || "",
+                productallocationobject: sKey,
+                CHARCVALUECOMBINATIONUUID: oRowData.CHARCVALUECOMBINATIONUUID || "",
+                PRODALLOCPERDSTARTUTCDATETIME: oRowData.PRODALLOCPERDSTARTUTCDATETIME || "",
+                PRODALLOCPERIODENDUTCDATETIME: oRowData.PRODALLOCPERIODENDUTCDATETIME || "",
+                fec_ini: this._toODataDate(sFecIni)
+            };
+        },
+
+        _executePut: function (oPayload) {
+            var that = this;
+            var oODataModel = this.getOwnerComponent().getModel();
+            var sPath = "/DynamicDataSet(key='" + encodeURIComponent(oPayload.key) + "')";
+
+            return new Promise(function (resolve, reject) {
+                oODataModel.update(sPath, oPayload, {
+                    success: function () {
+                        resolve();
+                    },
+                    error: function (oError) {
+                        reject(oError);
+                    }
+                });
+            });
         }
 
     });
