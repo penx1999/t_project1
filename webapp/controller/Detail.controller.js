@@ -210,7 +210,6 @@ sap.ui.define([
                 if (bEditable) {
                     oTemplate = new Input({
                         value: "{detailModel>" + oCol.name + "}",
-                        width: "100%",
                         change: that._onFieldChange.bind(that),
                         liveChange: that._onFieldChange.bind(that)
                     });
@@ -392,6 +391,9 @@ sap.ui.define([
             var sServiceUrl = oODataModel.sServiceUrl;
             var sPath = sServiceUrl + "/DynamicDataSet(key='" + encodeURIComponent(oPayload.key) + "')";
             var sToken = oODataModel.getSecurityToken();
+
+            console.log("PUT Payload:", JSON.stringify(oPayload, null, 2));
+            console.log("PUT URL:", sPath);
 
             return new Promise(function (resolve, reject) {
                 jQuery.ajax({
