@@ -459,6 +459,8 @@ sap.ui.define([
 
                         var oPromise = new Promise(function (resolve, reject) {
                             oODataModel.update(sPath, oDataItem, {
+                                method: "PUT",
+                                merge: false,
                                 success: function () {
                                     resolve();
                                 },
