@@ -401,6 +401,31 @@ sap.ui.define([
             this._oOriginalData.push(JSON.parse(JSON.stringify(oNewRow)));
         },
 
+        onChangeStatus: function (oEvent) {
+            var oTable = this.byId("idDynamicTable");
+            var aSelectedIndices = oTable.getSelectedIndices();
+
+            if (aSelectedIndices.length === 0) {
+                MessageToast.show("Seleccione una fila para cambiar el estado");
+                return;
+            }
+
+            if (aSelectedIndices.length > 1) {
+                MessageToast.show("Solo puede cambiar el estado de una fila a la vez");
+                return;
+            }
+
+            var sNewStatus = oEvent.getParameter("item").getText();
+            var oModel = this.getView().getModel("detailModel");
+            var iSelectedIndex = aSelectedIndices[0];
+
+            oModel.setProperty("/rows/" + iSelectedIndex + "/PRODALLOCATIONACTIVATIONSTATUS", sNewStatus);
+
+            oTable.clearSelection();
+
+            oModel.setProperty("/hasChanges", true);
+        },
+
         _onFieldChange: function (oEvent) {
             jQuery.sap.log.info("Detail._onFieldChange triggered");
             var oModel = this.getView().getModel("detailModel");
