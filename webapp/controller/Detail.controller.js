@@ -358,8 +358,6 @@ sap.ui.define([
             oTable.clearSelection();
 
             oModel.setProperty("/hasChanges", true);
-
-            MessageToast.show(aSelectedIndices.length + " fila(s) eliminada(s)");
         },
 
         onCopyRow: function () {
@@ -401,8 +399,6 @@ sap.ui.define([
             oModel.setProperty("/hasChanges", true);
 
             this._oOriginalData.push(JSON.parse(JSON.stringify(oNewRow)));
-
-            MessageToast.show("Fila copiada");
         },
 
         _onFieldChange: function (oEvent) {
