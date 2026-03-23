@@ -415,7 +415,7 @@ sap.ui.define([
                 return;
             }
 
-            var sNewStatus = oEvent.getParameter("item").getText();
+            var sNewStatus = oEvent.getSource().getText();
             var oModel = this.getView().getModel("detailModel");
             var iSelectedIndex = aSelectedIndices[0];
 
