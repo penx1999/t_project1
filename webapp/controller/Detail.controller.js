@@ -328,6 +328,40 @@ sap.ui.define([
             this._oOriginalData.push(JSON.parse(JSON.stringify(oNewRow)));
         },
 
+        onDeleteRows: function () {
+            var oTable = this.byId("idDynamicTable");
+            var aSelectedIndices = oTable.getSelectedIndices();
+
+            if (aSelectedIndices.length === 0) {
+                MessageToast.show("Seleccione al menos una fila para eliminar");
+                return;
+            }
+
+            var oModel = this.getView().getModel("detailModel");
+            var aRows = oModel.getProperty("/rows") || [];
+
+            aSelectedIndices.sort(function (a, b) { return b - a; });
+
+            for (var i = 0; i < aSelectedIndices.length; i++) {
+                var iIndex = aSelectedIndices[i];
+                aRows.splice(iIndex, 1);
+                if (this._oOriginalData && this._oOriginalData[iIndex]) {
+                    this._oOriginalData.splice(iIndex, 1);
+                }
+            }
+
+            oModel.setProperty("/rows", aRows);
+
+            var iNewRowCount = Math.max(aRows.length, 5);
+            oModel.setProperty("/rowCount", Math.min(iNewRowCount, 15));
+
+            oTable.clearSelection();
+
+            oModel.setProperty("/hasChanges", true);
+
+            MessageToast.show(aSelectedIndices.length + " fila(s) eliminada(s)");
+        },
+
         _onFieldChange: function (oEvent) {
             jQuery.sap.log.info("Detail._onFieldChange triggered");
             var oModel = this.getView().getModel("detailModel");

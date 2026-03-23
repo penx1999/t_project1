@@ -81,7 +81,7 @@
                         alternateRowColors="true"
                         visibleRowCountMode="Fixed"
                         visibleRowCount="{detailModel>/rowCount}"
-                        selectionMode="None"
+                        selectionMode="MultiToggle"
                         columnHeaderHeight="32"
                         width="100%"
                         class="sapUiSmallMarginBottom">
@@ -94,6 +94,12 @@
                                     icon="sap-icon://add"
                                     type="Transparent"
                                     press=".onAddNewRow"/>
+                                <Button
+                                    id="idDeleteRowButton"
+                                    text="{i18n>deleteButton}"
+                                    icon="sap-icon://delete"
+                                    type="Transparent"
+                                    press=".onDeleteRows"/>
                             </OverflowToolbar>
                         </t:extension>
                         <t:columns/>
