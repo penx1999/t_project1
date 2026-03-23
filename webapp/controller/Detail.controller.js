@@ -227,17 +227,23 @@ sap.ui.define([
                 var sFieldName = oCol.name;
                 var sFieldUpper = sFieldName.toUpperCase();
                 
-                var bNonEditable = (sFieldUpper === "PRODUCTALLOCATIONOBJECT" ||
-                                    sFieldUpper === "PRODALLOCATIONACTIVATIONSTATUS" ||
-                                    sFieldUpper === "PRODALLOCCHARCCONSTRAINTSTATUS");
+                var bNonEditableText = (sFieldUpper === "PRODUCTALLOCATIONOBJECT");
+                
+                var bNonEditableInput = (sFieldUpper === "PRODALLOCATIONACTIVATIONSTATUS" ||
+                                         sFieldUpper === "PRODALLOCCHARCCONSTRAINTSTATUS");
                 
                 var bEditableField = (sFieldUpper === "ZZRFCUT" ||
                                       sFieldUpper === "PRODALLOCCHARCVALUECOMBNCMNT" ||
                                       sFieldUpper === "PRODUCTALLOCATIONQUANTITY");
 
                 var oTemplate;
-                if (bNonEditable) {
+                if (bNonEditableText) {
                     oTemplate = new Text({ text: "{detailModel>" + sFieldName + "}", wrapping: false });
+                } else if (bNonEditableInput) {
+                    oTemplate = new Input({
+                        value: "{detailModel>" + sFieldName + "}",
+                        editable: false
+                    }).addStyleClass("sapUiSizeCompact");
                 } else if (bEditableField) {
                     oTemplate = new Input({
                         value: "{detailModel>" + sFieldName + "}",
