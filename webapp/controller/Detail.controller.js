@@ -362,6 +362,49 @@ sap.ui.define([
             MessageToast.show(aSelectedIndices.length + " fila(s) eliminada(s)");
         },
 
+        onCopyRow: function () {
+            var oTable = this.byId("idDynamicTable");
+            var aSelectedIndices = oTable.getSelectedIndices();
+
+            if (aSelectedIndices.length === 0) {
+                MessageToast.show("Seleccione una fila para copiar");
+                return;
+            }
+
+            if (aSelectedIndices.length > 1) {
+                MessageToast.show("Solo puede copiar una fila a la vez");
+                return;
+            }
+
+            var oModel = this.getView().getModel("detailModel");
+            var aRows = oModel.getProperty("/rows") || [];
+            var iSelectedIndex = aSelectedIndices[0];
+            var oSelectedRow = aRows[iSelectedIndex];
+
+            var oNewRow = JSON.parse(JSON.stringify(oSelectedRow));
+
+            oNewRow["_isNew"] = true;
+
+            oNewRow["PRODALLOCATIONACTIVATIONSTATUS"] = "Active";
+            oNewRow["PRODALLOCATIONACTIVATIONSTATUS_old"] = "Active";
+            oNewRow["PRODALLOCCHARCCONSTRAINTSTATUS"] = "As in Sequence Const";
+            oNewRow["PRODALLOCCHARCCONSTRAINTSTATUS_old"] = "As in Sequence Const";
+
+            aRows.push(oNewRow);
+            oModel.setProperty("/rows", aRows);
+
+            var iNewRowCount = Math.min(aRows.length + 1, 15);
+            oModel.setProperty("/rowCount", iNewRowCount);
+
+            oTable.clearSelection();
+
+            oModel.setProperty("/hasChanges", true);
+
+            this._oOriginalData.push(JSON.parse(JSON.stringify(oNewRow)));
+
+            MessageToast.show("Fila copiada");
+        },
+
         _onFieldChange: function (oEvent) {
             jQuery.sap.log.info("Detail._onFieldChange triggered");
             var oModel = this.getView().getModel("detailModel");
