@@ -106,18 +106,11 @@
                                     icon="sap-icon://copy"
                                     type="Transparent"
                                     press=".onCopyRow"/>
-                                <MenuButton
+                                <Button
                                     id="idChangeStatusButton"
                                     text="{i18n>changeStatusButton}"
                                     type="Transparent"
-                                    beforeMenuOpen=".onBeforeChangeStatusMenuOpen">
-                                    <menu>
-                                        <Menu id="idChangeStatusMenu">
-                                            <MenuItem text="Active" press=".onChangeStatus"/>
-                                            <MenuItem text="Inactive" press=".onChangeStatus"/>
-                                        </Menu>
-                                    </menu>
-                                </MenuButton>
+                                    press=".onOpenChangeStatusMenu"/>
                             </OverflowToolbar>
                         </t:extension>
                         <t:columns/>

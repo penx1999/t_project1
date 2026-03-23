@@ -401,13 +401,25 @@ sap.ui.define([
             this._oOriginalData.push(JSON.parse(JSON.stringify(oNewRow)));
         },
 
-        onBeforeChangeStatusMenuOpen: function (oEvent) {
+        onOpenChangeStatusMenu: function (oEvent) {
             var oTable = this.byId("idDynamicTable");
             var aSelectedIndices = oTable.getSelectedIndices();
 
             if (aSelectedIndices.length !== 1) {
-                oEvent.preventDefault();
+                return;
             }
+
+            var oButton = oEvent.getSource();
+            if (!this._oStatusMenu) {
+                this._oStatusMenu = new sap.m.Menu({
+                    items: [
+                        new sap.m.MenuItem({ text: "Active", press: this.onChangeStatus.bind(this) }),
+                        new sap.m.MenuItem({ text: "Inactive", press: this.onChangeStatus.bind(this) })
+                    ]
+                });
+                this.getView().addDependent(this._oStatusMenu);
+            }
+            this._oStatusMenu.openBy(oButton);
         },
 
         onChangeStatus: function (oEvent) {
