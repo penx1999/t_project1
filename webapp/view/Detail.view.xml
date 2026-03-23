@@ -109,9 +109,10 @@
                                 <MenuButton
                                     id="idChangeStatusButton"
                                     text="{i18n>changeStatusButton}"
-                                    type="Transparent">
+                                    type="Transparent"
+                                    beforeMenuOpen=".onBeforeChangeStatusMenuOpen">
                                     <menu>
-                                        <Menu>
+                                        <Menu id="idChangeStatusMenu">
                                             <MenuItem text="Active" press=".onChangeStatus"/>
                                             <MenuItem text="Inactive" press=".onChangeStatus"/>
                                         </Menu>

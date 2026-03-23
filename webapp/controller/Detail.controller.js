@@ -401,17 +401,20 @@ sap.ui.define([
             this._oOriginalData.push(JSON.parse(JSON.stringify(oNewRow)));
         },
 
+        onBeforeChangeStatusMenuOpen: function (oEvent) {
+            var oTable = this.byId("idDynamicTable");
+            var aSelectedIndices = oTable.getSelectedIndices();
+
+            if (aSelectedIndices.length !== 1) {
+                oEvent.preventDefault();
+            }
+        },
+
         onChangeStatus: function (oEvent) {
             var oTable = this.byId("idDynamicTable");
             var aSelectedIndices = oTable.getSelectedIndices();
 
-            if (aSelectedIndices.length === 0) {
-                MessageToast.show("Seleccione una fila para cambiar el estado");
-                return;
-            }
-
-            if (aSelectedIndices.length > 1) {
-                MessageToast.show("Solo puede cambiar el estado de una fila a la vez");
+            if (aSelectedIndices.length !== 1) {
                 return;
             }
 
