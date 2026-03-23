@@ -85,6 +85,17 @@
                         columnHeaderHeight="32"
                         width="100%"
                         class="sapUiSmallMarginBottom">
+                        <t:extension>
+                            <OverflowToolbar>
+                                <ToolbarSpacer/>
+                                <Button
+                                    id="idNewRowButton"
+                                    text="{i18n>newButton}"
+                                    icon="sap-icon://add"
+                                    type="Transparent"
+                                    press=".onAddNewRow"/>
+                            </OverflowToolbar>
+                        </t:extension>
                         <t:columns/>
                     </t:Table>
                 </content>

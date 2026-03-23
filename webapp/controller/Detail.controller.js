@@ -15,10 +15,14 @@ sap.ui.define([
 
     var EDITABLE_FIELDS = [
         "ZZRFCUT",
-        "PRODALLOCATIONACTIVATIONSTATUS",
-        "PRODALLOCCHARCCONSTRAINTSTATUS",
         "PRODALLOCCHARCVALUECOMBNCMNT",
         "PRODUCTALLOCATIONQUANTITY"
+    ];
+
+    var NON_EDITABLE_FIELDS = [
+        "PRODUCTALLOCATIONOBJECT",
+        "PRODALLOCATIONACTIVATIONSTATUS",
+        "PRODALLOCCHARCCONSTRAINTSTATUS"
     ];
 
     return Controller.extend("t_project1.controller.Detail", {
@@ -220,17 +224,28 @@ sap.ui.define([
             jQuery.sap.log.info("Detail._buildTable: columns=" + JSON.stringify(aColumns.map(function(c){ return c.name; })) + " | iStatusIdx=" + iStatusIdx + " | iFixedCount=" + iFixedCount);
 
             aColumns.forEach(function (oCol) {
-                var bEditable = EDITABLE_FIELDS.indexOf(oCol.name.toUpperCase()) !== -1 ||
-                                EDITABLE_FIELDS.indexOf(oCol.name) !== -1;
+                var sFieldUpper = oCol.name.toUpperCase();
+                var bNonEditable = NON_EDITABLE_FIELDS.indexOf(sFieldUpper) !== -1 ||
+                                   NON_EDITABLE_FIELDS.indexOf(oCol.name) !== -1;
+                var bEditableField = EDITABLE_FIELDS.indexOf(sFieldUpper) !== -1 ||
+                                     EDITABLE_FIELDS.indexOf(oCol.name) !== -1;
+
                 var oTemplate;
-                if (bEditable) {
+                if (bNonEditable) {
+                    oTemplate = new Text({ text: "{detailModel>" + oCol.name + "}", wrapping: false });
+                } else if (bEditableField) {
                     oTemplate = new Input({
                         value: "{detailModel>" + oCol.name + "}",
                         change: that._onFieldChange.bind(that),
                         liveChange: that._onFieldChange.bind(that)
                     }).addStyleClass("sapUiSizeCompact");
                 } else {
-                    oTemplate = new Text({ text: "{detailModel>" + oCol.name + "}", wrapping: false });
+                    oTemplate = new Input({
+                        value: "{detailModel>" + oCol.name + "}",
+                        editable: "{= ${detailModel>_isNew} === true }",
+                        change: that._onFieldChange.bind(that),
+                        liveChange: that._onFieldChange.bind(that)
+                    }).addStyleClass("sapUiSizeCompact");
                 }
 
                 oTable.addColumn(new UIColumn({
@@ -269,6 +284,33 @@ sap.ui.define([
             } else {
                 this.getOwnerComponent().getRouter().navTo("RouteListReport", {}, true);
             }
+        },
+
+        onAddNewRow: function () {
+            var oModel = this.getView().getModel("detailModel");
+            var aRows = oModel.getProperty("/rows") || [];
+            var aColumns = oModel.getProperty("/columns") || [];
+            var sProductAllocationObject = oModel.getProperty("/productAllocationObject") || "";
+
+            var oNewRow = {};
+            aColumns.forEach(function (oCol) {
+                oNewRow[oCol.name] = "";
+                oNewRow[oCol.name + "_old"] = "";
+            });
+
+            oNewRow["PRODUCTALLOCATIONOBJECT"] = sProductAllocationObject;
+            oNewRow["PRODUCTALLOCATIONOBJECT_old"] = sProductAllocationObject;
+            oNewRow["_isNew"] = true;
+
+            aRows.push(oNewRow);
+            oModel.setProperty("/rows", aRows);
+
+            var iNewRowCount = Math.min(aRows.length + 1, 15);
+            oModel.setProperty("/rowCount", iNewRowCount);
+
+            oModel.setProperty("/hasChanges", true);
+
+            this._oOriginalData.push(JSON.parse(JSON.stringify(oNewRow)));
         },
 
         _onFieldChange: function (oEvent) {
