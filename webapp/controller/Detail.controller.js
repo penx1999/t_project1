@@ -441,6 +441,49 @@ sap.ui.define([
             oModel.setProperty("/hasChanges", true);
         },
 
+        onOpenChangeConstraintStatusMenu: function (oEvent) {
+            var oTable = this.byId("idDynamicTable");
+            var aSelectedIndices = oTable.getSelectedIndices();
+
+            if (aSelectedIndices.length !== 1) {
+                return;
+            }
+
+            var oButton = oEvent.getSource();
+            if (!this._oConstraintStatusMenu) {
+                this._oConstraintStatusMenu = new sap.m.Menu({
+                    items: [
+                        new sap.m.MenuItem({ text: "Unrestricted Availability", press: this.onChangeConstraintStatus.bind(this) }),
+                        new sap.m.MenuItem({ text: "Restricted Availability", press: this.onChangeConstraintStatus.bind(this) }),
+                        new sap.m.MenuItem({ text: "No Availability", press: this.onChangeConstraintStatus.bind(this) }),
+                        new sap.m.MenuItem({ text: "Not Relevant", press: this.onChangeConstraintStatus.bind(this) }),
+                        new sap.m.MenuItem({ text: "As in Sequence Constraint", press: this.onChangeConstraintStatus.bind(this) })
+                    ]
+                });
+                this.getView().addDependent(this._oConstraintStatusMenu);
+            }
+            this._oConstraintStatusMenu.openBy(oButton);
+        },
+
+        onChangeConstraintStatus: function (oEvent) {
+            var oTable = this.byId("idDynamicTable");
+            var aSelectedIndices = oTable.getSelectedIndices();
+
+            if (aSelectedIndices.length !== 1) {
+                return;
+            }
+
+            var sNewStatus = oEvent.getSource().getText();
+            var oModel = this.getView().getModel("detailModel");
+            var iSelectedIndex = aSelectedIndices[0];
+
+            oModel.setProperty("/rows/" + iSelectedIndex + "/PRODALLOCCHARCCONSTRAINTSTATUS", sNewStatus);
+
+            oTable.clearSelection();
+
+            oModel.setProperty("/hasChanges", true);
+        },
+
         _onFieldChange: function (oEvent) {
             jQuery.sap.log.info("Detail._onFieldChange triggered");
             var oModel = this.getView().getModel("detailModel");

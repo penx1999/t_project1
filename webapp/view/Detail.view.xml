@@ -111,6 +111,11 @@
                                     text="{i18n>changeStatusButton}"
                                     type="Transparent"
                                     press=".onOpenChangeStatusMenu"/>
+                                <Button
+                                    id="idChangeConstraintStatusButton"
+                                    text="{i18n>changeConstraintStatusButton}"
+                                    type="Transparent"
+                                    press=".onOpenChangeConstraintStatusMenu"/>
                             </OverflowToolbar>
                         </t:extension>
                         <t:columns/>
