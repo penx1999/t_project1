@@ -357,9 +357,9 @@ sap.ui.define([
             var that = this;
             var aPayloadItems = this._buildPayloadArray(aChangedRows, sFecIni);
 
-            console.log("PUT Payload Array:", JSON.stringify(aPayloadItems, null, 2));
+            console.log("POST Payload Array:", JSON.stringify(aPayloadItems, null, 2));
 
-            this._executePut(aPayloadItems)
+            this._executePost(aPayloadItems)
                 .then(function () {
                     oModel.setProperty("/busy", false);
                     oModel.setProperty("/hasChanges", false);
@@ -442,16 +442,16 @@ sap.ui.define([
             return aPayload;
         },
 
-        _executePut: function (aPayload) {
+        _executePost: function (aPayload) {
             var oODataModel = this.getOwnerComponent().getModel();
 
-            console.log("=== PUT REQUEST ===");
-            console.log("PUT Path: /DynamicFieldSet('.')");
-            console.log("PUT Payload:", JSON.stringify(aPayload, null, 2));
+            console.log("=== POST REQUEST ===");
+            console.log("POST Path: /DynamicFieldSet");
+            console.log("POST Payload:", JSON.stringify(aPayload, null, 2));
             console.log("===================");
 
             var oData = {
-                name: ".",
+                name: "",
                 tablename: "PAL",
                 DataSetAsoc: []
             };
@@ -466,13 +466,13 @@ sap.ui.define([
             console.log("Flattened DataSetAsoc:", JSON.stringify(oData, null, 2));
 
             return new Promise(function (resolve, reject) {
-                oODataModel.update("/DynamicFieldSet('.')", oData, {
+                oODataModel.create("/DynamicFieldSet", oData, {
                     success: function () {
-                        console.log("PUT Success");
+                        console.log("POST Success");
                         resolve();
                     },
                     error: function (oError) {
-                        console.log("PUT Error:", oError);
+                        console.log("POST Error:", oError);
                         reject(oError);
                     }
                 });
