@@ -224,24 +224,29 @@ sap.ui.define([
             jQuery.sap.log.info("Detail._buildTable: columns=" + JSON.stringify(aColumns.map(function(c){ return c.name; })) + " | iStatusIdx=" + iStatusIdx + " | iFixedCount=" + iFixedCount);
 
             aColumns.forEach(function (oCol) {
-                var sFieldUpper = oCol.name.toUpperCase();
-                var bNonEditable = NON_EDITABLE_FIELDS.indexOf(sFieldUpper) !== -1 ||
-                                   NON_EDITABLE_FIELDS.indexOf(oCol.name) !== -1;
-                var bEditableField = EDITABLE_FIELDS.indexOf(sFieldUpper) !== -1 ||
-                                     EDITABLE_FIELDS.indexOf(oCol.name) !== -1;
+                var sFieldName = oCol.name;
+                var sFieldUpper = sFieldName.toUpperCase();
+                
+                var bNonEditable = (sFieldUpper === "PRODUCTALLOCATIONOBJECT" ||
+                                    sFieldUpper === "PRODALLOCATIONACTIVATIONSTATUS" ||
+                                    sFieldUpper === "PRODALLOCCHARCCONSTRAINTSTATUS");
+                
+                var bEditableField = (sFieldUpper === "ZZRFCUT" ||
+                                      sFieldUpper === "PRODALLOCCHARCVALUECOMBNCMNT" ||
+                                      sFieldUpper === "PRODUCTALLOCATIONQUANTITY");
 
                 var oTemplate;
                 if (bNonEditable) {
-                    oTemplate = new Text({ text: "{detailModel>" + oCol.name + "}", wrapping: false });
+                    oTemplate = new Text({ text: "{detailModel>" + sFieldName + "}", wrapping: false });
                 } else if (bEditableField) {
                     oTemplate = new Input({
-                        value: "{detailModel>" + oCol.name + "}",
+                        value: "{detailModel>" + sFieldName + "}",
                         change: that._onFieldChange.bind(that),
                         liveChange: that._onFieldChange.bind(that)
                     }).addStyleClass("sapUiSizeCompact");
                 } else {
                     oTemplate = new Input({
-                        value: "{detailModel>" + oCol.name + "}",
+                        value: "{detailModel>" + sFieldName + "}",
                         editable: "{= ${detailModel>_isNew} === true }",
                         change: that._onFieldChange.bind(that),
                         liveChange: that._onFieldChange.bind(that)
