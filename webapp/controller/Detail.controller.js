@@ -9,8 +9,9 @@ sap.ui.define([
     "sap/m/Text",
     "sap/m/Input",
     "sap/m/Label",
-    "sap/ui/table/Column"
-], function (Controller, History, JSONModel, Filter, FilterOperator, MessageBox, MessageToast, Text, Input, Label, UIColumn) {
+    "sap/ui/table/Column",
+    "sap/ui/core/format/DateFormat"
+], function (Controller, History, JSONModel, Filter, FilterOperator, MessageBox, MessageToast, Text, Input, Label, UIColumn, DateFormat) {
     "use strict";
 
     var EDITABLE_FIELDS = [
@@ -223,6 +224,10 @@ sap.ui.define([
 
             jQuery.sap.log.info("Detail._buildTable: columns=" + JSON.stringify(aColumns.map(function(c){ return c.name; })) + " | iStatusIdx=" + iStatusIdx + " | iFixedCount=" + iFixedCount);
 
+            var oDateFormat = DateFormat.getDateInstance({
+                style: "medium"
+            });
+
             aColumns.forEach(function (oCol) {
                 var sFieldName = oCol.name;
                 var sFieldUpper = sFieldName.toUpperCase();
@@ -236,9 +241,45 @@ sap.ui.define([
                                       sFieldUpper === "PRODALLOCCHARCVALUECOMBNCMNT" ||
                                       sFieldUpper === "PRODUCTALLOCATIONQUANTITY");
 
+                var bDateField = (sFieldUpper === "PRODALLOCPERDSTARTUTCDATETIME" ||
+                                  sFieldUpper === "PRODALLOCPERIODENDUTCDATETIME");
+
                 var oTemplate;
                 if (bNonEditableText) {
                     oTemplate = new Text({ text: "{detailModel>" + sFieldName + "}", wrapping: false });
+                } else if (bDateField) {
+                    oTemplate = new Text({
+                        text: {
+                            path: "detailModel>" + sFieldName,
+                            formatter: function (sValue) {
+                                if (!sValue) {
+                                    return "";
+                                }
+                                var oDate;
+                                if (sValue instanceof Date) {
+                                    oDate = sValue;
+                                } else if (typeof sValue === "string") {
+                                    if (sValue.indexOf("/Date(") > -1) {
+                                        var iTimestamp = parseInt(sValue.replace("/Date(", "").replace(")/", ""), 10);
+                                        oDate = new Date(iTimestamp);
+                                    } else if (sValue.length === 8) {
+                                        oDate = new Date(
+                                            parseInt(sValue.substring(0, 4), 10),
+                                            parseInt(sValue.substring(4, 6), 10) - 1,
+                                            parseInt(sValue.substring(6, 8), 10)
+                                        );
+                                    } else {
+                                        oDate = new Date(sValue);
+                                    }
+                                }
+                                if (oDate && !isNaN(oDate.getTime())) {
+                                    return oDateFormat.format(oDate);
+                                }
+                                return sValue;
+                            }
+                        },
+                        wrapping: false
+                    });
                 } else if (bNonEditableInput) {
                     oTemplate = new Input({
                         value: "{detailModel>" + sFieldName + "}",
