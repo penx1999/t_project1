@@ -251,26 +251,25 @@ sap.ui.define([
                     oTemplate = new Text({
                         text: {
                             path: "detailModel>" + sFieldName,
-                            formatter: function (sValue) {
-                                if (!sValue) {
+                            formatter: function (vValue) {
+                                if (!vValue) {
                                     return "";
                                 }
                                 var oDate;
-                                if (sValue instanceof Date) {
-                                    oDate = sValue;
-                                } else if (typeof sValue === "string") {
-                                    if (sValue.indexOf("/Date(") > -1) {
-                                        var iTimestamp = parseInt(sValue.replace("/Date(", "").replace(")/", ""), 10);
-                                        oDate = new Date(iTimestamp);
-                                    } else if (sValue.length === 8) {
-                                        oDate = new Date(
-                                            parseInt(sValue.substring(0, 4), 10),
-                                            parseInt(sValue.substring(4, 6), 10) - 1,
-                                            parseInt(sValue.substring(6, 8), 10)
-                                        );
-                                    } else {
-                                        oDate = new Date(sValue);
-                                    }
+                                var sValue = String(vValue);
+                                if (vValue instanceof Date) {
+                                    oDate = vValue;
+                                } else if (sValue.indexOf("/Date(") > -1) {
+                                    var iTimestamp = parseInt(sValue.replace("/Date(", "").replace(")/", ""), 10);
+                                    oDate = new Date(iTimestamp);
+                                } else if (/^\d{8}$/.test(sValue)) {
+                                    oDate = new Date(
+                                        parseInt(sValue.substring(0, 4), 10),
+                                        parseInt(sValue.substring(4, 6), 10) - 1,
+                                        parseInt(sValue.substring(6, 8), 10)
+                                    );
+                                } else {
+                                    oDate = new Date(sValue);
                                 }
                                 if (oDate && !isNaN(oDate.getTime())) {
                                     return oDateFormat.format(oDate);
