@@ -243,6 +243,8 @@ sap.ui.define([
 
                 var bDateField = (sFieldUpper === "PRODALLOCPERDSTARTUTCDATETIME" ||
                                   sFieldUpper === "PRODALLOCPERIODENDUTCDATETIME");
+                
+                console.log("Column: " + sFieldName + " | Upper: " + sFieldUpper + " | isDateField: " + bDateField);
 
                 var oTemplate;
                 if (bNonEditableText) {
