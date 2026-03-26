@@ -350,7 +350,7 @@ sap.ui.define([
             aRows.push(oNewRow);
             oModel.setProperty("/rows", aRows);
 
-            var iNewRowCount = Math.min(aRows.length + 1, 15);
+            var iNewRowCount = Math.min(aRows.length, 15);
             oModel.setProperty("/rowCount", iNewRowCount);
 
             oModel.setProperty("/hasChanges", true);
@@ -421,7 +421,7 @@ sap.ui.define([
             aRows.push(oNewRow);
             oModel.setProperty("/rows", aRows);
 
-            var iNewRowCount = Math.min(aRows.length + 1, 15);
+            var iNewRowCount = Math.min(aRows.length, 15);
             oModel.setProperty("/rowCount", iNewRowCount);
 
             oTable.clearSelection();
