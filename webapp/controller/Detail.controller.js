@@ -248,8 +248,8 @@ sap.ui.define([
                 if (bNonEditableText) {
                     oTemplate = new Text({ text: "{detailModel>" + sFieldName + "}", wrapping: false });
                 } else if (bDateField) {
-                    oTemplate = new Text({
-                        text: {
+                    oTemplate = new Input({
+                        value: {
                             path: "detailModel>" + sFieldName,
                             formatter: function (vValue) {
                                 if (!vValue) {
@@ -277,8 +277,10 @@ sap.ui.define([
                                 return sValue;
                             }
                         },
-                        wrapping: false
-                    });
+                        editable: "{= ${detailModel>_isNew} === true }",
+                        change: that._onFieldChange.bind(that),
+                        liveChange: that._onFieldChange.bind(that)
+                    }).addStyleClass("sapUiSizeCompact");
                 } else if (bNonEditableInput) {
                     oTemplate = new Input({
                         value: "{detailModel>" + sFieldName + "}",
