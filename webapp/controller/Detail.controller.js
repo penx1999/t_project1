@@ -241,10 +241,8 @@ sap.ui.define([
                                       sFieldUpper === "PRODALLOCCHARCVALUECOMBNCMNT" ||
                                       sFieldUpper === "PRODUCTALLOCATIONQUANTITY");
 
-                var bDateField = (sFieldUpper === "PRODALLOCPERDSTARTUTCDATETIME" ||
-                                  sFieldUpper === "PRODALLOCPERIODENDUTCDATETIME");
-                
-                console.log("Column: " + sFieldName + " | Upper: " + sFieldUpper + " | isDateField: " + bDateField);
+                var bDateField = (sFieldUpper === "PRODALLOCPERDSTARTUTCDATE" ||
+                                  sFieldUpper === "PRODALLOCPERIODENDUTCDATE");
 
                 var oTemplate;
                 if (bNonEditableText) {
@@ -301,14 +299,9 @@ sap.ui.define([
                     }).addStyleClass("sapUiSizeCompact");
                 }
 
-                var sLabel = oCol.label;
-                if (sLabel === "Start Date") {
-                    sLabel = "Start DateXXX";
-                }
-
                 oTable.addColumn(new UIColumn({
                     width: "150px",
-                    label: new Label({ text: sLabel, wrapping: false }),
+                    label: new Label({ text: oCol.label, wrapping: false }),
                     template: oTemplate,
                     resizable: true,
                     autoResizable: true
