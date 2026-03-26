@@ -265,6 +265,7 @@ sap.ui.define([
                         },
                         valueFormat: "yyyy-MM-dd",
                         displayFormat: "medium",
+                        placeholder: "",
                         editable: "{= ${detailModel>_isNew} === true }",
                         showValueHelp: "{= ${detailModel>_isNew} === true }",
                         change: that._onFieldChange.bind(that)
