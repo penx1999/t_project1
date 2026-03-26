@@ -9,9 +9,10 @@ sap.ui.define([
     "sap/m/Text",
     "sap/m/Input",
     "sap/m/Label",
+    "sap/m/DatePicker",
     "sap/ui/table/Column",
     "sap/ui/core/format/DateFormat"
-], function (Controller, History, JSONModel, Filter, FilterOperator, MessageBox, MessageToast, Text, Input, Label, UIColumn, DateFormat) {
+], function (Controller, History, JSONModel, Filter, FilterOperator, MessageBox, MessageToast, Text, Input, Label, DatePicker, UIColumn, DateFormat) {
     "use strict";
 
     var EDITABLE_FIELDS = [
@@ -248,38 +249,25 @@ sap.ui.define([
                 if (bNonEditableText) {
                     oTemplate = new Text({ text: "{detailModel>" + sFieldName + "}", wrapping: false });
                 } else if (bDateField) {
-                    oTemplate = new Input({
+                    oTemplate = new DatePicker({
                         value: {
                             path: "detailModel>" + sFieldName,
                             formatter: function (vValue) {
                                 if (!vValue) {
                                     return "";
                                 }
-                                var oDate;
                                 var sValue = String(vValue);
-                                if (vValue instanceof Date) {
-                                    oDate = vValue;
-                                } else if (sValue.indexOf("/Date(") > -1) {
-                                    var iTimestamp = parseInt(sValue.replace("/Date(", "").replace(")/", ""), 10);
-                                    oDate = new Date(iTimestamp);
-                                } else if (/^\d{8}$/.test(sValue)) {
-                                    oDate = new Date(
-                                        parseInt(sValue.substring(0, 4), 10),
-                                        parseInt(sValue.substring(4, 6), 10) - 1,
-                                        parseInt(sValue.substring(6, 8), 10)
-                                    );
-                                } else {
-                                    oDate = new Date(sValue);
-                                }
-                                if (oDate && !isNaN(oDate.getTime())) {
-                                    return oDateFormat.format(oDate);
+                                if (/^\d{8}$/.test(sValue)) {
+                                    return sValue.substring(0, 4) + "-" + sValue.substring(4, 6) + "-" + sValue.substring(6, 8);
                                 }
                                 return sValue;
                             }
                         },
+                        valueFormat: "yyyy-MM-dd",
+                        displayFormat: "medium",
                         editable: "{= ${detailModel>_isNew} === true }",
-                        change: that._onFieldChange.bind(that),
-                        liveChange: that._onFieldChange.bind(that)
+                        showValueHelp: "{= ${detailModel>_isNew} === true }",
+                        change: that._onFieldChange.bind(that)
                     }).addStyleClass("sapUiSizeCompact");
                 } else if (bNonEditableInput) {
                     oTemplate = new Input({
