@@ -289,16 +289,9 @@ sap.ui.define([
                     }).addStyleClass("sapUiSizeCompact");
                 }
 
-                var sLabel = oCol.label;
-                if (sFieldUpper === "PRODALLOCPERDSTARTUTCDATE") {
-                    sLabel = "test1";
-                } else if (sFieldUpper === "PRODALLOCPERIODENDUTCDATE") {
-                    sLabel = "test2";
-                }
-
                 oTable.addColumn(new UIColumn({
                     width: "150px",
-                    label: new Label({ text: sLabel, wrapping: false }),
+                    label: new Label({ text: oCol.label, wrapping: false }),
                     template: oTemplate,
                     resizable: true,
                     autoResizable: true

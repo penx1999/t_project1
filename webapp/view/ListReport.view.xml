@@ -28,7 +28,8 @@
                     <Button
                         text="{i18n>clearButton}"
                         icon="sap-icon://clear-filter"
-                        press=".onClear"/>
+                        press=".onClear"
+                        visible="false"/>
                 </f:actions>
             </f:DynamicPageTitle>
         </f:title>
