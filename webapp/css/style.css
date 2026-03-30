@@ -1,13 +1,20 @@
+.sapUshellApplicationContainer,
+.sapMShellCenteredContent,
+.sapMShellBG,
+.sapMShell > .sapMShellBG,
+.sapUiComponentContainer,
+.sapMApp,
+.sapMPage,
+.sapFDynamicPage,
+.sapFDynamicPageContent {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
 .sapUshellApplicationContainer {
-    max-width: 100% !important;
-    width: 100% !important;
-}
-
-.sapMShellCenteredContent {
-    max-width: 100% !important;
-    width: 100% !important;
-}
-
-.sapFDynamicPage {
-    max-width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
 }
