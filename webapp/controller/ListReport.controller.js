@@ -12,7 +12,7 @@ sap.ui.define([
 
         onInit: function () {
             var oModel = new JSONModel({
-                filterProdAlloc: "TEST FR MAGG CET",
+                filterProdAlloc: "*",
                 QuotaResults: [],
                 detailEnabled: false,
                 selectedItems: []
