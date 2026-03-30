@@ -8,6 +8,15 @@
     <script>
         window["sap-ushell-config"] = {
             defaultRenderer: "fiori2",
+            renderers: {
+                fiori2: {
+                    componentData: {
+                        config: {
+                            enableMergeAppAndShellHeaders: true
+                        }
+                    }
+                }
+            },
             applications: {
                 "tproject1-display": {
                     title: "Gestión de Cuotas de Producto",
@@ -15,7 +24,8 @@
                     additionalInformation: "SAPUI5.Component=t_project1",
                     applicationType: "URL",
                     url: "../",
-                    navigationMode: "embedded"
+                    navigationMode: "embedded",
+                    fullWidth: true
                 }
             }
         };
