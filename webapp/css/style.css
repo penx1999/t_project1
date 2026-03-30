@@ -28,7 +28,14 @@
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 auto !important;
-    border: 5px solid blue !important;
+    border: 5px solid cyan !important;
+}
+.sapUiComponentContainer .sapUiComponentContainer::before {
+    content: "sapUiComponentContainer INTERNO" !important;
+    background: cyan !important;
+    color: black !important;
+    padding: 2px 5px !important;
+    font-size: 10px !important;
 }
 .sapUiComponentContainer::before {
     content: "sapUiComponentContainer" !important;
