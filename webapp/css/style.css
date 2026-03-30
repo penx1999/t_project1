@@ -31,6 +31,7 @@
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 auto !important;
+    border: 5px solid red !important;
 }
 .sapUiComponentContainer::before {
     content: "sapUiComponentContainer" !important;
