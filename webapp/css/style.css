@@ -24,14 +24,11 @@
 }
 
 /* Forzar ancho completo en el contenedor interno de la app */
-.sapUiComponentContainer .sapUiComponentContainer,
-#container,
-[data-sap-ui-component],
-.sapUiComponentContainer > div {
+.sapUiComponentContainer .sapUiComponentContainer {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 auto !important;
-    border: 5px solid red !important;
+    border: 5px solid blue !important;
 }
 .sapUiComponentContainer::before {
     content: "sapUiComponentContainer" !important;
