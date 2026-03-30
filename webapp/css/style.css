@@ -16,6 +16,11 @@
 
 .sapUiComponentContainer {
     border: 5px solid blue !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    margin: 0 !important;
 }
 .sapUiComponentContainer::before {
     content: "sapUiComponentContainer" !important;
