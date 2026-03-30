@@ -54,6 +54,9 @@
 
 .sapFDynamicPage {
     border: 5px solid orange !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
 }
 .sapFDynamicPage::before {
     content: "sapFDynamicPage" !important;
