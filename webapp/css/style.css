@@ -26,8 +26,14 @@
 /* Forzar ancho completo en el contenedor interno de la app */
 .sapUiComponentContainer .sapUiComponentContainer {
     width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 auto !important;
+    max-width: none !important;
+    min-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    position: relative !important;
+    box-sizing: border-box !important;
     border: 5px solid cyan !important;
 }
 .sapUiComponentContainer .sapUiComponentContainer::before {
