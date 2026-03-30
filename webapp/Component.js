@@ -7,7 +7,10 @@ sap.ui.define([
 
     return UIComponent.extend("t_project1.Component", {
         metadata: {
-            manifest: "json"
+            manifest: "json",
+            config: {
+                fullWidth: true
+            }
         },
 
         init: function() {
