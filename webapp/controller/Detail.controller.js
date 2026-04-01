@@ -232,6 +232,10 @@ sap.ui.define([
             aColumns.forEach(function (oCol) {
                 var sFieldName = oCol.name;
                 var sFieldUpper = sFieldName.toUpperCase();
+
+                if (sFieldUpper === "PRODUCTALLOCATIONOBJECTUUID") {
+                    return;
+                }
                 
                 var bNonEditableText = (sFieldUpper === "PRODUCTALLOCATIONOBJECT");
                 
