@@ -601,6 +601,12 @@ sap.ui.define([
             oModel.setProperty("/busy", true);
             MessageToast.show(oBundle.getText("msgSaving"));
 
+            var aRows = oModel.getProperty("/rows") || [];
+            aRows.forEach(function (oRow, iIdx) {
+                oRow.position = String(iIdx + 1);
+            });
+            oModel.setProperty("/rows", aRows);
+
             var that = this;
             var aPayloadItems = this._buildPayloadArray(aChangedRows, sFecIni);
 
