@@ -253,6 +253,7 @@ sap.ui.define([
                 if (bNonEditableText) {
                     oTemplate = new Text({ text: "{detailModel>" + sFieldName + "}", wrapping: false });
                 } else if (bDateField) {
+                    var sDateErrorProp = (sFieldUpper === "PRODALLOCPERDSTARTUTCDATE") ? "_startDateError" : "_endDateError";
                     oTemplate = new DatePicker({
                         value: {
                             path: "detailModel>" + sFieldName,
@@ -271,6 +272,7 @@ sap.ui.define([
                         displayFormat: "medium",
                         placeholder: " ",
                         editable: "{= ${detailModel>_isNew} === true }",
+                        valueState: "{= ${detailModel>" + sDateErrorProp + "} ? 'Error' : 'None' }",
                         change: that._onFieldChange.bind(that)
                     }).addStyleClass("sapUiSizeCompact");
                 } else if (bNonEditableInput) {
@@ -527,6 +529,13 @@ sap.ui.define([
             jQuery.sap.log.info("Detail._onFieldChange triggered");
             var oModel = this.getView().getModel("detailModel");
             var aRows = oModel.getProperty("/rows");
+            if (aRows) {
+                aRows.forEach(function (oRow) {
+                    oRow._startDateError = false;
+                    oRow._endDateError = false;
+                });
+                oModel.setProperty("/rows", aRows);
+            }
             var bHasChanges = this._detectChanges(aRows);
             jQuery.sap.log.info("Detail._onFieldChange: hasChanges=" + bHasChanges);
             oModel.setProperty("/hasChanges", bHasChanges);
@@ -591,6 +600,20 @@ sap.ui.define([
             return aChangedRows;
         },
 
+        onCancel: function () {
+            var oBundle = this.getView().getModel("i18n").getResourceBundle();
+            var that = this;
+            MessageBox.confirm(oBundle.getText("cancelConfirmMsg"), {
+                actions: [oBundle.getText("confirmYes"), oBundle.getText("confirmNo")],
+                emphasizedAction: oBundle.getText("confirmNo"),
+                onClose: function (sAction) {
+                    if (sAction === oBundle.getText("confirmYes")) {
+                        that.onNavBack();
+                    }
+                }
+            });
+        },
+
         onSave: function () {
             var oModel = this.getView().getModel("detailModel");
             var oBundle = this.getView().getModel("i18n").getResourceBundle();
@@ -598,6 +621,32 @@ sap.ui.define([
 
             if (aChangedRows.length === 0) {
                 MessageToast.show(oBundle.getText("msgNoChanges"));
+                return;
+            }
+
+            var aRows = oModel.getProperty("/rows") || [];
+            var bDateError = false;
+
+            aRows.forEach(function (oRow) {
+                oRow._startDateError = false;
+                oRow._endDateError = false;
+            });
+
+            aChangedRows.forEach(function (oChangedRow) {
+                var oRowData = oChangedRow.rowData;
+                var sStart = oRowData["PRODALLOCPERDSTARTUTCDATE"] || "";
+                var sEnd = oRowData["PRODALLOCPERIODENDUTCDATE"] || "";
+                if (sStart && sEnd && sEnd < sStart) {
+                    oRowData._startDateError = true;
+                    oRowData._endDateError = true;
+                    bDateError = true;
+                }
+            });
+
+            oModel.setProperty("/rows", aRows);
+
+            if (bDateError) {
+                MessageBox.error(oBundle.getText("msgDateRangeError"));
                 return;
             }
 

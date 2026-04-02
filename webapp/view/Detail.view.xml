@@ -20,6 +20,12 @@
                 </contentMiddle>
                 <contentRight>
                     <Button
+                        id="idCancelButton"
+                        text="{i18n>cancelButton}"
+                        type="Default"
+                        icon="sap-icon://decline"
+                        press=".onCancel"/>
+                    <Button
                         id="idSaveButton"
                         text="{i18n>saveButton}"
                         type="Emphasized"
