@@ -31,6 +31,7 @@ sap.ui.define([
 
         _oOriginalData: null,
         _oFieldMetadata: null,
+        _hasDeletedRows: false,
 
         onInit: function () {
             var oToday = new Date();
@@ -180,6 +181,7 @@ sap.ui.define([
                     });
 
                     that._oOriginalData = JSON.parse(JSON.stringify(aRows));
+                    that._hasDeletedRows = false;
 
                     var sTitle = oBundle.getText("tableDataTitle") + " (" + aRows.length + ")";
 
@@ -393,6 +395,7 @@ sap.ui.define([
 
             oTable.clearSelection();
 
+            this._hasDeletedRows = true;
             oModel.setProperty("/hasChanges", true);
         },
 
@@ -546,8 +549,15 @@ sap.ui.define([
                 return false;
             }
 
+            if (this._hasDeletedRows) {
+                return true;
+            }
+
             for (var i = 0; i < aRows.length; i++) {
                 var oRow = aRows[i];
+                if (oRow._isNew) {
+                    return true;
+                }
                 var oOriginal = this._oOriginalData[i];
                 if (!oOriginal) { continue; }
 
@@ -665,6 +675,7 @@ sap.ui.define([
                     oModel.setProperty("/busy", false);
                     oModel.setProperty("/hasChanges", false);
                     that._oOriginalData = JSON.parse(JSON.stringify(oModel.getProperty("/rows")));
+                    that._hasDeletedRows = false;
                     MessageToast.show(oBundle.getText("msgSaveSuccess"));
                 })
                 .catch(function (oError) {
