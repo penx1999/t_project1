@@ -663,7 +663,7 @@ sap.ui.define([
                     var oCellMeta = that._oCellKeys[sCellKey] || {};
 
                     var sCurrentValue = oRowData[sFieldName] || "";
-                    var sOldValue = oRowData[sFieldName + "_old"] || sCurrentValue;
+                    var sOldValue = oRowData["_isNew"] ? "" : (oRowData[sFieldName + "_old"] || sCurrentValue);
 
                     var oDataItem = {
                         key: oCellMeta.key || "",
