@@ -415,6 +415,11 @@ sap.ui.define([
 
             var oNewRow = JSON.parse(JSON.stringify(oSelectedRow));
 
+            var aColumns = oModel.getProperty("/columns") || [];
+            aColumns.forEach(function (oCol) {
+                oNewRow[oCol.name + "_old"] = "";
+            });
+
             oNewRow["_isNew"] = true;
 
             oNewRow["PRODALLOCATIONACTIVATIONSTATUS"] = "Active";
