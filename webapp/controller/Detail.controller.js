@@ -264,7 +264,7 @@ sap.ui.define([
                     var fnDateChange = (function (sField) {
                         return function (oEvent) {
                             var oDP = oEvent.getSource();
-                            var sNewValue = oDP.getValue();
+                            var sNewValue = oDP.getValue().replace(/-/g, "");
                             var oCtx = oDP.getBindingContext("detailModel");
                             if (oCtx) {
                                 oCtx.getModel().setProperty(oCtx.getPath() + "/" + sField, sNewValue);
