@@ -696,12 +696,13 @@ sap.ui.define([
             console.log("POST Payload Array:", JSON.stringify(aPayloadItems, null, 2));
 
             this._executePost(aPayloadItems)
-                .then(function () {
+                .then(function (sSapMsg) {
                     oModel.setProperty("/busy", false);
                     oModel.setProperty("/hasChanges", false);
                     that._oOriginalData = JSON.parse(JSON.stringify(oModel.getProperty("/rows")));
                     that._hasDeletedRows = false;
-                    MessageToast.show(oBundle.getText("msgSaveSuccess"));
+                    var sDisplay = sSapMsg || oBundle.getText("msgSaveSuccess");
+                    MessageToast.show(sDisplay);
                 })
                 .catch(function (oError) {
                     oModel.setProperty("/busy", false);
@@ -804,9 +805,17 @@ sap.ui.define([
 
             return new Promise(function (resolve, reject) {
                 oODataModel.create("/DynamicFieldSet", oData, {
-                    success: function () {
+                    success: function (oData, oResponse) {
                         console.log("POST Success");
-                        resolve();
+                        var sSapMsg = "";
+                        try {
+                            var sHeader = oResponse && oResponse.headers && oResponse.headers["sap-message"];
+                            if (sHeader) {
+                                var oMsg = JSON.parse(sHeader);
+                                sSapMsg = oMsg.message || "";
+                            }
+                        } catch (e) {}
+                        resolve(sSapMsg);
                     },
                     error: function (oError) {
                         console.log("POST Error:", oError);
