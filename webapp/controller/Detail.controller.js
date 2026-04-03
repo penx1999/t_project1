@@ -260,6 +260,18 @@ sap.ui.define([
                     oTemplate = new Text({ text: "{detailModel>" + sFieldName + "}", wrapping: false });
                 } else if (bDateField) {
                     var sDateErrorProp = (sFieldUpper === "PRODALLOCPERDSTARTUTCDATE") ? "_startDateError" : "_endDateError";
+                    var sDateFieldName = sFieldName;
+                    var fnDateChange = (function (sField) {
+                        return function (oEvent) {
+                            var oDP = oEvent.getSource();
+                            var sNewValue = oDP.getValue();
+                            var oCtx = oDP.getBindingContext("detailModel");
+                            if (oCtx) {
+                                oCtx.getModel().setProperty(oCtx.getPath() + "/" + sField, sNewValue);
+                            }
+                            that._onFieldChange(oEvent);
+                        };
+                    }(sDateFieldName));
                     oTemplate = new DatePicker({
                         value: {
                             path: "detailModel>" + sFieldName,
@@ -279,7 +291,7 @@ sap.ui.define([
                         placeholder: " ",
                         editable: "{= ${detailModel>_isNew} === true }",
                         valueState: "{= ${detailModel>" + sDateErrorProp + "} ? 'Error' : 'None' }",
-                        change: that._onFieldChange.bind(that)
+                        change: fnDateChange
                     }).addStyleClass("sapUiSizeCompact");
                 } else if (bNonEditableInput) {
                     oTemplate = new Input({
@@ -601,7 +613,7 @@ sap.ui.define([
                     }
                 }
 
-                if (aChangedFields.length > 0) {
+                if (oRow._isNew || aChangedFields.length > 0) {
                     aChangedRows.push({
                         rowIndex: i,
                         rowData: oRow,
