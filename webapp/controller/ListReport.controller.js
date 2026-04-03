@@ -20,6 +20,13 @@ sap.ui.define([
             this.getView().setModel(oModel);
         },
 
+        onAfterRendering: function () {
+            var oInput = this.byId("idProdAlloc");
+            if (oInput) {
+                oInput.focus();
+            }
+        },
+
         onSearch: function () {
             var oModel = this.getView().getModel();
             var sProdAlloc = oModel.getProperty("/filterProdAlloc");
