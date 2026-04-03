@@ -658,10 +658,19 @@ sap.ui.define([
                 oRow._endDateError = false;
             });
 
+            var fnNormDate = function (s) {
+                if (!s) { return ""; }
+                var str = String(s).trim();
+                if (/^\d{8}$/.test(str)) {
+                    return str.substring(0, 4) + "-" + str.substring(4, 6) + "-" + str.substring(6, 8);
+                }
+                return str;
+            };
+
             aChangedRows.forEach(function (oChangedRow) {
                 var oRowData = oChangedRow.rowData;
-                var sStart = oRowData["PRODALLOCPERDSTARTUTCDATE"] || "";
-                var sEnd = oRowData["PRODALLOCPERIODENDUTCDATE"] || "";
+                var sStart = fnNormDate(oRowData["PRODALLOCPERDSTARTUTCDATE"]);
+                var sEnd = fnNormDate(oRowData["PRODALLOCPERIODENDUTCDATE"]);
                 if (sStart && sEnd && sEnd < sStart) {
                     oRowData._startDateError = true;
                     oRowData._endDateError = true;
