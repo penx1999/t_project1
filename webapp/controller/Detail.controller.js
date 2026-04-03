@@ -51,7 +51,10 @@ sap.ui.define([
                 busy: false,
                 hasChanges: false,
                 fec_ini: this._formatDateValue(oToday),
-                fec_fin: this._formatDateValue(oNextYear)
+                fec_fin: this._formatDateValue(oNextYear),
+                messageText: "",
+                messageType: "None",
+                messageVisible: false
             });
             this.getView().setModel(oModel, "detailModel");
 
@@ -555,9 +558,14 @@ sap.ui.define([
                 });
                 oModel.setProperty("/rows", aRows);
             }
+            oModel.setProperty("/messageVisible", false);
             var bHasChanges = this._detectChanges(aRows);
             jQuery.sap.log.info("Detail._onFieldChange: hasChanges=" + bHasChanges);
             oModel.setProperty("/hasChanges", bHasChanges);
+        },
+
+        onMessageClose: function () {
+            this.getView().getModel("detailModel").setProperty("/messageVisible", false);
         },
 
         _detectChanges: function (aRows) {
@@ -696,13 +704,25 @@ sap.ui.define([
             console.log("POST Payload Array:", JSON.stringify(aPayloadItems, null, 2));
 
             this._executePost(aPayloadItems)
-                .then(function (sSapMsg) {
+                .then(function (oSapMsg) {
                     oModel.setProperty("/busy", false);
                     oModel.setProperty("/hasChanges", false);
                     that._oOriginalData = JSON.parse(JSON.stringify(oModel.getProperty("/rows")));
                     that._hasDeletedRows = false;
-                    var sDisplay = sSapMsg || oBundle.getText("msgSaveSuccess");
-                    MessageToast.show(sDisplay);
+                    if (oSapMsg && oSapMsg.text) {
+                        var sType = "Information";
+                        var sSev = (oSapMsg.severity || "").toLowerCase();
+                        if (sSev === "success") { sType = "Success"; }
+                        else if (sSev === "warning" || sSev === "w") { sType = "Warning"; }
+                        else if (sSev === "error" || sSev === "e") { sType = "Error"; }
+                        oModel.setProperty("/messageText", oSapMsg.text);
+                        oModel.setProperty("/messageType", sType);
+                        oModel.setProperty("/messageVisible", true);
+                    } else {
+                        oModel.setProperty("/messageText", oBundle.getText("msgSaveSuccess"));
+                        oModel.setProperty("/messageType", "Success");
+                        oModel.setProperty("/messageVisible", true);
+                    }
                 })
                 .catch(function (oError) {
                     oModel.setProperty("/busy", false);
@@ -807,15 +827,15 @@ sap.ui.define([
                 oODataModel.create("/DynamicFieldSet", oData, {
                     success: function (oData, oResponse) {
                         console.log("POST Success");
-                        var sSapMsg = "";
+                        var oSapMsg = null;
                         try {
                             var sHeader = oResponse && oResponse.headers && oResponse.headers["sap-message"];
                             if (sHeader) {
-                                var oMsg = JSON.parse(sHeader);
-                                sSapMsg = oMsg.message || "";
+                                var oParsed = JSON.parse(sHeader);
+                                oSapMsg = { text: oParsed.message || "", severity: oParsed.severity || "" };
                             }
                         } catch (e) {}
-                        resolve(sSapMsg);
+                        resolve(oSapMsg);
                     },
                     error: function (oError) {
                         console.log("POST Error:", oError);

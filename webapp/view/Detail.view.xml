@@ -46,6 +46,16 @@
                 backgroundDesign="Translucent">
             </ObjectHeader>
 
+            <!-- Service Message Strip -->
+            <MessageStrip
+                id="idServiceMessage"
+                text="{detailModel>/messageText}"
+                type="{detailModel>/messageType}"
+                visible="{detailModel>/messageVisible}"
+                showCloseButton="true"
+                class="sapUiSmallMarginBeginEnd sapUiSmallMarginTop"
+                close=".onMessageClose"/>
+
             <!-- Selection Range Panel -->
             <Panel
                 headerText="{i18n>selectionRange}"
