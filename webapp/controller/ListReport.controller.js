@@ -18,12 +18,24 @@ sap.ui.define([
                 selectedItems: []
             });
             this.getView().setModel(oModel);
+
+            var that = this;
+            this.getView().addEventDelegate({
+                onkeydown: function (oEvent) {
+                    if (oEvent.key === "Enter" || oEvent.keyCode === 13) {
+                        var sTag = oEvent.target ? oEvent.target.tagName.toUpperCase() : "";
+                        if (sTag !== "BUTTON") {
+                            that.onSearch();
+                        }
+                    }
+                }
+            });
         },
 
         onAfterRendering: function () {
             var oInput = this.byId("idProdAlloc");
             if (oInput) {
-                oInput.focus();
+                setTimeout(function () { oInput.focus(); }, 300);
             }
         },
 
