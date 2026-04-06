@@ -85,6 +85,9 @@ sap.ui.define([
             var oModel = this.getView().getModel("detailModel");
             oModel.setProperty("/productAllocationObject", sQuotaId);
             oModel.setProperty("/busy", true);
+            oModel.setProperty("/messageVisible", false);
+            oModel.setProperty("/messageText", "");
+            oModel.setProperty("/messageType", "None");
             this._loadDynamicFields(sQuotaId);
         },
 
@@ -345,6 +348,10 @@ sap.ui.define([
         },
 
         onNavBack: function () {
+            var oModel = this.getView().getModel("detailModel");
+            oModel.setProperty("/messageVisible", false);
+            oModel.setProperty("/messageText", "");
+            oModel.setProperty("/messageType", "None");
             var oHistory = History.getInstance();
             var sPreviousHash = oHistory.getPreviousHash();
             if (sPreviousHash !== undefined) {
