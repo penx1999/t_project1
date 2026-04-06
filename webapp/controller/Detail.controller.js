@@ -446,11 +446,6 @@ sap.ui.define([
 
             oNewRow["_isNew"] = true;
 
-            oNewRow["PRODALLOCATIONACTIVATIONSTATUS"] = "Active";
-            oNewRow["PRODALLOCATIONACTIVATIONSTATUS_old"] = "Active";
-            oNewRow["PRODALLOCCHARCCONSTRAINTSTATUS"] = "As in Sequence Const";
-            oNewRow["PRODALLOCCHARCCONSTRAINTSTATUS_old"] = "As in Sequence Const";
-
             aRows.push(oNewRow);
             oModel.setProperty("/rows", aRows);
 
