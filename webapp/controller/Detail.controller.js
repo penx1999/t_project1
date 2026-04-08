@@ -36,6 +36,7 @@ sap.ui.define([
         _oOriginalData: null,
         _oFieldMetadata: null,
         _hasDeletedRows: false,
+        _aDeletedRows: [],
 
         onInit: function () {
             var oToday = new Date();
@@ -192,6 +193,7 @@ sap.ui.define([
 
                     that._oOriginalData = JSON.parse(JSON.stringify(aRows));
                     that._hasDeletedRows = false;
+                    that._aDeletedRows = [];
 
                     var sTitle = oBundle.getText("tableDataTitle") + " (" + aRows.length + ")";
 
@@ -408,6 +410,7 @@ sap.ui.define([
 
             for (var i = 0; i < aSelectedIndices.length; i++) {
                 var iIndex = aSelectedIndices[i];
+                this._aDeletedRows.push({ rowIndex: iIndex, rowData: JSON.parse(JSON.stringify(aRows[iIndex])) });
                 aRows.splice(iIndex, 1);
                 if (this._oOriginalData && this._oOriginalData[iIndex]) {
                     this._oOriginalData.splice(iIndex, 1);
@@ -655,7 +658,7 @@ sap.ui.define([
             var oBundle = this.getView().getModel("i18n").getResourceBundle();
             var aChangedRows = this._getChangedRows();
 
-            if (aChangedRows.length === 0) {
+            if (aChangedRows.length === 0 && this._aDeletedRows.length === 0) {
                 MessageToast.show(oBundle.getText("msgNoChanges"));
                 return;
             }
@@ -711,6 +714,7 @@ sap.ui.define([
                     oModel.setProperty("/hasChanges", false);
                     that._oOriginalData = JSON.parse(JSON.stringify(oModel.getProperty("/rows")));
                     that._hasDeletedRows = false;
+                    that._aDeletedRows = [];
                     if (oSapMsg && oSapMsg.text) {
                         var sType = "Information";
                         var sSev = (oSapMsg.severity || "").toLowerCase();
@@ -789,6 +793,36 @@ sap.ui.define([
                     };
 
                     oFieldsMap[sFieldName].DataSetAsoc.push(oDataItem);
+                });
+            });
+
+            this._aDeletedRows.forEach(function (oDeletedEntry) {
+                var iRowIndex = oDeletedEntry.rowIndex;
+                var oRowData = oDeletedEntry.rowData;
+
+                aColumns.forEach(function (oCol) {
+                    var sFieldName = oCol.name;
+                    var sCellKey = iRowIndex + "_" + sFieldName;
+                    var oCellMeta = that._oCellKeys[sCellKey] || {};
+
+                    var oDataItem = {
+                        key: oCellMeta.key || "",
+                        tabname: oCellMeta.tabname || "PAL",
+                        name: sFieldName,
+                        Value: "",
+                        Value_old: "",
+                        position: String(iRowIndex + 1),
+                        prodallocationtimeseriesuuid: oCellMeta.prodallocationtimeseriesuuid || oRowData.prodallocationtimeseriesuuid || "",
+                        productallocationobject: oCellMeta.productallocationobject || oRowData.productallocationobject || "",
+                        CHARCVALUECOMBINATIONUUID: oCellMeta.CHARCVALUECOMBINATIONUUID || oRowData.CHARCVALUECOMBINATIONUUID || "",
+                        PRODALLOCPERDSTARTUTCDATETIME: oCellMeta.PRODALLOCPERDSTARTUTCDATETIME || oRowData.PRODALLOCPERDSTARTUTCDATETIME || "",
+                        PRODALLOCPERIODENDUTCDATETIME: oCellMeta.PRODALLOCPERIODENDUTCDATETIME || oRowData.PRODALLOCPERIODENDUTCDATETIME || "",
+                        fec_ini: that._toODataDate(sFecIni) || ""
+                    };
+
+                    if (oFieldsMap[sFieldName]) {
+                        oFieldsMap[sFieldName].DataSetAsoc.push(oDataItem);
+                    }
                 });
             });
 
