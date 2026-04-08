@@ -810,7 +810,7 @@ sap.ui.define([
                         tabname: oCellMeta.tabname || "PAL",
                         name: sFieldName,
                         Value: "",
-                        Value_old: "",
+                        Value_old: oRowData[sFieldName] || "",
                         position: String(iRowIndex + 1),
                         prodallocationtimeseriesuuid: oCellMeta.prodallocationtimeseriesuuid || oRowData.prodallocationtimeseriesuuid || "",
                         productallocationobject: oCellMeta.productallocationobject || oRowData.productallocationobject || "",
