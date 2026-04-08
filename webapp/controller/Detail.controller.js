@@ -408,9 +408,19 @@ sap.ui.define([
 
             aSelectedIndices.sort(function (a, b) { return b - a; });
 
+            var aColumns = oModel.getProperty("/columns") || [];
+
             for (var i = 0; i < aSelectedIndices.length; i++) {
                 var iIndex = aSelectedIndices[i];
-                this._aDeletedRows.push({ rowIndex: iIndex, rowData: JSON.parse(JSON.stringify(aRows[iIndex])) });
+                var oRowCopy = JSON.parse(JSON.stringify(aRows[iIndex]));
+                aColumns.forEach(function (oCol) {
+                    var sField = oCol.name;
+                    var sOldKey = sField + "_old";
+                    if (!oRowCopy[sOldKey]) {
+                        oRowCopy[sOldKey] = oRowCopy[sField] || "";
+                    }
+                });
+                this._aDeletedRows.push({ rowIndex: iIndex, rowData: oRowCopy });
                 aRows.splice(iIndex, 1);
                 if (this._oOriginalData && this._oOriginalData[iIndex]) {
                     this._oOriginalData.splice(iIndex, 1);
@@ -810,7 +820,7 @@ sap.ui.define([
                         tabname: oCellMeta.tabname || "PAL",
                         name: sFieldName,
                         Value: "",
-                        Value_old: oRowData[sFieldName] || "",
+                        Value_old: oRowData[sFieldName + "_old"] || oRowData[sFieldName] || "",
                         position: String(iRowIndex + 1),
                         prodallocationtimeseriesuuid: oCellMeta.prodallocationtimeseriesuuid || oRowData.prodallocationtimeseriesuuid || "",
                         productallocationobject: oCellMeta.productallocationobject || oRowData.productallocationobject || "",
