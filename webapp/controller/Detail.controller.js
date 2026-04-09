@@ -319,9 +319,7 @@ sap.ui.define([
                 } else {
                     oTemplate = new Input({
                         value: "{detailModel>" + sFieldName + "}",
-                        editable: "{= ${detailModel>_isNew} === true }",
-                        change: that._onFieldChange.bind(that),
-                        liveChange: that._onFieldChange.bind(that)
+                        editable: false
                     }).addStyleClass("sapUiSizeCompact");
                 }
 
