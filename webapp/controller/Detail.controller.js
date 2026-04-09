@@ -165,6 +165,9 @@ sap.ui.define([
                             if (!aRows[iIdx].prodallocationtimeseriesuuid) {
                                 aRows[iIdx].prodallocationtimeseriesuuid = oEntry.prodallocationtimeseriesuuid;
                             }
+                            if (!aRows[iIdx].productallocationsequence) {
+                                aRows[iIdx].productallocationsequence = oEntry.productallocationsequence || "";
+                            }
                             var sValue = (oEntry.Value || "").toString().trim();
                             var sValueOld = (oEntry.Value_old || oEntry.Value || "").toString().trim();
                             aRows[iIdx][oField.name] = sValue;
@@ -179,7 +182,8 @@ sap.ui.define([
                                 productallocationobject: oEntry.productallocationobject,
                                 CHARCVALUECOMBINATIONUUID: oEntry.CHARCVALUECOMBINATIONUUID,
                                 PRODALLOCPERDSTARTUTCDATETIME: oEntry.PRODALLOCPERDSTARTUTCDATETIME,
-                                PRODALLOCPERIODENDUTCDATETIME: oEntry.PRODALLOCPERIODENDUTCDATETIME
+                                PRODALLOCPERIODENDUTCDATETIME: oEntry.PRODALLOCPERIODENDUTCDATETIME,
+                                productallocationsequence: oEntry.productallocationsequence || ""
                             };
 
                             if (!that._oFieldMetadata[oField.name]) {
@@ -799,6 +803,7 @@ sap.ui.define([
                         CHARCVALUECOMBINATIONUUID: oCellMeta.CHARCVALUECOMBINATIONUUID || oRowData.CHARCVALUECOMBINATIONUUID || "",
                         PRODALLOCPERDSTARTUTCDATETIME: oCellMeta.PRODALLOCPERDSTARTUTCDATETIME || oRowData.PRODALLOCPERDSTARTUTCDATETIME || "",
                         PRODALLOCPERIODENDUTCDATETIME: oCellMeta.PRODALLOCPERIODENDUTCDATETIME || oRowData.PRODALLOCPERIODENDUTCDATETIME || "",
+                        productallocationsequence: oCellMeta.productallocationsequence || oRowData.productallocationsequence || "",
                         fec_ini: that._toODataDate(sFecIni) || ""
                     };
 
@@ -827,6 +832,7 @@ sap.ui.define([
                         CHARCVALUECOMBINATIONUUID: oCellMeta.CHARCVALUECOMBINATIONUUID || oRowData.CHARCVALUECOMBINATIONUUID || "",
                         PRODALLOCPERDSTARTUTCDATETIME: oCellMeta.PRODALLOCPERDSTARTUTCDATETIME || oRowData.PRODALLOCPERDSTARTUTCDATETIME || "",
                         PRODALLOCPERIODENDUTCDATETIME: oCellMeta.PRODALLOCPERIODENDUTCDATETIME || oRowData.PRODALLOCPERIODENDUTCDATETIME || "",
+                        productallocationsequence: oCellMeta.productallocationsequence || oRowData.productallocationsequence || "",
                         fec_ini: that._toODataDate(sFecIni) || ""
                     };
 
