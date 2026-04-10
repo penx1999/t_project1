@@ -708,11 +708,22 @@ sap.ui.define([
                 return str;
             };
 
+            var oCtrl = this;
+            console.log("DEBUG onSave: aChangedRows.length=", aChangedRows.length, " _aDeletedRows.length=", oCtrl._aDeletedRows ? oCtrl._aDeletedRows.length : 0);
+
             aChangedRows.forEach(function (oChangedRow) {
                 var oRowData = oChangedRow.rowData;
                 var sStart = fnNormDate(oRowData["PRODALLOCPERDSTARTUTCDATE"]);
                 var sEnd = fnNormDate(oRowData["PRODALLOCPERIODENDUTCDATE"]);
                 var sQty = (oRowData["PRODUCTALLOCATIONQUANTITY"] || "").toString().trim();
+
+                console.log("DEBUG onSave row:", JSON.stringify({
+                    _isNew: oRowData._isNew,
+                    sStart: sStart,
+                    sEnd: sEnd,
+                    sQty: sQty,
+                    keys: Object.keys(oRowData)
+                }));
 
                 if (oRowData._isNew) {
                     if (!sStart) { oRowData._startDateError = true; bRequiredError = true; }
