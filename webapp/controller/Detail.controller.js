@@ -379,10 +379,10 @@ sap.ui.define([
 
             oNewRow["PRODUCTALLOCATIONOBJECT"] = sProductAllocationObject;
             oNewRow["PRODUCTALLOCATIONOBJECT_old"] = sProductAllocationObject;
-            oNewRow["PRODALLOCATIONACTIVATIONSTATUS"] = "Active";
-            oNewRow["PRODALLOCATIONACTIVATIONSTATUS_old"] = "Active";
-            oNewRow["PRODALLOCCHARCCONSTRAINTSTATUS"] = "As in Sequence Const";
-            oNewRow["PRODALLOCCHARCCONSTRAINTSTATUS_old"] = "As in Sequence Const";
+            oNewRow["PRODALLOCATIONACTIVATIONSTATUS"] = "Activos";
+            oNewRow["PRODALLOCATIONACTIVATIONSTATUS_old"] = "Activos";
+            oNewRow["PRODALLOCCHARCCONSTRAINTSTATUS"] = "Como en restricción de secuencia";
+            oNewRow["PRODALLOCCHARCCONSTRAINTSTATUS_old"] = "Como en restricción de secuencia";
             oNewRow["_isNew"] = true;
 
             aRows.push(oNewRow);
