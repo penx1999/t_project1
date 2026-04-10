@@ -270,6 +270,9 @@ sap.ui.define([
                 var bDateField = (sFieldUpper === "PRODALLOCPERDSTARTUTCDATE" ||
                                   sFieldUpper === "PRODALLOCPERIODENDUTCDATE");
 
+                var bIsComment = (sFieldUpper === "PRODALLOCCHARCVALUECOMBNCMNT");
+                var bIsRequired = !bNonEditableText && !bNeverEditable && !bNonEditableInput && !bIsComment;
+
                 var oTemplate;
                 if (bNonEditableText) {
                     oTemplate = new Text({ text: "{detailModel>" + sFieldName + "}", wrapping: false });
@@ -279,7 +282,6 @@ sap.ui.define([
                         editable: false
                     }).addStyleClass("sapUiSizeCompact");
                 } else if (bDateField) {
-                    var sDateErrorProp = (sFieldUpper === "PRODALLOCPERDSTARTUTCDATE") ? "_startDateError" : "_endDateError";
                     var sDateFieldName = sFieldName;
                     var fnDateChange = (function (sField) {
                         return function (oEvent) {
@@ -310,7 +312,8 @@ sap.ui.define([
                         displayFormat: "medium",
                         placeholder: " ",
                         editable: "{= ${detailModel>_isNew} === true }",
-                        valueState: "{= ${detailModel>" + sDateErrorProp + "} ? 'Error' : 'None' }",
+                        required: "{= ${detailModel>_isNew} === true }",
+                        valueState: "{= ${detailModel>_err_" + sFieldName + "} ? 'Error' : 'None' }",
                         change: fnDateChange
                     }).addStyleClass("sapUiSizeCompact");
                 } else if (bNonEditableInput) {
@@ -324,14 +327,17 @@ sap.ui.define([
                         change: that._onFieldChange.bind(that),
                         liveChange: that._onFieldChange.bind(that)
                     };
-                    if (sFieldUpper === "PRODUCTALLOCATIONQUANTITY") {
-                        oInputCfg.valueState = "{= ${detailModel>_quantityError} ? 'Error' : 'None' }";
+                    if (!bIsComment) {
+                        oInputCfg.valueState = "{= ${detailModel>_err_" + sFieldName + "} ? 'Error' : 'None' }";
+                        oInputCfg.required = true;
                     }
                     oTemplate = new Input(oInputCfg).addStyleClass("sapUiSizeCompact");
                 } else {
                     oTemplate = new Input({
                         value: "{detailModel>" + sFieldName + "}",
                         editable: "{= ${detailModel>_isNew} === true }",
+                        required: "{= ${detailModel>_isNew} === true }",
+                        valueState: "{= ${detailModel>_err_" + sFieldName + "} ? 'Error' : 'None' }",
                         change: that._onFieldChange.bind(that),
                         liveChange: that._onFieldChange.bind(that)
                     }).addStyleClass("sapUiSizeCompact");
@@ -339,7 +345,7 @@ sap.ui.define([
 
                 oTable.addColumn(new UIColumn({
                     width: "150px",
-                    label: new Label({ text: oCol.label, wrapping: false }),
+                    label: new Label({ text: oCol.label + (bIsRequired ? " *" : ""), wrapping: false }),
                     template: oTemplate,
                     resizable: true,
                     autoResizable: true
@@ -393,10 +399,13 @@ sap.ui.define([
 
             oNewRow["PRODUCTALLOCATIONOBJECT"] = sProductAllocationObject;
             oNewRow["PRODUCTALLOCATIONOBJECT_old"] = sProductAllocationObject;
-            oNewRow["PRODALLOCATIONACTIVATIONSTATUS"] = "Activos";
-            oNewRow["PRODALLOCATIONACTIVATIONSTATUS_old"] = "Activos";
-            oNewRow["PRODALLOCCHARCCONSTRAINTSTATUS"] = "Como en restricción de secuencia";
-            oNewRow["PRODALLOCCHARCCONSTRAINTSTATUS_old"] = "Como en restricción de secuencia";
+            var oAddBundle = this.getView().getModel("i18n").getResourceBundle();
+            var sDefStatus = oAddBundle.getText("defaultActivationStatus");
+            var sDefConstraint = oAddBundle.getText("defaultConstraintStatus");
+            oNewRow["PRODALLOCATIONACTIVATIONSTATUS"] = sDefStatus;
+            oNewRow["PRODALLOCATIONACTIVATIONSTATUS_old"] = sDefStatus;
+            oNewRow["PRODALLOCCHARCCONSTRAINTSTATUS"] = sDefConstraint;
+            oNewRow["PRODALLOCCHARCCONSTRAINTSTATUS_old"] = sDefConstraint;
             oNewRow["_isNew"] = true;
 
             aRows.push(oNewRow);
@@ -584,8 +593,9 @@ sap.ui.define([
             var aRows = oModel.getProperty("/rows");
             if (aRows) {
                 aRows.forEach(function (oRow) {
-                    oRow._startDateError = false;
-                    oRow._endDateError = false;
+                    Object.keys(oRow).forEach(function (sKey) {
+                        if (sKey.indexOf("_err_") === 0) { oRow[sKey] = false; }
+                    });
                 });
                 oModel.setProperty("/rows", aRows);
             }
@@ -690,13 +700,22 @@ sap.ui.define([
             }
 
             var aRows = oModel.getProperty("/rows") || [];
+            var aColumns = oModel.getProperty("/columns") || [];
             var bDateError = false;
             var bRequiredError = false;
 
+            var aNonRequired = [
+                "PRODALLOCCHARCVALUECOMBNCMNT",
+                "PRODALLOCATIONACTIVATIONSTATUS",
+                "PRODALLOCCHARCCONSTRAINTSTATUS",
+                "PRODUCTALLOCATIONOBJECT",
+                "PRODUCTALLOCATIONOBJECTUUID"
+            ];
+
             aRows.forEach(function (oRow) {
-                oRow._startDateError = false;
-                oRow._endDateError = false;
-                oRow._quantityError = false;
+                aColumns.forEach(function (oCol) {
+                    oRow["_err_" + oCol.name] = false;
+                });
             });
 
             var fnNormDate = function (s) {
@@ -708,32 +727,33 @@ sap.ui.define([
                 return str;
             };
 
-            var oCtrl = this;
-            console.log("DEBUG onSave: aChangedRows.length=", aChangedRows.length, " _aDeletedRows.length=", oCtrl._aDeletedRows ? oCtrl._aDeletedRows.length : 0);
+            var sStartField = null, sEndField = null;
+            aColumns.forEach(function (oCol) {
+                var u = oCol.name.toUpperCase();
+                if (u === "PRODALLOCPERDSTARTUTCDATE") { sStartField = oCol.name; }
+                if (u === "PRODALLOCPERIODENDUTCDATE")  { sEndField   = oCol.name; }
+            });
 
             aChangedRows.forEach(function (oChangedRow) {
                 var oRowData = oChangedRow.rowData;
-                var sStart = fnNormDate(oRowData["PRODALLOCPERDSTARTUTCDATE"]);
-                var sEnd = fnNormDate(oRowData["PRODALLOCPERIODENDUTCDATE"]);
-                var sQty = (oRowData["PRODUCTALLOCATIONQUANTITY"] || "").toString().trim();
-
-                console.log("DEBUG onSave row:", JSON.stringify({
-                    _isNew: oRowData._isNew,
-                    sStart: sStart,
-                    sEnd: sEnd,
-                    sQty: sQty,
-                    keys: Object.keys(oRowData)
-                }));
 
                 if (oRowData._isNew) {
-                    if (!sStart) { oRowData._startDateError = true; bRequiredError = true; }
-                    if (!sEnd)   { oRowData._endDateError   = true; bRequiredError = true; }
-                    if (!sQty)   { oRowData._quantityError  = true; bRequiredError = true; }
+                    aColumns.forEach(function (oCol) {
+                        var sFieldName = oCol.name;
+                        if (aNonRequired.indexOf(sFieldName.toUpperCase()) !== -1) { return; }
+                        var sValue = (oRowData[sFieldName] || "").toString().trim();
+                        if (!sValue) {
+                            oRowData["_err_" + sFieldName] = true;
+                            bRequiredError = true;
+                        }
+                    });
                 }
 
+                var sStart = sStartField ? fnNormDate(oRowData[sStartField]) : "";
+                var sEnd   = sEndField   ? fnNormDate(oRowData[sEndField])   : "";
                 if (sStart && sEnd && sEnd < sStart) {
-                    oRowData._startDateError = true;
-                    oRowData._endDateError = true;
+                    if (sStartField) { oRowData["_err_" + sStartField] = true; }
+                    if (sEndField)   { oRowData["_err_" + sEndField]   = true; }
                     bDateError = true;
                 }
             });
@@ -741,7 +761,7 @@ sap.ui.define([
             oModel.setProperty("/rows", aRows);
 
             if (bRequiredError) {
-                MessageBox.error("Las fechas de inicio/fin y el campo 'QUOTA Qty' son obligatorios para filas nuevas.");
+                MessageBox.error(oBundle.getText("msgRequiredFields"));
                 return;
             }
 
