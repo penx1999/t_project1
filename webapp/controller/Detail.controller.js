@@ -319,11 +319,15 @@ sap.ui.define([
                         editable: false
                     }).addStyleClass("sapUiSizeCompact");
                 } else if (bEditableField) {
-                    oTemplate = new Input({
+                    var oInputCfg = {
                         value: "{detailModel>" + sFieldName + "}",
                         change: that._onFieldChange.bind(that),
                         liveChange: that._onFieldChange.bind(that)
-                    }).addStyleClass("sapUiSizeCompact");
+                    };
+                    if (sFieldUpper === "PRODUCTALLOCATIONQUANTITY") {
+                        oInputCfg.valueState = "{= ${detailModel>_quantityError} ? 'Error' : 'None' }";
+                    }
+                    oTemplate = new Input(oInputCfg).addStyleClass("sapUiSizeCompact");
                 } else {
                     oTemplate = new Input({
                         value: "{detailModel>" + sFieldName + "}",
@@ -687,10 +691,12 @@ sap.ui.define([
 
             var aRows = oModel.getProperty("/rows") || [];
             var bDateError = false;
+            var bRequiredError = false;
 
             aRows.forEach(function (oRow) {
                 oRow._startDateError = false;
                 oRow._endDateError = false;
+                oRow._quantityError = false;
             });
 
             var fnNormDate = function (s) {
@@ -706,6 +712,14 @@ sap.ui.define([
                 var oRowData = oChangedRow.rowData;
                 var sStart = fnNormDate(oRowData["PRODALLOCPERDSTARTUTCDATE"]);
                 var sEnd = fnNormDate(oRowData["PRODALLOCPERIODENDUTCDATE"]);
+                var sQty = (oRowData["PRODUCTALLOCATIONQUANTITY"] || "").toString().trim();
+
+                if (oRowData._isNew) {
+                    if (!sStart) { oRowData._startDateError = true; bRequiredError = true; }
+                    if (!sEnd)   { oRowData._endDateError   = true; bRequiredError = true; }
+                    if (!sQty)   { oRowData._quantityError  = true; bRequiredError = true; }
+                }
+
                 if (sStart && sEnd && sEnd < sStart) {
                     oRowData._startDateError = true;
                     oRowData._endDateError = true;
@@ -714,6 +728,11 @@ sap.ui.define([
             });
 
             oModel.setProperty("/rows", aRows);
+
+            if (bRequiredError) {
+                MessageBox.error("Las fechas de inicio/fin y el campo 'QUOTA Qty' son obligatorios para filas nuevas.");
+                return;
+            }
 
             if (bDateError) {
                 MessageBox.error(oBundle.getText("msgDateRangeError"));
