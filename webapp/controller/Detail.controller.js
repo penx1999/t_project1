@@ -257,6 +257,9 @@ sap.ui.define([
                 
                 var bNonEditableText = (sFieldUpper === "PRODUCTALLOCATIONOBJECT");
                 
+                var sLabelUpper = (oCol.label || "").toUpperCase().trim();
+                var bNeverEditable = (sLabelUpper === "AVBL QTY" || sLabelUpper === "CNSMD QTY");
+
                 var bNonEditableInput = (sFieldUpper === "PRODALLOCATIONACTIVATIONSTATUS" ||
                                          sFieldUpper === "PRODALLOCCHARCCONSTRAINTSTATUS");
                 
@@ -270,6 +273,11 @@ sap.ui.define([
                 var oTemplate;
                 if (bNonEditableText) {
                     oTemplate = new Text({ text: "{detailModel>" + sFieldName + "}", wrapping: false });
+                } else if (bNeverEditable) {
+                    oTemplate = new Input({
+                        value: "{detailModel>" + sFieldName + "}",
+                        editable: false
+                    }).addStyleClass("sapUiSizeCompact");
                 } else if (bDateField) {
                     var sDateErrorProp = (sFieldUpper === "PRODALLOCPERDSTARTUTCDATE") ? "_startDateError" : "_endDateError";
                     var sDateFieldName = sFieldName;
@@ -319,7 +327,9 @@ sap.ui.define([
                 } else {
                     oTemplate = new Input({
                         value: "{detailModel>" + sFieldName + "}",
-                        editable: false
+                        editable: "{= ${detailModel>_isNew} === true }",
+                        change: that._onFieldChange.bind(that),
+                        liveChange: that._onFieldChange.bind(that)
                     }).addStyleClass("sapUiSizeCompact");
                 }
 
