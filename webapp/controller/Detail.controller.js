@@ -740,7 +740,10 @@ sap.ui.define([
                 if (oRowData._isNew) {
                     aColumns.forEach(function (oCol) {
                         var sFieldName = oCol.name;
-                        if (aNonRequired.indexOf(sFieldName.toUpperCase()) !== -1) { return; }
+                        var sFieldUpper = sFieldName.toUpperCase();
+                        var sColLabelUpper = (oCol.label || "").toUpperCase().trim();
+                        if (aNonRequired.indexOf(sFieldUpper) !== -1) { return; }
+                        if (sColLabelUpper === "AVBL QTY" || sColLabelUpper === "CNSMD QTY") { return; }
                         var sValue = (oRowData[sFieldName] || "").toString().trim();
                         if (!sValue) {
                             oRowData["_err_" + sFieldName] = true;
