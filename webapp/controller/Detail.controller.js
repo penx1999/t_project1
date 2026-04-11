@@ -785,11 +785,6 @@ sap.ui.define([
 
             this._executePost(aPayloadItems)
                 .then(function (oSapMsg) {
-                    oModel.setProperty("/busy", false);
-                    oModel.setProperty("/hasChanges", false);
-                    that._oOriginalData = JSON.parse(JSON.stringify(oModel.getProperty("/rows")));
-                    that._hasDeletedRows = false;
-                    that._aDeletedRows = [];
                     if (oSapMsg && oSapMsg.text) {
                         var sType = "Information";
                         var sSev = (oSapMsg.severity || "").toLowerCase();
@@ -804,6 +799,11 @@ sap.ui.define([
                         oModel.setProperty("/messageType", "Success");
                         oModel.setProperty("/messageVisible", true);
                     }
+                    that._hasDeletedRows = false;
+                    that._aDeletedRows = [];
+                    var sObj = oModel.getProperty("/productAllocationObject");
+                    oModel.setProperty("/busy", true);
+                    that._loadDynamicFields(sObj);
                 })
                 .catch(function (oError) {
                     oModel.setProperty("/busy", false);
