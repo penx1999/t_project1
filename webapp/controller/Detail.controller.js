@@ -539,7 +539,6 @@ sap.ui.define([
             aSelectedIndices.forEach(function (iIdx) {
                 oModel.setProperty("/rows/" + iIdx + "/PRODALLOCATIONACTIVATIONSTATUS", sEnglishValue);
             });
-            oTable.clearSelection();
             oModel.setProperty("/hasChanges", true);
         },
 
@@ -582,7 +581,6 @@ sap.ui.define([
             aSelectedIndices.forEach(function (iIdx) {
                 oModel.setProperty("/rows/" + iIdx + "/PRODALLOCCHARCCONSTRAINTSTATUS", sNewStatus);
             });
-            oTable.clearSelection();
             oModel.setProperty("/hasChanges", true);
         },
 
