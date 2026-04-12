@@ -507,17 +507,21 @@ sap.ui.define([
         onOpenChangeStatusMenu: function (oEvent) {
             var oTable = this.byId("idDynamicTable");
             var aSelectedIndices = oTable.getSelectedIndices();
+            var oBundle = this.getView().getModel("i18n").getResourceBundle();
 
-            if (aSelectedIndices.length !== 1) {
+            if (aSelectedIndices.length === 0) {
+                MessageToast.show(oBundle.getText("msgSelectRows"));
                 return;
             }
 
             var oButton = oEvent.getSource();
             if (!this._oStatusMenu) {
+                var that = this;
                 this._oStatusMenu = new sap.m.Menu({
+                    title: oBundle.getText("changeStatusButton"),
                     items: [
-                        new sap.m.MenuItem({ text: "Active", press: this.onChangeStatus.bind(this) }),
-                        new sap.m.MenuItem({ text: "Inactive", press: this.onChangeStatus.bind(this) })
+                        new sap.m.MenuItem({ text: oBundle.getText("statusMenuActive"),   press: that.onChangeStatus.bind(that) }),
+                        new sap.m.MenuItem({ text: oBundle.getText("statusMenuInactive"), press: that.onChangeStatus.bind(that) })
                     ]
                 });
                 this.getView().addDependent(this._oStatusMenu);
@@ -528,39 +532,38 @@ sap.ui.define([
         onChangeStatus: function (oEvent) {
             var oTable = this.byId("idDynamicTable");
             var aSelectedIndices = oTable.getSelectedIndices();
-
-            if (aSelectedIndices.length !== 1) {
-                return;
-            }
+            if (aSelectedIndices.length === 0) { return; }
 
             var sNewStatus = oEvent.getSource().getText();
             var oModel = this.getView().getModel("detailModel");
-            var iSelectedIndex = aSelectedIndices[0];
-
-            oModel.setProperty("/rows/" + iSelectedIndex + "/PRODALLOCATIONACTIVATIONSTATUS", sNewStatus);
-
+            aSelectedIndices.forEach(function (iIdx) {
+                oModel.setProperty("/rows/" + iIdx + "/PRODALLOCATIONACTIVATIONSTATUS", sNewStatus);
+            });
             oTable.clearSelection();
-
             oModel.setProperty("/hasChanges", true);
         },
 
         onOpenChangeConstraintStatusMenu: function (oEvent) {
             var oTable = this.byId("idDynamicTable");
             var aSelectedIndices = oTable.getSelectedIndices();
+            var oBundle = this.getView().getModel("i18n").getResourceBundle();
 
-            if (aSelectedIndices.length !== 1) {
+            if (aSelectedIndices.length === 0) {
+                MessageToast.show(oBundle.getText("msgSelectRows"));
                 return;
             }
 
             var oButton = oEvent.getSource();
             if (!this._oConstraintStatusMenu) {
+                var that = this;
                 this._oConstraintStatusMenu = new sap.m.Menu({
+                    title: oBundle.getText("changeConstraintStatusButton"),
                     items: [
-                        new sap.m.MenuItem({ text: "Unrestricted Availability", press: this.onChangeConstraintStatus.bind(this) }),
-                        new sap.m.MenuItem({ text: "Restricted Availability", press: this.onChangeConstraintStatus.bind(this) }),
-                        new sap.m.MenuItem({ text: "No Availability", press: this.onChangeConstraintStatus.bind(this) }),
-                        new sap.m.MenuItem({ text: "Not Relevant", press: this.onChangeConstraintStatus.bind(this) }),
-                        new sap.m.MenuItem({ text: "As in Sequence Constraint", press: this.onChangeConstraintStatus.bind(this) })
+                        new sap.m.MenuItem({ text: oBundle.getText("constraintRestricted"),     press: that.onChangeConstraintStatus.bind(that) }),
+                        new sap.m.MenuItem({ text: oBundle.getText("constraintUnrestricted"),   press: that.onChangeConstraintStatus.bind(that) }),
+                        new sap.m.MenuItem({ text: oBundle.getText("constraintNoAvailability"), press: that.onChangeConstraintStatus.bind(that) }),
+                        new sap.m.MenuItem({ text: oBundle.getText("constraintNotRelevant"),    press: that.onChangeConstraintStatus.bind(that) }),
+                        new sap.m.MenuItem({ text: oBundle.getText("constraintAsInSequence"),   press: that.onChangeConstraintStatus.bind(that) })
                     ]
                 });
                 this.getView().addDependent(this._oConstraintStatusMenu);
@@ -571,19 +574,14 @@ sap.ui.define([
         onChangeConstraintStatus: function (oEvent) {
             var oTable = this.byId("idDynamicTable");
             var aSelectedIndices = oTable.getSelectedIndices();
-
-            if (aSelectedIndices.length !== 1) {
-                return;
-            }
+            if (aSelectedIndices.length === 0) { return; }
 
             var sNewStatus = oEvent.getSource().getText();
             var oModel = this.getView().getModel("detailModel");
-            var iSelectedIndex = aSelectedIndices[0];
-
-            oModel.setProperty("/rows/" + iSelectedIndex + "/PRODALLOCCHARCCONSTRAINTSTATUS", sNewStatus);
-
+            aSelectedIndices.forEach(function (iIdx) {
+                oModel.setProperty("/rows/" + iIdx + "/PRODALLOCCHARCCONSTRAINTSTATUS", sNewStatus);
+            });
             oTable.clearSelection();
-
             oModel.setProperty("/hasChanges", true);
         },
 
