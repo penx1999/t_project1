@@ -517,11 +517,12 @@ sap.ui.define([
             var oButton = oEvent.getSource();
             if (!this._oStatusMenu) {
                 var that = this;
+                var bEnS = this._getSapLang() === "en";
                 this._oStatusMenu = new sap.m.Menu({
                     title: oBundle.getText("changeStatusButton"),
                     items: [
-                        new sap.m.MenuItem({ text: "Active",   press: that.onChangeStatus.bind(that) }),
-                        new sap.m.MenuItem({ text: "Inactive", press: that.onChangeStatus.bind(that) })
+                        new sap.m.MenuItem({ text: bEnS ? "Active"   : "Activos",  press: function () { that.onChangeStatus("Active");   } }),
+                        new sap.m.MenuItem({ text: bEnS ? "Inactive" : "Inactivos", press: function () { that.onChangeStatus("Inactive"); } })
                     ]
                 });
                 this.getView().addDependent(this._oStatusMenu);
@@ -529,15 +530,14 @@ sap.ui.define([
             this._oStatusMenu.openBy(oButton);
         },
 
-        onChangeStatus: function (oEvent) {
+        onChangeStatus: function (sEnglishValue) {
             var oTable = this.byId("idDynamicTable");
             var aSelectedIndices = oTable.getSelectedIndices();
             if (aSelectedIndices.length === 0) { return; }
 
-            var sNewStatus = oEvent.getSource().getText();
             var oModel = this.getView().getModel("detailModel");
             aSelectedIndices.forEach(function (iIdx) {
-                oModel.setProperty("/rows/" + iIdx + "/PRODALLOCATIONACTIVATIONSTATUS", sNewStatus);
+                oModel.setProperty("/rows/" + iIdx + "/PRODALLOCATIONACTIVATIONSTATUS", sEnglishValue);
             });
             oTable.clearSelection();
             oModel.setProperty("/hasChanges", true);
