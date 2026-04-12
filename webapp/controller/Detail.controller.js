@@ -399,9 +399,9 @@ sap.ui.define([
 
             oNewRow["PRODUCTALLOCATIONOBJECT"] = sProductAllocationObject;
             oNewRow["PRODUCTALLOCATIONOBJECT_old"] = sProductAllocationObject;
-            var oAddBundle = this.getView().getModel("i18n").getResourceBundle();
-            var sDefStatus = oAddBundle.getText("defaultActivationStatus");
-            var sDefConstraint = oAddBundle.getText("defaultConstraintStatus");
+            var bEn = this._getSapLang() === "en";
+            var sDefStatus     = bEn ? "Active"                      : "Activos";
+            var sDefConstraint = bEn ? "As in Sequence Constraint"    : "Como en restricci\u00f3n de secuencia";
             oNewRow["PRODALLOCATIONACTIVATIONSTATUS"] = sDefStatus;
             oNewRow["PRODALLOCATIONACTIVATIONSTATUS_old"] = sDefStatus;
             oNewRow["PRODALLOCCHARCCONSTRAINTSTATUS"] = sDefConstraint;
@@ -517,11 +517,12 @@ sap.ui.define([
             var oButton = oEvent.getSource();
             if (!this._oStatusMenu) {
                 var that = this;
+                var bEnS = this._getSapLang() === "en";
                 this._oStatusMenu = new sap.m.Menu({
                     title: oBundle.getText("changeStatusButton"),
                     items: [
-                        new sap.m.MenuItem({ text: oBundle.getText("statusMenuActive"),   press: that.onChangeStatus.bind(that) }),
-                        new sap.m.MenuItem({ text: oBundle.getText("statusMenuInactive"), press: that.onChangeStatus.bind(that) })
+                        new sap.m.MenuItem({ text: bEnS ? "Active"   : "Activos",  press: that.onChangeStatus.bind(that) }),
+                        new sap.m.MenuItem({ text: bEnS ? "Inactive" : "Inactivos", press: that.onChangeStatus.bind(that) })
                     ]
                 });
                 this.getView().addDependent(this._oStatusMenu);
@@ -556,14 +557,15 @@ sap.ui.define([
             var oButton = oEvent.getSource();
             if (!this._oConstraintStatusMenu) {
                 var that = this;
+                var bEnC = this._getSapLang() === "en";
                 this._oConstraintStatusMenu = new sap.m.Menu({
                     title: oBundle.getText("changeConstraintStatusButton"),
                     items: [
-                        new sap.m.MenuItem({ text: oBundle.getText("constraintRestricted"),     press: that.onChangeConstraintStatus.bind(that) }),
-                        new sap.m.MenuItem({ text: oBundle.getText("constraintUnrestricted"),   press: that.onChangeConstraintStatus.bind(that) }),
-                        new sap.m.MenuItem({ text: oBundle.getText("constraintNoAvailability"), press: that.onChangeConstraintStatus.bind(that) }),
-                        new sap.m.MenuItem({ text: oBundle.getText("constraintNotRelevant"),    press: that.onChangeConstraintStatus.bind(that) }),
-                        new sap.m.MenuItem({ text: oBundle.getText("constraintAsInSequence"),   press: that.onChangeConstraintStatus.bind(that) })
+                        new sap.m.MenuItem({ text: bEnC ? "Restricted Availability"   : "Disponibilidad Restringida",      press: that.onChangeConstraintStatus.bind(that) }),
+                        new sap.m.MenuItem({ text: bEnC ? "Unrestricted Availability" : "Disponibilidad No Restringida",  press: that.onChangeConstraintStatus.bind(that) }),
+                        new sap.m.MenuItem({ text: bEnC ? "No Availability"           : "Sin Disponibilidad",             press: that.onChangeConstraintStatus.bind(that) }),
+                        new sap.m.MenuItem({ text: bEnC ? "Not Relevant"              : "No Relevante",                   press: that.onChangeConstraintStatus.bind(that) }),
+                        new sap.m.MenuItem({ text: bEnC ? "As in Sequence Constraint" : "Como en restricci\u00f3n de secuencia", press: that.onChangeConstraintStatus.bind(that) })
                     ]
                 });
                 this.getView().addDependent(this._oConstraintStatusMenu);
@@ -605,6 +607,11 @@ sap.ui.define([
 
         onMessageClose: function () {
             this.getView().getModel("detailModel").setProperty("/messageVisible", false);
+        },
+
+        _getSapLang: function () {
+            var sLang = (sap.ui.getCore().getConfiguration().getLanguage() || "").toLowerCase().substring(0, 2);
+            return sLang === "en" ? "en" : "es";
         },
 
         _detectChanges: function (aRows) {
