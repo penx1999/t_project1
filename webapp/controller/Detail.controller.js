@@ -521,8 +521,8 @@ sap.ui.define([
                 this._oStatusMenu = new sap.m.Menu({
                     title: oBundle.getText("changeStatusButton"),
                     items: [
-                        new sap.m.MenuItem({ text: bEnS ? "Active"   : "Activos",  press: function () { that.onChangeStatus("Active");   } }),
-                        new sap.m.MenuItem({ text: bEnS ? "Inactive" : "Inactivos", press: function () { that.onChangeStatus("Inactive"); } })
+                        new sap.m.MenuItem({ text: bEnS ? "Active"   : "Activos",  press: function () { that.onChangeStatus(bEnS ? "Active"   : "Activos");  } }),
+                        new sap.m.MenuItem({ text: bEnS ? "Inactive" : "Inactivos", press: function () { that.onChangeStatus(bEnS ? "Inactive" : "Inactivos"); } })
                     ]
                 });
                 this.getView().addDependent(this._oStatusMenu);
@@ -852,6 +852,10 @@ sap.ui.define([
                     var oCellMeta = that._oCellKeys[sCellKey] || {};
 
                     var sCurrentValue = oRowData[sFieldName] || "";
+                    if (sFieldName.toUpperCase() === "PRODALLOCATIONACTIVATIONSTATUS") {
+                        var oStatusEn = { "activos": "Active", "inactivos": "Inactive", "active": "Active", "inactive": "Inactive" };
+                        sCurrentValue = oStatusEn[sCurrentValue.toLowerCase()] || sCurrentValue;
+                    }
                     var sOldValue = oRowData["_isNew"] ? "" : (oRowData[sFieldName + "_old"] || sCurrentValue);
 
                     var oDataItem = {
