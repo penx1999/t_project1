@@ -400,8 +400,8 @@ sap.ui.define([
             oNewRow["PRODUCTALLOCATIONOBJECT"] = sProductAllocationObject;
             oNewRow["PRODUCTALLOCATIONOBJECT_old"] = sProductAllocationObject;
             var bEn = this._getSapLang() === "en";
-            var sDefStatus     = bEn ? "Active"                      : "Activos";
-            var sDefConstraint = bEn ? "As in Sequence Constraint"    : "Como en restricci\u00f3n de secuencia";
+            var sDefStatus     = "Active";
+            var sDefConstraint = bEn ? "As in Sequence Constraint" : "Como en restricci\u00f3n de secuencia";
             oNewRow["PRODALLOCATIONACTIVATIONSTATUS"] = sDefStatus;
             oNewRow["PRODALLOCATIONACTIVATIONSTATUS_old"] = sDefStatus;
             oNewRow["PRODALLOCCHARCCONSTRAINTSTATUS"] = sDefConstraint;
@@ -517,12 +517,11 @@ sap.ui.define([
             var oButton = oEvent.getSource();
             if (!this._oStatusMenu) {
                 var that = this;
-                var bEnS = this._getSapLang() === "en";
                 this._oStatusMenu = new sap.m.Menu({
                     title: oBundle.getText("changeStatusButton"),
                     items: [
-                        new sap.m.MenuItem({ text: bEnS ? "Active"   : "Activos",  press: that.onChangeStatus.bind(that) }),
-                        new sap.m.MenuItem({ text: bEnS ? "Inactive" : "Inactivos", press: that.onChangeStatus.bind(that) })
+                        new sap.m.MenuItem({ text: "Active",   press: that.onChangeStatus.bind(that) }),
+                        new sap.m.MenuItem({ text: "Inactive", press: that.onChangeStatus.bind(that) })
                     ]
                 });
                 this.getView().addDependent(this._oStatusMenu);
