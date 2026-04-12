@@ -559,10 +559,10 @@ sap.ui.define([
                 this._oConstraintStatusMenu = new sap.m.Menu({
                     title: oBundle.getText("changeConstraintStatusButton"),
                     items: [
-                        new sap.m.MenuItem({ text: bEnC ? "Restricted Availability"   : "Disponibilidad Restringida",      press: that.onChangeConstraintStatus.bind(that) }),
-                        new sap.m.MenuItem({ text: bEnC ? "Unrestricted Availability" : "Disponibilidad No Restringida",  press: that.onChangeConstraintStatus.bind(that) }),
-                        new sap.m.MenuItem({ text: bEnC ? "No Availability"           : "Sin Disponibilidad",             press: that.onChangeConstraintStatus.bind(that) }),
-                        new sap.m.MenuItem({ text: bEnC ? "Not Relevant"              : "No Relevante",                   press: that.onChangeConstraintStatus.bind(that) }),
+                        new sap.m.MenuItem({ text: bEnC ? "Unrestricted Availability" : "Disponibilidad no restringida",    press: that.onChangeConstraintStatus.bind(that) }),
+                        new sap.m.MenuItem({ text: bEnC ? "Restricted Availability"   : "Disponibilidad restringida",      press: that.onChangeConstraintStatus.bind(that) }),
+                        new sap.m.MenuItem({ text: bEnC ? "No Availability"           : "Sin disponibilidad",              press: that.onChangeConstraintStatus.bind(that) }),
+                        new sap.m.MenuItem({ text: bEnC ? "Not Relevant"              : "No relevante",                    press: that.onChangeConstraintStatus.bind(that) }),
                         new sap.m.MenuItem({ text: bEnC ? "As in Sequence Constraint" : "Como en restricci\u00f3n de secuencia", press: that.onChangeConstraintStatus.bind(that) })
                     ]
                 });
