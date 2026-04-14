@@ -852,7 +852,8 @@ sap.ui.define([
                     var oCellMeta = that._oCellKeys[sCellKey] || {};
 
                     var sCurrentValue = oRowData[sFieldName] || "";
-                    var sOldValue = oRowData["_isNew"] ? "" : (oRowData[sFieldName + "_old"] || sCurrentValue);
+                    var sOldRaw = oRowData[sFieldName + "_old"];
+                    var sOldValue = oRowData["_isNew"] ? "" : (sOldRaw != null ? String(sOldRaw) : sCurrentValue);
                     if (sFieldName.toUpperCase() === "PRODALLOCATIONACTIVATIONSTATUS") {
                         var oStatusEn = { "activos": "Active", "inactivos": "Inactive", "active": "Active", "inactive": "Inactive" };
                         sCurrentValue = oStatusEn[sCurrentValue.toLowerCase()] || sCurrentValue;
