@@ -852,11 +852,12 @@ sap.ui.define([
                     var oCellMeta = that._oCellKeys[sCellKey] || {};
 
                     var sCurrentValue = oRowData[sFieldName] || "";
+                    var sOldValue = oRowData["_isNew"] ? "" : (oRowData[sFieldName + "_old"] || sCurrentValue);
                     if (sFieldName.toUpperCase() === "PRODALLOCATIONACTIVATIONSTATUS") {
                         var oStatusEn = { "activos": "Active", "inactivos": "Inactive", "active": "Active", "inactive": "Inactive" };
                         sCurrentValue = oStatusEn[sCurrentValue.toLowerCase()] || sCurrentValue;
+                        sOldValue    = oStatusEn[sOldValue.toLowerCase()]    || sOldValue;
                     }
-                    var sOldValue = oRowData["_isNew"] ? "" : (oRowData[sFieldName + "_old"] || sCurrentValue);
 
                     var oDataItem = {
                         key: oCellMeta.key || "",
@@ -887,12 +888,17 @@ sap.ui.define([
                     var sCellKey = iRowIndex + "_" + sFieldName;
                     var oCellMeta = that._oCellKeys[sCellKey] || {};
 
+                    var sDelOldValue = oRowData[sFieldName + "_old"] || oRowData[sFieldName] || "";
+                    if (sFieldName.toUpperCase() === "PRODALLOCATIONACTIVATIONSTATUS") {
+                        var oStatusEnDel = { "activos": "Active", "inactivos": "Inactive", "active": "Active", "inactive": "Inactive" };
+                        sDelOldValue = oStatusEnDel[sDelOldValue.toLowerCase()] || sDelOldValue;
+                    }
                     var oDataItem = {
                         key: oCellMeta.key || "",
                         tabname: oCellMeta.tabname || "PAL",
                         name: sFieldName,
                         Value: "",
-                        Value_old: oRowData[sFieldName + "_old"] || oRowData[sFieldName] || "",
+                        Value_old: sDelOldValue,
                         position: String(iRowIndex + 1),
                         prodallocationtimeseriesuuid: oCellMeta.prodallocationtimeseriesuuid || oRowData.prodallocationtimeseriesuuid || "",
                         productallocationobject: oCellMeta.productallocationobject || oRowData.productallocationobject || "",
