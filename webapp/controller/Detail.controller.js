@@ -427,39 +427,62 @@ sap.ui.define([
         _registerHashGuard: function () {
             if (this._fnHashGuard) { return; }
             var that = this;
+
+            // 1) sap.ushell navigation filter (FLP cross-app navigation)
             try {
                 if (sap.ushell && sap.ushell.Container) {
                     var oShellNav = sap.ushell.Container.getService("ShellNavigation");
-                    this._fnHashGuard = function () {
+                    this._fnNavFilter = function () {
                         var oModel = that.getView() && that.getView().getModel("detailModel");
                         if (!oModel || !oModel.getProperty("/hasChanges")) {
                             return oShellNav.NavigationFilterStatus.Continue;
                         }
                         var oDef = jQuery.Deferred();
                         that._showUnsavedPopup(
-                            function () {
-                                that._unregisterHashGuard();
-                                oDef.resolve(oShellNav.NavigationFilterStatus.Continue);
-                            },
-                            function () {
-                                oDef.resolve(oShellNav.NavigationFilterStatus.Reject);
-                            }
+                            function () { that._unregisterHashGuard(); oDef.resolve(oShellNav.NavigationFilterStatus.Continue); },
+                            function () { oDef.resolve(oShellNav.NavigationFilterStatus.Reject); }
                         );
                         return oDef.promise();
                     };
-                    oShellNav.registerNavigationFilter(this._fnHashGuard);
+                    oShellNav.registerNavigationFilter(this._fnNavFilter);
                     this._oShellNav = oShellNav;
                 }
             } catch (e) {
-                jQuery.sap.log.warning("Detail: ShellNavigation service not available: " + e);
+                jQuery.sap.log.warning("Detail: ShellNavigation not available: " + e);
             }
+
+            // 2) hashchange fallback – uses history.replaceState to silently restore the
+            //    URL so the SAPUI5 Router does NOT re-trigger _onRouteMatched (no refresh)
+            var bHandling = false;
+            this._fnHashGuard = function (oEvent) {
+                if (bHandling) { return; }
+                var oModel = that.getView() && that.getView().getModel("detailModel");
+                if (!oModel || !oModel.getProperty("/hasChanges")) { return; }
+                bHandling = true;
+                var sOldUrl = oEvent.oldURL || "";
+                var sNewUrl = oEvent.newURL || "";
+                // Restore URL silently – replaceState does NOT fire hashchange or popstate
+                try { history.replaceState(history.state, document.title, sOldUrl); } catch (ex) {}
+                that._showUnsavedPopup(
+                    function () {                          // Abandonar
+                        that._unregisterHashGuard();
+                        try { window.location.href = sNewUrl; } catch (ex) {}
+                    },
+                    function () { bHandling = false; }    // Continuar Edición
+                );
+            };
+            window.addEventListener("hashchange", this._fnHashGuard);
         },
 
         _unregisterHashGuard: function () {
-            if (this._fnHashGuard && this._oShellNav) {
-                try { this._oShellNav.unregisterNavigationFilter(this._fnHashGuard); } catch (e) {}
+            if (this._fnNavFilter && this._oShellNav) {
+                try { this._oShellNav.unregisterNavigationFilter(this._fnNavFilter); } catch (e) {}
+            }
+            if (this._fnHashGuard) {
+                window.removeEventListener("hashchange", this._fnHashGuard);
             }
             this._fnHashGuard = null;
+            this._fnNavFilter = null;
             this._oShellNav = null;
         },
 
