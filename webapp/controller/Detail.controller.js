@@ -83,17 +83,18 @@ sap.ui.define([
 
         _onRouteMatched: function (oEvent) {
             var sQuotaId = decodeURIComponent(oEvent.getParameter("arguments").quotaId);
-            if (this._bPreventReload) {
-                this._bPreventReload = false;
+            var oOwner = this.getOwnerComponent();
+            if (oOwner._bPreventDetailReload) {
+                oOwner._bPreventDetailReload = false;
                 return;
             }
             var oModel = this.getView().getModel("detailModel");
+            oOwner._oDetailModel = oModel;
             oModel.setProperty("/productAllocationObject", sQuotaId);
             oModel.setProperty("/busy", true);
             oModel.setProperty("/messageVisible", false);
             oModel.setProperty("/messageText", "");
             oModel.setProperty("/messageType", "None");
-            this._registerHashGuard();
             this._loadDynamicFields(sQuotaId);
         },
 
@@ -380,13 +381,9 @@ sap.ui.define([
             var oModel = this.getView().getModel("detailModel");
             if (oModel.getProperty("/hasChanges")) {
                 var that = this;
-                this._showUnsavedPopup(function () {
-                    that._unregisterHashGuard();
-                    that._doNavBack();
-                });
+                this._showUnsavedPopup(function () { that._doNavBack(); });
                 return;
             }
-            this._unregisterHashGuard();
             this._doNavBack();
         },
 
@@ -426,77 +423,6 @@ sap.ui.define([
                 afterClose: function () { oDialog.destroy(); }
             });
             oDialog.open();
-        },
-
-        _registerHashGuard: function () {
-            if (this._fnHashGuard) { return; }
-            var that = this;
-
-            // 1) sap.ushell navigation filter (FLP cross-app navigation)
-            try {
-                if (sap.ushell && sap.ushell.Container) {
-                    var oShellNav = sap.ushell.Container.getService("ShellNavigation");
-                    this._fnNavFilter = function () {
-                        var oModel = that.getView() && that.getView().getModel("detailModel");
-                        if (!oModel || !oModel.getProperty("/hasChanges")) {
-                            return oShellNav.NavigationFilterStatus.Continue;
-                        }
-                        var oDef = jQuery.Deferred();
-                        that._showUnsavedPopup(
-                            function () { that._unregisterHashGuard(); oDef.resolve(oShellNav.NavigationFilterStatus.Continue); },
-                            function () { oDef.resolve(oShellNav.NavigationFilterStatus.Reject); }
-                        );
-                        return oDef.promise();
-                    };
-                    oShellNav.registerNavigationFilter(this._fnNavFilter);
-                    this._oShellNav = oShellNav;
-                }
-            } catch (e) {
-                jQuery.sap.log.warning("Detail: ShellNavigation not available: " + e);
-            }
-
-            // 2) hashchange fallback – SAPUI5 Router registers its listener first so it
-            //    already processed the hash change when we fire. We counter-navigate back
-            //    to Detail with _bPreventReload=true so _onRouteMatched skips the data load.
-            var bHandling = false;
-            this._fnHashGuard = function (oEvent) {
-                if (bHandling) { return; }
-                var oModel = that.getView() && that.getView().getModel("detailModel");
-                if (!oModel || !oModel.getProperty("/hasChanges")) { return; }
-                bHandling = true;
-                var sNewUrl = oEvent.newURL || "";
-                var sQuotaId = oModel.getProperty("/productAllocationObject");
-                // Navigate back to Detail immediately so the router restores our page
-                that._bPreventReload = true;
-                that.getOwnerComponent().getRouter().navTo(
-                    "RouteDetail", { quotaId: encodeURIComponent(sQuotaId) }, true
-                );
-                that._showUnsavedPopup(
-                    function () {                              // Abandonar
-                        bHandling = false;
-                        that._unregisterHashGuard();
-                        that._bPreventReload = false;
-                        try { window.location.href = sNewUrl; } catch (ex) {}
-                    },
-                    function () {                              // Continuar Edición
-                        bHandling = false;
-                        that._bPreventReload = false;
-                    }
-                );
-            };
-            window.addEventListener("hashchange", this._fnHashGuard);
-        },
-
-        _unregisterHashGuard: function () {
-            if (this._fnNavFilter && this._oShellNav) {
-                try { this._oShellNav.unregisterNavigationFilter(this._fnNavFilter); } catch (e) {}
-            }
-            if (this._fnHashGuard) {
-                window.removeEventListener("hashchange", this._fnHashGuard);
-            }
-            this._fnHashGuard = null;
-            this._fnNavFilter = null;
-            this._oShellNav = null;
         },
 
         onAddNewRow: function () {
