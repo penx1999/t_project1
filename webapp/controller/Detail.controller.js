@@ -894,8 +894,8 @@ sap.ui.define([
 
             this._executePost(aPayloadItems)
                 .then(function (oSapMsg) {
+                    var sType = "Information";
                     if (oSapMsg && oSapMsg.text) {
-                        var sType = "Information";
                         var sSev = (oSapMsg.severity || "").toLowerCase();
                         if (sSev === "success") { sType = "Success"; }
                         else if (sSev === "warning" || sSev === "w") { sType = "Warning"; }
@@ -904,15 +904,20 @@ sap.ui.define([
                         oModel.setProperty("/messageType", sType);
                         oModel.setProperty("/messageVisible", true);
                     } else {
+                        sType = "Success";
                         oModel.setProperty("/messageText", oBundle.getText("msgSaveSuccess"));
                         oModel.setProperty("/messageType", "Success");
                         oModel.setProperty("/messageVisible", true);
                     }
-                    that._hasDeletedRows = false;
-                    that._aDeletedRows = [];
-                    var sObj = oModel.getProperty("/productAllocationObject");
-                    oModel.setProperty("/busy", true);
-                    that._loadDynamicFields(sObj);
+                    if (sType === "Error") {
+                        oModel.setProperty("/busy", false);
+                    } else {
+                        that._hasDeletedRows = false;
+                        that._aDeletedRows = [];
+                        var sObj = oModel.getProperty("/productAllocationObject");
+                        oModel.setProperty("/busy", true);
+                        that._loadDynamicFields(sObj);
+                    }
                 })
                 .catch(function (oError) {
                     oModel.setProperty("/busy", false);
