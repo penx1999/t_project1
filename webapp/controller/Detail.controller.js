@@ -738,6 +738,7 @@ sap.ui.define([
                 emphasizedAction: oBundle.getText("confirmNo"),
                 onClose: function (sAction) {
                     if (sAction === oBundle.getText("confirmYes")) {
+                        that.getView().getModel("detailModel").setProperty("/hasChanges", false);
                         that._doNavBack();
                     }
                 }
