@@ -11,8 +11,9 @@ sap.ui.define([
     "sap/m/Label",
     "sap/m/DatePicker",
     "sap/ui/table/Column",
+    "sap/ui/table/RowSettings",
     "sap/ui/core/format/DateFormat"
-], function (Controller, History, JSONModel, Filter, FilterOperator, MessageBox, MessageToast, Text, Input, Label, DatePicker, UIColumn, DateFormat) {
+], function (Controller, History, JSONModel, Filter, FilterOperator, MessageBox, MessageToast, Text, Input, Label, DatePicker, UIColumn, RowSettings, DateFormat) {
     "use strict";
 
     var EDITABLE_FIELDS = [
@@ -364,6 +365,9 @@ sap.ui.define([
             });
 
             oTable.setFixedColumnCount(iFixedCount);
+            oTable.setRowSettingsTemplate(new RowSettings({
+                highlight: "{= ${detailModel>_overlapError} ? 'Error' : 'None' }"
+            }));
             oTable.bindRows("detailModel>/rows");
 
             var oModel = this.getView().getModel("detailModel");
@@ -765,6 +769,7 @@ sap.ui.define([
                 aColumns.forEach(function (oCol) {
                     oRow["_err_" + oCol.name] = false;
                 });
+                oRow._overlapError = false;
             });
 
             var fnNormDate = function (s) {
@@ -819,6 +824,48 @@ sap.ui.define([
 
             if (bDateError) {
                 MessageBox.error(oBundle.getText("msgDateRangeError"));
+                return;
+            }
+
+            // --- Date overlap validation across all rows with same key fields ---
+            var iCsIdx = -1;
+            aColumns.forEach(function (oCol, iIdx) {
+                if (oCol.name.toUpperCase() === "PRODALLOCCHARCCONSTRAINTSTATUS") { iCsIdx = iIdx; }
+            });
+            var aKeyFields = (iCsIdx >= 0 ? aColumns.slice(0, iCsIdx + 1) : aColumns).map(function (c) { return c.name; });
+
+            var oGroups = {};
+            aRows.forEach(function (oRow, iIdx) {
+                var sGroupKey = aKeyFields.map(function (f) { return oRow[f] || ""; }).join("|");
+                if (!oGroups[sGroupKey]) { oGroups[sGroupKey] = []; }
+                oGroups[sGroupKey].push({ idx: iIdx, row: oRow });
+            });
+
+            var bOverlapError = false;
+            Object.keys(oGroups).forEach(function (sGK) {
+                var aGrp = oGroups[sGK];
+                if (aGrp.length < 2) { return; }
+                for (var ii = 0; ii < aGrp.length; ii++) {
+                    for (var jj = ii + 1; jj < aGrp.length; jj++) {
+                        var rA = aGrp[ii].row, rB = aGrp[jj].row;
+                        var asStart = sStartField ? fnNormDate(rA[sStartField]) : "";
+                        var asEnd   = sEndField   ? fnNormDate(rA[sEndField])   : "";
+                        var bsStart = sStartField ? fnNormDate(rB[sStartField]) : "";
+                        var bsEnd   = sEndField   ? fnNormDate(rB[sEndField])   : "";
+                        if (asStart && asEnd && bsStart && bsEnd) {
+                            if (asStart <= bsEnd && bsStart <= asEnd) {
+                                aRows[aGrp[ii].idx]._overlapError = true;
+                                aRows[aGrp[jj].idx]._overlapError = true;
+                                bOverlapError = true;
+                            }
+                        }
+                    }
+                }
+            });
+
+            if (bOverlapError) {
+                oModel.setProperty("/rows", aRows);
+                MessageBox.error(oBundle.getText("msgDateOverlapError"));
                 return;
             }
 
