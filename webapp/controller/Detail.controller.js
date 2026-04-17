@@ -373,6 +373,33 @@ sap.ui.define([
 
         onNavBack: function () {
             var oModel = this.getView().getModel("detailModel");
+            if (oModel.getProperty("/hasChanges")) {
+                var oBundle = this.getView().getModel("i18n").getResourceBundle();
+                var that = this;
+                var oDialog = new sap.m.Dialog({
+                    title: oBundle.getText("warningTitle"),
+                    type: "Message",
+                    state: "Warning",
+                    content: [new sap.m.Text({ text: oBundle.getText("msgUnsavedChanges") })],
+                    beginButton: new sap.m.Button({
+                        text: oBundle.getText("continuarEdicion"),
+                        press: function () { oDialog.close(); }
+                    }),
+                    endButton: new sap.m.Button({
+                        text: oBundle.getText("abandonar"),
+                        type: "Reject",
+                        press: function () { oDialog.close(); that._doNavBack(); }
+                    }),
+                    afterClose: function () { oDialog.destroy(); }
+                });
+                oDialog.open();
+                return;
+            }
+            this._doNavBack();
+        },
+
+        _doNavBack: function () {
+            var oModel = this.getView().getModel("detailModel");
             oModel.setProperty("/messageVisible", false);
             oModel.setProperty("/messageText", "");
             oModel.setProperty("/messageType", "None");
@@ -406,6 +433,8 @@ sap.ui.define([
             oNewRow["PRODALLOCATIONACTIVATIONSTATUS_old"] = sDefStatus;
             oNewRow["PRODALLOCCHARCCONSTRAINTSTATUS"] = sDefConstraint;
             oNewRow["PRODALLOCCHARCCONSTRAINTSTATUS_old"] = sDefConstraint;
+            oNewRow["ZZRFCUT"] = "08";
+            oNewRow["ZZRFCUT_old"] = "08";
             oNewRow["_isNew"] = true;
 
             aRows.push(oNewRow);

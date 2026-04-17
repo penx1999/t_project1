@@ -33,9 +33,10 @@ sap.ui.define([
         },
 
         onAfterRendering: function () {
-            var oInput = this.byId("idProdAlloc");
-            if (oInput) {
-                setTimeout(function () { oInput.focus(); }, 300);
+            if (!this._bAutoSearchDone) {
+                this._bAutoSearchDone = true;
+                var that = this;
+                setTimeout(function () { that.onSearch(); }, 0);
             }
         },
 

@@ -24,7 +24,8 @@
                         text="{i18n>searchButton}"
                         type="Emphasized"
                         icon="sap-icon://search"
-                        press=".onSearch"/>
+                        press=".onSearch"
+                        visible="false"/>
                     <Button
                         text="{i18n>clearButton}"
                         icon="sap-icon://clear-filter"
@@ -42,7 +43,7 @@
                 <VBox class="sapUiSmallMarginBeginEnd sapUiSmallMarginTopBottom">
                     <FlexBox wrap="Wrap" alignItems="End">
 
-                        <VBox class="sapUiSmallMarginEnd" width="18rem">
+                        <VBox class="sapUiSmallMarginEnd" width="18rem" visible="false">
                             <Label text="{i18n>ProdAllocObj}" required="true" labelFor="idProdAlloc"/>
                             <Input
                                 id="idProdAlloc"
