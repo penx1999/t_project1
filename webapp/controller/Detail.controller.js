@@ -86,6 +86,11 @@ sap.ui.define([
             var oOwner = this.getOwnerComponent();
             if (oOwner._bPreventDetailReload) {
                 oOwner._bPreventDetailReload = false;
+                var that = this;
+                this._showUnsavedPopup(function () {
+                    that.getView().getModel("detailModel").setProperty("/hasChanges", false);
+                    that._doNavBack();
+                });
                 return;
             }
             var oModel = this.getView().getModel("detailModel");

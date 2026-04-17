@@ -41,33 +41,10 @@ sap.ui.define([
             var oDetailModel = oOwner._oDetailModel;
             if (oDetailModel && oDetailModel.getProperty("/hasChanges")) {
                 var sQuotaId = oDetailModel.getProperty("/productAllocationObject");
-                var oBundle = this.getView().getModel("i18n").getResourceBundle();
-                var oDialog = new sap.m.Dialog({
-                    title: oBundle.getText("warningTitle"),
-                    type: "Message",
-                    state: "Warning",
-                    content: [new sap.m.Text({ text: oBundle.getText("msgUnsavedChanges") })],
-                    beginButton: new sap.m.Button({
-                        text: oBundle.getText("continuarEdicion"),
-                        press: function () {
-                            oDialog.close();
-                            oOwner._bPreventDetailReload = true;
-                            oOwner.getRouter().navTo("RouteDetail", {
-                                quotaId: encodeURIComponent(sQuotaId)
-                            });
-                        }
-                    }),
-                    endButton: new sap.m.Button({
-                        text: oBundle.getText("abandonar"),
-                        type: "Reject",
-                        press: function () {
-                            oDialog.close();
-                            oDetailModel.setProperty("/hasChanges", false);
-                        }
-                    }),
-                    afterClose: function () { oDialog.destroy(); }
+                oOwner._bPreventDetailReload = true;
+                oOwner.getRouter().navTo("RouteDetail", {
+                    quotaId: encodeURIComponent(sQuotaId)
                 });
-                oDialog.open();
             }
         },
 
