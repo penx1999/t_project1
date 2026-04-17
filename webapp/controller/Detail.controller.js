@@ -83,6 +83,10 @@ sap.ui.define([
 
         _onRouteMatched: function (oEvent) {
             var sQuotaId = decodeURIComponent(oEvent.getParameter("arguments").quotaId);
+            if (this._bPreventReload) {
+                this._bPreventReload = false;
+                return;
+            }
             var oModel = this.getView().getModel("detailModel");
             oModel.setProperty("/productAllocationObject", sQuotaId);
             oModel.setProperty("/busy", true);
@@ -451,24 +455,33 @@ sap.ui.define([
                 jQuery.sap.log.warning("Detail: ShellNavigation not available: " + e);
             }
 
-            // 2) hashchange fallback – uses history.replaceState to silently restore the
-            //    URL so the SAPUI5 Router does NOT re-trigger _onRouteMatched (no refresh)
+            // 2) hashchange fallback – SAPUI5 Router registers its listener first so it
+            //    already processed the hash change when we fire. We counter-navigate back
+            //    to Detail with _bPreventReload=true so _onRouteMatched skips the data load.
             var bHandling = false;
             this._fnHashGuard = function (oEvent) {
                 if (bHandling) { return; }
                 var oModel = that.getView() && that.getView().getModel("detailModel");
                 if (!oModel || !oModel.getProperty("/hasChanges")) { return; }
                 bHandling = true;
-                var sOldUrl = oEvent.oldURL || "";
                 var sNewUrl = oEvent.newURL || "";
-                // Restore URL silently – replaceState does NOT fire hashchange or popstate
-                try { history.replaceState(history.state, document.title, sOldUrl); } catch (ex) {}
+                var sQuotaId = oModel.getProperty("/productAllocationObject");
+                // Navigate back to Detail immediately so the router restores our page
+                that._bPreventReload = true;
+                that.getOwnerComponent().getRouter().navTo(
+                    "RouteDetail", { quotaId: encodeURIComponent(sQuotaId) }, true
+                );
                 that._showUnsavedPopup(
-                    function () {                          // Abandonar
+                    function () {                              // Abandonar
+                        bHandling = false;
                         that._unregisterHashGuard();
+                        that._bPreventReload = false;
                         try { window.location.href = sNewUrl; } catch (ex) {}
                     },
-                    function () { bHandling = false; }    // Continuar Edición
+                    function () {                              // Continuar Edición
+                        bHandling = false;
+                        that._bPreventReload = false;
+                    }
                 );
             };
             window.addEventListener("hashchange", this._fnHashGuard);
