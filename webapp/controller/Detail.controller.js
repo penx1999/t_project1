@@ -400,7 +400,7 @@ sap.ui.define([
             }
         },
 
-        _showUnsavedPopup: function (fnOnAbandon) {
+        _showUnsavedPopup: function (fnOnAbandon, fnOnContinue) {
             var oBundle = this.getView().getModel("i18n").getResourceBundle();
             var oDialog = new sap.m.Dialog({
                 title: oBundle.getText("warningTitle"),
@@ -409,7 +409,10 @@ sap.ui.define([
                 content: [new sap.m.Text({ text: oBundle.getText("msgUnsavedChanges") })],
                 beginButton: new sap.m.Button({
                     text: oBundle.getText("continuarEdicion"),
-                    press: function () { oDialog.close(); }
+                    press: function () {
+                        oDialog.close();
+                        if (fnOnContinue) { fnOnContinue(); }
+                    }
                 }),
                 endButton: new sap.m.Button({
                     text: oBundle.getText("abandonar"),
@@ -424,26 +427,40 @@ sap.ui.define([
         _registerHashGuard: function () {
             if (this._fnHashGuard) { return; }
             var that = this;
-            var bSkipNext = false;
-            this._fnHashGuard = function () {
-                if (bSkipNext) { bSkipNext = false; return; }
-                var oModel = that.getView() && that.getView().getModel("detailModel");
-                if (!oModel || !oModel.getProperty("/hasChanges")) { return; }
-                bSkipNext = true;
-                window.history.go(1);
-                that._showUnsavedPopup(function () {
-                    that._unregisterHashGuard();
-                    window.history.go(-1);
-                });
-            };
-            window.addEventListener("hashchange", this._fnHashGuard);
+            try {
+                if (sap.ushell && sap.ushell.Container) {
+                    var oShellNav = sap.ushell.Container.getService("ShellNavigation");
+                    this._fnHashGuard = function () {
+                        var oModel = that.getView() && that.getView().getModel("detailModel");
+                        if (!oModel || !oModel.getProperty("/hasChanges")) {
+                            return oShellNav.NavigationFilterStatus.Continue;
+                        }
+                        var oDef = jQuery.Deferred();
+                        that._showUnsavedPopup(
+                            function () {
+                                that._unregisterHashGuard();
+                                oDef.resolve(oShellNav.NavigationFilterStatus.Continue);
+                            },
+                            function () {
+                                oDef.resolve(oShellNav.NavigationFilterStatus.Reject);
+                            }
+                        );
+                        return oDef.promise();
+                    };
+                    oShellNav.registerNavigationFilter(this._fnHashGuard);
+                    this._oShellNav = oShellNav;
+                }
+            } catch (e) {
+                jQuery.sap.log.warning("Detail: ShellNavigation service not available: " + e);
+            }
         },
 
         _unregisterHashGuard: function () {
-            if (this._fnHashGuard) {
-                window.removeEventListener("hashchange", this._fnHashGuard);
-                this._fnHashGuard = null;
+            if (this._fnHashGuard && this._oShellNav) {
+                try { this._oShellNav.unregisterNavigationFilter(this._fnHashGuard); } catch (e) {}
             }
+            this._fnHashGuard = null;
+            this._oShellNav = null;
         },
 
         onAddNewRow: function () {
