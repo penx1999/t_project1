@@ -828,11 +828,21 @@ sap.ui.define([
             }
 
             // --- Date overlap validation across all rows with same key fields ---
+            // Key fields = all columns up to and including the last STATUS column (Constraint Status)
             var iCsIdx = -1;
             aColumns.forEach(function (oCol, iIdx) {
-                if (oCol.name.toUpperCase() === "PRODALLOCCHARCCONSTRAINTSTATUS") { iCsIdx = iIdx; }
+                if (oCol.name.toUpperCase().indexOf("STATUS") !== -1) { iCsIdx = iIdx; }
             });
-            var aKeyFields = (iCsIdx >= 0 ? aColumns.slice(0, iCsIdx + 1) : aColumns).map(function (c) { return c.name; });
+            var aNonKey = ["PRODALLOCPERDSTARTUTCDATE", "PRODALLOCPERIODENDUTCDATE",
+                           "PRODUCTALLOCATIONQUANTITY", "ZZRFCUT",
+                           "PRODALLOCCHARCVALUECOMBNCMNT", "PRODUCTALLOCATIONOBJECTUUID"];
+            var aKeyFields = (iCsIdx >= 0
+                ? aColumns.slice(0, iCsIdx + 1)
+                : aColumns.filter(function (c) {
+                    var u = c.name.toUpperCase();
+                    return aNonKey.indexOf(u) === -1 && u.indexOf("AVBL") === -1 && u.indexOf("CNSMD") === -1;
+                })
+            ).map(function (c) { return c.name; });
 
             var oGroups = {};
             aRows.forEach(function (oRow, iIdx) {
