@@ -496,7 +496,9 @@ sap.ui.define([
                         oRowCopy[sOldKey] = oRowCopy[sField] || "";
                     }
                 });
-                this._aDeletedRows.push({ rowIndex: iIndex, rowData: oRowCopy });
+                if (!aRows[iIndex]._isNew) {
+                    this._aDeletedRows.push({ rowIndex: iIndex, rowData: oRowCopy });
+                }
                 aRows.splice(iIndex, 1);
                 if (this._oOriginalData && this._oOriginalData[iIndex]) {
                     this._oOriginalData.splice(iIndex, 1);
