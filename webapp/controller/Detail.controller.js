@@ -738,7 +738,7 @@ sap.ui.define([
                 emphasizedAction: oBundle.getText("confirmNo"),
                 onClose: function (sAction) {
                     if (sAction === oBundle.getText("confirmYes")) {
-                        that.onNavBack();
+                        that._doNavBack();
                     }
                 }
             });
