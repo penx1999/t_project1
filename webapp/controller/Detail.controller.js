@@ -89,6 +89,7 @@ sap.ui.define([
             oModel.setProperty("/messageVisible", false);
             oModel.setProperty("/messageText", "");
             oModel.setProperty("/messageType", "None");
+            this._registerHashGuard();
             this._loadDynamicFields(sQuotaId);
         },
 
@@ -374,27 +375,14 @@ sap.ui.define([
         onNavBack: function () {
             var oModel = this.getView().getModel("detailModel");
             if (oModel.getProperty("/hasChanges")) {
-                var oBundle = this.getView().getModel("i18n").getResourceBundle();
                 var that = this;
-                var oDialog = new sap.m.Dialog({
-                    title: oBundle.getText("warningTitle"),
-                    type: "Message",
-                    state: "Warning",
-                    content: [new sap.m.Text({ text: oBundle.getText("msgUnsavedChanges") })],
-                    beginButton: new sap.m.Button({
-                        text: oBundle.getText("continuarEdicion"),
-                        press: function () { oDialog.close(); }
-                    }),
-                    endButton: new sap.m.Button({
-                        text: oBundle.getText("abandonar"),
-                        type: "Reject",
-                        press: function () { oDialog.close(); that._doNavBack(); }
-                    }),
-                    afterClose: function () { oDialog.destroy(); }
+                this._showUnsavedPopup(function () {
+                    that._unregisterHashGuard();
+                    that._doNavBack();
                 });
-                oDialog.open();
                 return;
             }
+            this._unregisterHashGuard();
             this._doNavBack();
         },
 
@@ -409,6 +397,52 @@ sap.ui.define([
                 window.history.go(-1);
             } else {
                 this.getOwnerComponent().getRouter().navTo("RouteListReport", {}, true);
+            }
+        },
+
+        _showUnsavedPopup: function (fnOnAbandon) {
+            var oBundle = this.getView().getModel("i18n").getResourceBundle();
+            var oDialog = new sap.m.Dialog({
+                title: oBundle.getText("warningTitle"),
+                type: "Message",
+                state: "Warning",
+                content: [new sap.m.Text({ text: oBundle.getText("msgUnsavedChanges") })],
+                beginButton: new sap.m.Button({
+                    text: oBundle.getText("continuarEdicion"),
+                    press: function () { oDialog.close(); }
+                }),
+                endButton: new sap.m.Button({
+                    text: oBundle.getText("abandonar"),
+                    type: "Reject",
+                    press: function () { oDialog.close(); fnOnAbandon(); }
+                }),
+                afterClose: function () { oDialog.destroy(); }
+            });
+            oDialog.open();
+        },
+
+        _registerHashGuard: function () {
+            if (this._fnHashGuard) { return; }
+            var that = this;
+            var bSkipNext = false;
+            this._fnHashGuard = function () {
+                if (bSkipNext) { bSkipNext = false; return; }
+                var oModel = that.getView() && that.getView().getModel("detailModel");
+                if (!oModel || !oModel.getProperty("/hasChanges")) { return; }
+                bSkipNext = true;
+                window.history.go(1);
+                that._showUnsavedPopup(function () {
+                    that._unregisterHashGuard();
+                    window.history.go(-1);
+                });
+            };
+            window.addEventListener("hashchange", this._fnHashGuard);
+        },
+
+        _unregisterHashGuard: function () {
+            if (this._fnHashGuard) {
+                window.removeEventListener("hashchange", this._fnHashGuard);
+                this._fnHashGuard = null;
             }
         },
 
