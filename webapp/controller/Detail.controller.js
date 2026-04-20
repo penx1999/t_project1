@@ -906,6 +906,10 @@ sap.ui.define([
                         oModel.setProperty("/messageText", oSapMsg.text);
                         oModel.setProperty("/messageType", sType);
                         oModel.setProperty("/messageVisible", true);
+                        if (sType === "Error") {
+                            oModel.setProperty("/busy", false);
+                            return;
+                        }
                     } else {
                         oModel.setProperty("/messageText", oBundle.getText("msgSaveSuccess"));
                         oModel.setProperty("/messageType", "Success");
