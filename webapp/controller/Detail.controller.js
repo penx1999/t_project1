@@ -952,6 +952,34 @@ sap.ui.define([
                 };
             });
 
+            // --- Determine ind_ope='Q' for rows sharing material+centro+startDate+endDate ---
+            var sMaterialField = null, sCentroField = null;
+            aColumns.forEach(function (oCol) {
+                var lbl = (oCol.label || "").toLowerCase();
+                if (!sMaterialField && lbl.indexOf("material") !== -1) { sMaterialField = oCol.name; }
+                if (!sCentroField  && (lbl.indexOf("centro") !== -1 || lbl.indexOf("plant") !== -1)) { sCentroField = oCol.name; }
+            });
+            var sStartField = "PRODALLOCPERDSTARTUTCDATE";
+            var sEndField   = "PRODALLOCPERIODENDUTCDATE";
+
+            var oGroupCount = {};
+            aChangedRows.forEach(function (oChangedRow) {
+                var d = oChangedRow.rowData;
+                var sGK = (sMaterialField ? (d[sMaterialField] || "") : "") + "|" +
+                          (sCentroField   ? (d[sCentroField]   || "") : "") + "|" +
+                          (d[sStartField] || "") + "|" + (d[sEndField] || "");
+                oGroupCount[sGK] = (oGroupCount[sGK] || 0) + 1;
+            });
+            var oQRows = {};
+            aChangedRows.forEach(function (oChangedRow) {
+                var d = oChangedRow.rowData;
+                var sGK = (sMaterialField ? (d[sMaterialField] || "") : "") + "|" +
+                          (sCentroField   ? (d[sCentroField]   || "") : "") + "|" +
+                          (d[sStartField] || "") + "|" + (d[sEndField] || "");
+                if (oGroupCount[sGK] > 1) { oQRows[oChangedRow.rowIndex] = true; }
+            });
+            // -----------------------------------------------------------------------
+
             aChangedRows.forEach(function (oChangedRow) {
                 var iRowIndex = oChangedRow.rowIndex;
                 var oRowData = oChangedRow.rowData;
@@ -984,7 +1012,7 @@ sap.ui.define([
                         PRODALLOCPERIODENDUTCDATETIME: oCellMeta.PRODALLOCPERIODENDUTCDATETIME || oRowData.PRODALLOCPERIODENDUTCDATETIME || "",
                         productallocationsequence: oCellMeta.productallocationsequence || oRowData.productallocationsequence || "",
                         fec_ini: that._toODataDate(sFecIni) || "",
-                        ind_ope: oCellMeta.ind_ope || ""
+                        ind_ope: oQRows[iRowIndex] ? "Q" : (oCellMeta.ind_ope || "")
                     };
 
                     oFieldsMap[sFieldName].DataSetAsoc.push(oDataItem);
