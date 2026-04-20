@@ -195,7 +195,8 @@ sap.ui.define([
                                 CHARCVALUECOMBINATIONUUID: oEntry.CHARCVALUECOMBINATIONUUID,
                                 PRODALLOCPERDSTARTUTCDATETIME: oEntry.PRODALLOCPERDSTARTUTCDATETIME,
                                 PRODALLOCPERIODENDUTCDATETIME: oEntry.PRODALLOCPERIODENDUTCDATETIME,
-                                productallocationsequence: oEntry.productallocationsequence || ""
+                                productallocationsequence: oEntry.productallocationsequence || "",
+                                ind_ope: oEntry.ind_ope || ""
                             };
 
                             if (!that._oFieldMetadata[oField.name]) {
@@ -982,7 +983,8 @@ sap.ui.define([
                         PRODALLOCPERDSTARTUTCDATETIME: oCellMeta.PRODALLOCPERDSTARTUTCDATETIME || oRowData.PRODALLOCPERDSTARTUTCDATETIME || "",
                         PRODALLOCPERIODENDUTCDATETIME: oCellMeta.PRODALLOCPERIODENDUTCDATETIME || oRowData.PRODALLOCPERIODENDUTCDATETIME || "",
                         productallocationsequence: oCellMeta.productallocationsequence || oRowData.productallocationsequence || "",
-                        fec_ini: that._toODataDate(sFecIni) || ""
+                        fec_ini: that._toODataDate(sFecIni) || "",
+                        ind_ope: oCellMeta.ind_ope || ""
                     };
 
                     oFieldsMap[sFieldName].DataSetAsoc.push(oDataItem);
@@ -1016,7 +1018,8 @@ sap.ui.define([
                         PRODALLOCPERDSTARTUTCDATETIME: oCellMeta.PRODALLOCPERDSTARTUTCDATETIME || oRowData.PRODALLOCPERDSTARTUTCDATETIME || "",
                         PRODALLOCPERIODENDUTCDATETIME: oCellMeta.PRODALLOCPERIODENDUTCDATETIME || oRowData.PRODALLOCPERIODENDUTCDATETIME || "",
                         productallocationsequence: oCellMeta.productallocationsequence || oRowData.productallocationsequence || "",
-                        fec_ini: that._toODataDate(sFecIni) || ""
+                        fec_ini: that._toODataDate(sFecIni) || "",
+                        ind_ope: oCellMeta.ind_ope || ""
                     };
 
                     if (oFieldsMap[sFieldName]) {
