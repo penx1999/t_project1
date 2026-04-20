@@ -962,12 +962,12 @@ sap.ui.define([
             var sStartField = "PRODALLOCPERDSTARTUTCDATE";
             var sEndField   = "PRODALLOCPERIODENDUTCDATE";
 
+            var aAllRows = oModel.getProperty("/rows") || [];
             var oGroupCount = {};
-            aChangedRows.forEach(function (oChangedRow) {
-                var d = oChangedRow.rowData;
-                var sGK = (sMaterialField ? (d[sMaterialField] || "") : "") + "|" +
-                          (sCentroField   ? (d[sCentroField]   || "") : "") + "|" +
-                          (d[sStartField] || "") + "|" + (d[sEndField] || "");
+            aAllRows.forEach(function (oRow) {
+                var sGK = (sMaterialField ? (oRow[sMaterialField] || "") : "") + "|" +
+                          (sCentroField   ? (oRow[sCentroField]   || "") : "") + "|" +
+                          (oRow[sStartField] || "") + "|" + (oRow[sEndField] || "");
                 oGroupCount[sGK] = (oGroupCount[sGK] || 0) + 1;
             });
             var oQRows = {};
