@@ -980,7 +980,10 @@ sap.ui.define([
                 var sGK = (sMaterialField ? (d[sMaterialField] || "") : "") + "|" +
                           (sCentroField   ? (d[sCentroField]   || "") : "") + "|" +
                           (d[sStartField] || "") + "|" + (d[sEndField] || "");
-                if (oGroupCount[sGK] > 1) { oQRows[oChangedRow.rowIndex] = true; }
+                var bDatesModified = d["_isNew"] ||
+                    (d[sStartField + "_old"] != null && d[sStartField + "_old"] !== d[sStartField]) ||
+                    (d[sEndField   + "_old"] != null && d[sEndField   + "_old"] !== d[sEndField]);
+                if (oGroupCount[sGK] > 1 && bDatesModified) { oQRows[oChangedRow.rowIndex] = true; }
             });
             // -----------------------------------------------------------------------
 
