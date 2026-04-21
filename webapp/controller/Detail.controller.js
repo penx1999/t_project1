@@ -41,6 +41,7 @@ sap.ui.define([
 
         onInit: function () {
             var oToday = new Date();
+            var oFirstOfMonth = new Date(oToday.getFullYear(), oToday.getMonth(), 1);
             var oNextYear = new Date();
             oNextYear.setFullYear(oNextYear.getFullYear() + 1);
 
@@ -52,7 +53,7 @@ sap.ui.define([
                 rowCount: 5,
                 busy: false,
                 hasChanges: false,
-                fec_ini: this._formatDateValue(oToday),
+                fec_ini: this._formatDateValue(oFirstOfMonth),
                 fec_fin: this._formatDateValue(oNextYear),
                 messageText: "",
                 messageType: "None",
