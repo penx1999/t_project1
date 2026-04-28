@@ -714,7 +714,9 @@ sap.ui.define([
 
         _generateXlsx: function (XLSX, bWithDesc) {
             var oModel = this.getView().getModel("detailModel");
-            var aColumns = oModel.getProperty("/columns") || [];
+            var aColumns = (oModel.getProperty("/columns") || []).filter(function (oCol) {
+                return (oCol.name || "").toUpperCase() !== "PRODUCTALLOCATIONOBJECTUUID";
+            });
             var aRows = oModel.getProperty("/rows") || [];
 
             // First 16 reference lines (lines 1-15 with content, line 16 blank)
