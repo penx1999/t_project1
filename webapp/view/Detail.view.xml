@@ -133,6 +133,18 @@
                                     text="{i18n>changeConstraintStatusButton}"
                                     type="Transparent"
                                     press=".onOpenChangeConstraintStatusMenu"/>
+                                <Button
+                                    id="idDownloadButton"
+                                    icon="sap-icon://download"
+                                    type="Transparent"
+                                    tooltip="Download"
+                                    press=".onDownload"/>
+                                <Button
+                                    id="idUploadButton"
+                                    icon="sap-icon://upload"
+                                    type="Transparent"
+                                    tooltip="Upload"
+                                    press=".onUpload"/>
                             </OverflowToolbar>
                         </t:extension>
                         <t:columns/>

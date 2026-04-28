@@ -638,6 +638,14 @@ sap.ui.define([
             oModel.setProperty("/hasChanges", true);
         },
 
+        onDownload: function () {
+            MessageToast.show("Download - pending implementation");
+        },
+
+        onUpload: function () {
+            MessageToast.show("Upload - pending implementation");
+        },
+
         _onFieldChange: function (oEvent) {
             jQuery.sap.log.info("Detail._onFieldChange triggered");
             var oModel = this.getView().getModel("detailModel");
