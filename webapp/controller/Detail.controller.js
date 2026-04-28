@@ -639,7 +639,47 @@ sap.ui.define([
         },
 
         onDownload: function () {
-            MessageToast.show("Download - pending implementation");
+            var that = this;
+            if (!this._oDownloadDialog) {
+                var oCbDesc = new sap.m.CheckBox({ text: "With Descriptions", selected: false });
+                var oRbgFormat = new sap.m.RadioButtonGroup({
+                    columns: 1,
+                    selectedIndex: 0,
+                    buttons: [
+                        new sap.m.RadioButton({ text: "As Spreadsheet (.xlsx)" }),
+                        new sap.m.RadioButton({ text: "As Comma Separated Values File (.csv)" })
+                    ]
+                });
+                this._oDownloadDialog = new sap.m.Dialog({
+                    title: "Download Data",
+                    contentWidth: "22rem",
+                    content: [
+                        new sap.m.VBox({
+                            items: [oCbDesc, oRbgFormat]
+                        }).addStyleClass("sapUiSmallMargin")
+                    ],
+                    beginButton: new sap.m.Button({
+                        text: "OK",
+                        type: "Emphasized",
+                        press: function () {
+                            var bWithDesc = oCbDesc.getSelected();
+                            var sFormat = oRbgFormat.getSelectedIndex() === 0 ? "xlsx" : "csv";
+                            that._oDownloadDialog.close();
+                            that._executeDownload(sFormat, bWithDesc);
+                        }
+                    }),
+                    endButton: new sap.m.Button({
+                        text: "Cancel",
+                        press: function () { that._oDownloadDialog.close(); }
+                    })
+                });
+                this.getView().addDependent(this._oDownloadDialog);
+            }
+            this._oDownloadDialog.open();
+        },
+
+        _executeDownload: function (sFormat, bWithDesc) {
+            MessageToast.show("Download " + sFormat + (bWithDesc ? " with descriptions" : "") + " - pending implementation");
         },
 
         onUpload: function () {
