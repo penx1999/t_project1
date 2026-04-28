@@ -679,7 +679,82 @@ sap.ui.define([
         },
 
         _executeDownload: function (sFormat, bWithDesc) {
-            MessageToast.show("Download " + sFormat + (bWithDesc ? " with descriptions" : "") + " - pending implementation");
+            var that = this;
+            if (sFormat !== "xlsx") {
+                MessageToast.show("CSV download - pending implementation");
+                return;
+            }
+            this._loadSheetJS().then(function (XLSX) {
+                that._generateXlsx(XLSX, bWithDesc);
+            }).catch(function () {
+                MessageBox.error("Could not load Excel library.");
+            });
+        },
+
+        _loadSheetJS: function () {
+            return new Promise(function (resolve, reject) {
+                if (window.XLSX) { resolve(window.XLSX); return; }
+                var oScript = document.createElement("script");
+                oScript.src = "https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js";
+                oScript.onload = function () { resolve(window.XLSX); };
+                oScript.onerror = function (e) { reject(e); };
+                document.head.appendChild(oScript);
+            });
+        },
+
+        _buildDownloadFileName: function (sExt) {
+            var oModel = this.getView().getModel("detailModel");
+            var sObj = oModel.getProperty("/productAllocationObject") || "data";
+            var d = new Date();
+            var pad = function (n) { return ("0" + n).slice(-2); };
+            var sTs = d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) +
+                      pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
+            return sObj + "_" + sTs + "." + sExt;
+        },
+
+        _generateXlsx: function (XLSX, bWithDesc) {
+            var oModel = this.getView().getModel("detailModel");
+            var aColumns = oModel.getProperty("/columns") || [];
+            var aRows = oModel.getProperty("/rows") || [];
+
+            // First 16 reference lines (lines 1-15 with content, line 16 blank)
+            var aAoA = [
+                ["Activation Status",  "Activation Status - Description"],
+                ["01",                 "Inactive"],
+                ["02",                 "Active"],
+                [],
+                ["Constraint Status",  "Constraint Status - Description"],
+                ["01",                 "Unrestricted Availablity"],
+                ["02",                 "Restricted Availablity"],
+                ["03",                 "No Availability"],
+                ["04",                 "Not Relevant"],
+                ["05",                 "As in Sequence Constraint"],
+                [],
+                ["Delete CVC",         "Delete CVC - Description"],
+                ["",                   "No Deletion"],
+                ["1",                  "Standard Deletion"],
+                ["2",                  "Deletion with Consumptions"],
+                []
+            ];
+
+            // Column headers from table
+            var aHeader = aColumns.map(function (oCol) { return oCol.label || oCol.name; });
+            aAoA.push(aHeader);
+
+            // Data rows
+            aRows.forEach(function (oRow) {
+                var aRow = aColumns.map(function (oCol) {
+                    var v = oRow[oCol.name];
+                    return (v === undefined || v === null) ? "" : v;
+                });
+                aAoA.push(aRow);
+            });
+
+            var oWs = XLSX.utils.aoa_to_sheet(aAoA);
+            var oWb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(oWb, oWs, "Data");
+            var sFileName = this._buildDownloadFileName("xlsx");
+            XLSX.writeFile(oWb, sFileName);
         },
 
         onUpload: function () {
