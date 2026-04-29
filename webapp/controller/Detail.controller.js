@@ -695,7 +695,7 @@ sap.ui.define([
             return new Promise(function (resolve, reject) {
                 if (window.XLSX) { resolve(window.XLSX); return; }
                 var oScript = document.createElement("script");
-                oScript.src = "https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js";
+                oScript.src = "https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js";
                 oScript.onload = function () { resolve(window.XLSX); };
                 oScript.onerror = function (e) { reject(e); };
                 document.head.appendChild(oScript);
@@ -714,8 +714,13 @@ sap.ui.define([
 
         _generateXlsx: function (XLSX, bWithDesc) {
             var oModel = this.getView().getModel("detailModel");
+            var aExcludedLabels = ["avbl qty", "cnsmd qty"];
             var aColumns = (oModel.getProperty("/columns") || []).filter(function (oCol) {
-                return (oCol.name || "").toUpperCase() !== "PRODUCTALLOCATIONOBJECTUUID";
+                var sName = (oCol.name  || "").toUpperCase();
+                var sLbl  = (oCol.label || "").toLowerCase().trim();
+                if (sName === "PRODUCTALLOCATIONOBJECTUUID") { return false; }
+                if (aExcludedLabels.indexOf(sLbl) !== -1) { return false; }
+                return true;
             });
             var aRows = oModel.getProperty("/rows") || [];
 
@@ -753,6 +758,22 @@ sap.ui.define([
             });
 
             var oWs = XLSX.utils.aoa_to_sheet(aAoA);
+
+            // Apply font Aptos Narrow size 11 to every cell
+            var oFontStyle = { font: { name: "Aptos Narrow", sz: 11 } };
+            var oRange = XLSX.utils.decode_range(oWs["!ref"]);
+            for (var R = oRange.s.r; R <= oRange.e.r; R++) {
+                for (var C = oRange.s.c; C <= oRange.e.c; C++) {
+                    var sAddr = XLSX.utils.encode_cell({ r: R, c: C });
+                    var oCell = oWs[sAddr];
+                    if (!oCell) {
+                        oWs[sAddr] = { t: "s", v: "", s: oFontStyle };
+                    } else {
+                        oCell.s = Object.assign({}, oCell.s || {}, oFontStyle);
+                    }
+                }
+            }
+
             var oWb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(oWb, oWs, "Data");
             var sFileName = this._buildDownloadFileName("xlsx");
