@@ -781,7 +781,123 @@ sap.ui.define([
         },
 
         onUpload: function () {
-            MessageToast.show("Upload - pending implementation");
+            var that = this;
+            if (!this._oUploadInput) {
+                var oInput = document.createElement("input");
+                oInput.type = "file";
+                oInput.accept = ".xlsx,.xls";
+                oInput.style.display = "none";
+                oInput.addEventListener("change", function (e) {
+                    var oFile = e.target.files && e.target.files[0];
+                    if (oFile) { that._onUploadFileSelected(oFile); }
+                    oInput.value = "";
+                });
+                document.body.appendChild(oInput);
+                this._oUploadInput = oInput;
+            }
+            this._oUploadInput.click();
+        },
+
+        _onUploadFileSelected: function (oFile) {
+            var that = this;
+            this._loadSheetJS().then(function (XLSX) {
+                var oReader = new FileReader();
+                oReader.onload = function (e) {
+                    try {
+                        var oData = new Uint8Array(e.target.result);
+                        var oWb = XLSX.read(oData, { type: "array" });
+                        var sFirstSheet = oWb.SheetNames[0];
+                        var oWs = oWb.Sheets[sFirstSheet];
+                        var aAoA = XLSX.utils.sheet_to_json(oWs, { header: 1, defval: "", blankrows: true });
+                        that._processUploadedRows(aAoA);
+                    } catch (err) {
+                        MessageBox.error("Error reading Excel file: " + err.message);
+                    }
+                };
+                oReader.onerror = function () {
+                    MessageBox.error("Could not read the selected file.");
+                };
+                oReader.readAsArrayBuffer(oFile);
+            }).catch(function () {
+                MessageBox.error("Could not load Excel library.");
+            });
+        },
+
+        _processUploadedRows: function (aAoA) {
+            // Skip first 16 reference lines, header is row 17 (index 16), data starts row 18 (index 17)
+            if (!aAoA || aAoA.length < 17) {
+                MessageBox.error("Invalid file structure. Expected the same layout as the downloaded template.");
+                return;
+            }
+            var aHeader = aAoA[16] || [];
+            var aDataRows = aAoA.slice(17).filter(function (aRow) {
+                return aRow && aRow.some(function (v) { return v !== "" && v !== null && v !== undefined; });
+            });
+
+            if (aDataRows.length === 0) {
+                MessageToast.show("No data rows found in file.");
+                return;
+            }
+
+            var oModel = this.getView().getModel("detailModel");
+            var aColumns = oModel.getProperty("/columns") || [];
+            var sProductAllocationObject = oModel.getProperty("/productAllocationObject") || "";
+
+            // Map header label -> column index in header array
+            var oLabelToHeaderIdx = {};
+            aHeader.forEach(function (sLbl, i) {
+                if (sLbl !== undefined && sLbl !== null && String(sLbl).trim() !== "") {
+                    oLabelToHeaderIdx[String(sLbl).toLowerCase().trim()] = i;
+                }
+            });
+
+            var bEn = this._getSapLang() === "en";
+            var sDefStatus     = "Active";
+            var sDefConstraint = bEn ? "As in Sequence Constraint" : "Como en restricci\u00f3n de secuencia";
+
+            var aRows = oModel.getProperty("/rows") || [];
+
+            aDataRows.forEach(function (aXlsxRow) {
+                var oNewRow = {};
+                aColumns.forEach(function (oCol) {
+                    oNewRow[oCol.name] = "";
+                    oNewRow[oCol.name + "_old"] = "";
+                });
+
+                // Defaults like onAddNewRow
+                oNewRow["PRODUCTALLOCATIONOBJECT"] = sProductAllocationObject;
+                oNewRow["PRODUCTALLOCATIONOBJECT_old"] = sProductAllocationObject;
+                oNewRow["PRODALLOCATIONACTIVATIONSTATUS"] = sDefStatus;
+                oNewRow["PRODALLOCATIONACTIVATIONSTATUS_old"] = sDefStatus;
+                oNewRow["PRODALLOCCHARCCONSTRAINTSTATUS"] = sDefConstraint;
+                oNewRow["PRODALLOCCHARCCONSTRAINTSTATUS_old"] = sDefConstraint;
+                oNewRow["ZZRFCUT"] = "08";
+                oNewRow["ZZRFCUT_old"] = "08";
+                oNewRow["_isNew"] = true;
+
+                // Override with values read from xlsx, matched by column label
+                aColumns.forEach(function (oCol) {
+                    var sLbl = (oCol.label || "").toLowerCase().trim();
+                    if (!sLbl) { return; }
+                    var iIdx = oLabelToHeaderIdx[sLbl];
+                    if (iIdx === undefined) { return; }
+                    var v = aXlsxRow[iIdx];
+                    if (v === undefined || v === null) { return; }
+                    var sVal = String(v);
+                    oNewRow[oCol.name] = sVal;
+                    oNewRow[oCol.name + "_old"] = sVal;
+                });
+
+                aRows.push(oNewRow);
+                this._oOriginalData.push(JSON.parse(JSON.stringify(oNewRow)));
+            }, this);
+
+            oModel.setProperty("/rows", aRows);
+            var iNewRowCount = Math.min(aRows.length, 15);
+            oModel.setProperty("/rowCount", iNewRowCount);
+            oModel.setProperty("/hasChanges", true);
+
+            MessageToast.show(aDataRows.length + " row(s) loaded from file.");
         },
 
         _onFieldChange: function (oEvent) {
