@@ -974,10 +974,18 @@ sap.ui.define([
 
             var oGroups = {};
             aRows.forEach(function (oRow, iIdx) {
-                var sGK = aKeyFields.map(function (f) { return oRow[f] || ""; }).join("|");
+                var sGK = aKeyFields.map(function (f) {
+                    var v = oRow[f];
+                    return String(v == null ? "" : v).trim();
+                }).join("|");
                 if (!oGroups[sGK]) { oGroups[sGK] = []; }
-                oGroups[sGK].push(oRow);
+                oGroups[sGK].push({ idx: iIdx, row: oRow });
             });
+
+            jQuery.sap.log.info("[overlap-check] keyFields=" + JSON.stringify(aKeyFields));
+            jQuery.sap.log.info("[overlap-check] groups=" + JSON.stringify(Object.keys(oGroups).map(function (k) {
+                return { key: k, rowIdxs: oGroups[k].map(function (o) { return o.idx; }) };
+            })));
 
             var bOverlap = false;
             Object.keys(oGroups).forEach(function (sGK) {
@@ -985,10 +993,12 @@ sap.ui.define([
                 if (aGrp.length < 2) { return; }
                 for (var ii = 0; ii < aGrp.length; ii++) {
                     for (var jj = ii + 1; jj < aGrp.length; jj++) {
-                        var asStart = fnNormDate(aGrp[ii][sStartField]);
-                        var asEnd   = fnNormDate(aGrp[ii][sEndField]);
-                        var bsStart = fnNormDate(aGrp[jj][sStartField]);
-                        var bsEnd   = fnNormDate(aGrp[jj][sEndField]);
+                        var asStart = fnNormDate(aGrp[ii].row[sStartField]);
+                        var asEnd   = fnNormDate(aGrp[ii].row[sEndField]);
+                        var bsStart = fnNormDate(aGrp[jj].row[sStartField]);
+                        var bsEnd   = fnNormDate(aGrp[jj].row[sEndField]);
+                        jQuery.sap.log.info("[overlap-check] cmp idx=" + aGrp[ii].idx + " vs " + aGrp[jj].idx +
+                                            " A=" + asStart + ".." + asEnd + " B=" + bsStart + ".." + bsEnd);
                         if (asStart && asEnd && bsStart && bsEnd) {
                             if (asStart <= bsEnd && bsStart <= asEnd) { bOverlap = true; }
                         }
