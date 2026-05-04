@@ -881,16 +881,15 @@ sap.ui.define([
             var sDefStatus     = "Active";
             var sDefConstraint = bEn ? "As in Sequence Constraint" : "Como en restricci\u00f3n de secuencia";
 
-            var aRows = oModel.getProperty("/rows") || [];
+            var aExistingRows = oModel.getProperty("/rows") || [];
 
-            aDataRows.forEach(function (aXlsxRow) {
+            // Build candidate new rows (not yet pushed)
+            var aCandidateRows = aDataRows.map(function (aXlsxRow) {
                 var oNewRow = {};
                 aColumns.forEach(function (oCol) {
                     oNewRow[oCol.name] = "";
                     oNewRow[oCol.name + "_old"] = "";
                 });
-
-                // Defaults like onAddNewRow
                 oNewRow["PRODUCTALLOCATIONOBJECT"] = sProductAllocationObject;
                 oNewRow["PRODUCTALLOCATIONOBJECT_old"] = sProductAllocationObject;
                 oNewRow["PRODALLOCATIONACTIVATIONSTATUS"] = sDefStatus;
@@ -901,7 +900,6 @@ sap.ui.define([
                 oNewRow["ZZRFCUT_old"] = "08";
                 oNewRow["_isNew"] = true;
 
-                // Override with values read from xlsx, matched by column label
                 aColumns.forEach(function (oCol) {
                     var sLbl = (oCol.label || "").toLowerCase().trim();
                     if (!sLbl) { return; }
@@ -913,7 +911,19 @@ sap.ui.define([
                     oNewRow[oCol.name] = sVal;
                     oNewRow[oCol.name + "_old"] = sVal;
                 });
+                return oNewRow;
+            });
 
+            // Date overlap validation across existing + candidate rows (same logic as Save)
+            var aAllRows = aExistingRows.concat(aCandidateRows);
+            if (this._hasDateOverlap(aAllRows, aColumns)) {
+                MessageBox.error("ERROR! Dates in file!", { actions: ["OK"] });
+                return;
+            }
+
+            // Validation passed: commit rows
+            var aRows = aExistingRows;
+            aCandidateRows.forEach(function (oNewRow) {
                 aRows.push(oNewRow);
                 this._oOriginalData.push(JSON.parse(JSON.stringify(oNewRow)));
             }, this);
@@ -924,6 +934,68 @@ sap.ui.define([
             oModel.setProperty("/hasChanges", true);
 
             MessageToast.show(aDataRows.length + " row(s) loaded from file.");
+        },
+
+        _hasDateOverlap: function (aRows, aColumns) {
+            var sStartField = null, sEndField = null;
+            aColumns.forEach(function (oCol) {
+                var u = oCol.name.toUpperCase();
+                if (u === "PRODALLOCPERDSTARTUTCDATE") { sStartField = oCol.name; }
+                if (u === "PRODALLOCPERIODENDUTCDATE")  { sEndField   = oCol.name; }
+            });
+            if (!sStartField || !sEndField) { return false; }
+
+            var fnNormDate = function (s) {
+                if (!s) { return ""; }
+                var str = String(s).trim();
+                if (/^\d{8}$/.test(str)) {
+                    return str.substring(0, 4) + "-" + str.substring(4, 6) + "-" + str.substring(6, 8);
+                }
+                return str;
+            };
+
+            // Determine key fields (same rule used in Save validation)
+            var iCsIdx = -1;
+            aColumns.forEach(function (oCol, iIdx) {
+                if (oCol.name.toUpperCase().indexOf("STATUS") !== -1) { iCsIdx = iIdx; }
+            });
+            var aNonKey = ["PRODALLOCPERDSTARTUTCDATE", "PRODALLOCPERIODENDUTCDATE",
+                           "PRODUCTALLOCATIONQUANTITY", "ZZRFCUT",
+                           "PRODALLOCCHARCVALUECOMBNCMNT", "PRODUCTALLOCATIONOBJECTUUID"];
+            var aKeyFields = (iCsIdx >= 0
+                ? aColumns.slice(0, iCsIdx + 1)
+                : aColumns.filter(function (c) {
+                    var u = c.name.toUpperCase();
+                    return aNonKey.indexOf(u) === -1 && u.indexOf("AVBL") === -1 && u.indexOf("CNSMD") === -1;
+                })
+            ).filter(function (c) {
+                return c.name.toUpperCase().indexOf("STATUS") === -1;
+            }).map(function (c) { return c.name; });
+
+            var oGroups = {};
+            aRows.forEach(function (oRow, iIdx) {
+                var sGK = aKeyFields.map(function (f) { return oRow[f] || ""; }).join("|");
+                if (!oGroups[sGK]) { oGroups[sGK] = []; }
+                oGroups[sGK].push(oRow);
+            });
+
+            var bOverlap = false;
+            Object.keys(oGroups).forEach(function (sGK) {
+                var aGrp = oGroups[sGK];
+                if (aGrp.length < 2) { return; }
+                for (var ii = 0; ii < aGrp.length; ii++) {
+                    for (var jj = ii + 1; jj < aGrp.length; jj++) {
+                        var asStart = fnNormDate(aGrp[ii][sStartField]);
+                        var asEnd   = fnNormDate(aGrp[ii][sEndField]);
+                        var bsStart = fnNormDate(aGrp[jj][sStartField]);
+                        var bsEnd   = fnNormDate(aGrp[jj][sEndField]);
+                        if (asStart && asEnd && bsStart && bsEnd) {
+                            if (asStart <= bsEnd && bsStart <= asEnd) { bOverlap = true; }
+                        }
+                    }
+                }
+            });
+            return bOverlap;
         },
 
         _onFieldChange: function (oEvent) {
