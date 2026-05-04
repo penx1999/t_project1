@@ -914,6 +914,33 @@ sap.ui.define([
                 return oNewRow;
             });
 
+            // Per-row date range validation: end date must be after start date
+            var sStartField = null, sEndField = null;
+            aColumns.forEach(function (oCol) {
+                var u = oCol.name.toUpperCase();
+                if (u === "PRODALLOCPERDSTARTUTCDATE") { sStartField = oCol.name; }
+                if (u === "PRODALLOCPERIODENDUTCDATE")  { sEndField   = oCol.name; }
+            });
+            var fnNormDate = function (s) {
+                if (!s) { return ""; }
+                var str = String(s).trim();
+                if (/^\d{8}$/.test(str)) {
+                    return str.substring(0, 4) + "-" + str.substring(4, 6) + "-" + str.substring(6, 8);
+                }
+                return str;
+            };
+            if (sStartField && sEndField) {
+                var bRangeError = aCandidateRows.some(function (oRow) {
+                    var s = fnNormDate(oRow[sStartField]);
+                    var e = fnNormDate(oRow[sEndField]);
+                    return s && e && e <= s;
+                });
+                if (bRangeError) {
+                    MessageBox.error("ERROR! End Date must be after Start Date in file!", { actions: ["OK"] });
+                    return;
+                }
+            }
+
             // Date overlap validation across existing + candidate rows (same logic as Save)
             var aAllRows = aExistingRows.concat(aCandidateRows);
             if (this._hasDateOverlap(aAllRows, aColumns)) {
