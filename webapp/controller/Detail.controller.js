@@ -762,6 +762,13 @@ sap.ui.define([
             // Apply font Aptos Narrow size 11 to every cell
             var oFontStyle = { font: { name: "Aptos Narrow", sz: 11 } };
             var oRange = XLSX.utils.decode_range(oWs["!ref"]);
+
+            // Column widths: double the Excel default (8.43 ch -> ~17 ch)
+            var aCols = [];
+            for (var c = oRange.s.c; c <= oRange.e.c; c++) {
+                aCols.push({ wch: 17 });
+            }
+            oWs["!cols"] = aCols;
             for (var R = oRange.s.r; R <= oRange.e.r; R++) {
                 for (var C = oRange.s.c; C <= oRange.e.c; C++) {
                     var sAddr = XLSX.utils.encode_cell({ r: R, c: C });
