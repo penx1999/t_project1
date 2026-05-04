@@ -936,7 +936,7 @@ sap.ui.define([
                     return s && e && e <= s;
                 });
                 if (bRangeError) {
-                    MessageBox.error("ERROR! End Date must be after Start Date in file!", { actions: ["OK"] });
+                    MessageBox.error("ERROR! Dates in file!", { actions: ["OK"] });
                     return;
                 }
             }
