@@ -964,12 +964,13 @@ sap.ui.define([
                            "PRODALLOCCHARCVALUECOMBNCMNT", "PRODUCTALLOCATIONOBJECTUUID"];
             var aKeyFields = (iCsIdx >= 0
                 ? aColumns.slice(0, iCsIdx + 1)
-                : aColumns.filter(function (c) {
-                    var u = c.name.toUpperCase();
-                    return aNonKey.indexOf(u) === -1 && u.indexOf("AVBL") === -1 && u.indexOf("CNSMD") === -1;
-                })
+                : aColumns
             ).filter(function (c) {
-                return c.name.toUpperCase().indexOf("STATUS") === -1;
+                var u = c.name.toUpperCase();
+                return aNonKey.indexOf(u) === -1 &&
+                       u.indexOf("STATUS") === -1 &&
+                       u.indexOf("AVBL")   === -1 &&
+                       u.indexOf("CNSMD")  === -1;
             }).map(function (c) { return c.name; });
 
             var oGroups = {};
@@ -982,13 +983,6 @@ sap.ui.define([
                 oGroups[sGK].push({ idx: iIdx, row: oRow });
             });
 
-            console.log("[overlap-check] keyFields=", aKeyFields);
-            console.log("[overlap-check] groups=", Object.keys(oGroups).map(function (k) {
-                return { key: k, rowIdxs: oGroups[k].map(function (o) { return o.idx; }) };
-            }));
-            console.log("[overlap-check] sStartField=", sStartField, "sEndField=", sEndField);
-            console.log("[overlap-check] sample row[0]=", aRows[0], "row[last]=", aRows[aRows.length - 1]);
-
             var bOverlap = false;
             Object.keys(oGroups).forEach(function (sGK) {
                 var aGrp = oGroups[sGK];
@@ -999,8 +993,6 @@ sap.ui.define([
                         var asEnd   = fnNormDate(aGrp[ii].row[sEndField]);
                         var bsStart = fnNormDate(aGrp[jj].row[sStartField]);
                         var bsEnd   = fnNormDate(aGrp[jj].row[sEndField]);
-                        console.log("[overlap-check] cmp idx=" + aGrp[ii].idx + " vs " + aGrp[jj].idx +
-                                    " A=" + asStart + ".." + asEnd + " B=" + bsStart + ".." + bsEnd);
                         if (asStart && asEnd && bsStart && bsEnd) {
                             if (asStart <= bsEnd && bsStart <= asEnd) { bOverlap = true; }
                         }
@@ -1214,12 +1206,13 @@ sap.ui.define([
                            "PRODALLOCCHARCVALUECOMBNCMNT", "PRODUCTALLOCATIONOBJECTUUID"];
             var aKeyFields = (iCsIdx >= 0
                 ? aColumns.slice(0, iCsIdx + 1)
-                : aColumns.filter(function (c) {
-                    var u = c.name.toUpperCase();
-                    return aNonKey.indexOf(u) === -1 && u.indexOf("AVBL") === -1 && u.indexOf("CNSMD") === -1;
-                })
+                : aColumns
             ).filter(function (c) {
-                return c.name.toUpperCase().indexOf("STATUS") === -1;
+                var u = c.name.toUpperCase();
+                return aNonKey.indexOf(u) === -1 &&
+                       u.indexOf("STATUS") === -1 &&
+                       u.indexOf("AVBL")   === -1 &&
+                       u.indexOf("CNSMD")  === -1;
             }).map(function (c) { return c.name; });
 
             var oGroups = {};
