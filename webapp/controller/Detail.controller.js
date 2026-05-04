@@ -858,6 +858,25 @@ sap.ui.define([
                 }
             });
 
+            // Validate Allocation Object in file matches screen
+            var oAllocCol = aColumns.filter(function (oCol) {
+                return (oCol.name || "").toUpperCase() === "PRODUCTALLOCATIONOBJECT";
+            })[0];
+            var iAllocIdx = oAllocCol ? oLabelToHeaderIdx[(oAllocCol.label || "").toLowerCase().trim()] : undefined;
+            var bAllocOk = true;
+            if (iAllocIdx === undefined) {
+                bAllocOk = false;
+            } else {
+                for (var i = 0; i < aDataRows.length; i++) {
+                    var sFileAlloc = String(aDataRows[i][iAllocIdx] == null ? "" : aDataRows[i][iAllocIdx]).trim();
+                    if (sFileAlloc !== sProductAllocationObject) { bAllocOk = false; break; }
+                }
+            }
+            if (!bAllocOk) {
+                MessageBox.error("ERROR! Allocation Object in file does not correspond", { actions: ["OK"] });
+                return;
+            }
+
             var bEn = this._getSapLang() === "en";
             var sDefStatus     = "Active";
             var sDefConstraint = bEn ? "As in Sequence Constraint" : "Como en restricci\u00f3n de secuencia";
