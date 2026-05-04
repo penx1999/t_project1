@@ -982,10 +982,12 @@ sap.ui.define([
                 oGroups[sGK].push({ idx: iIdx, row: oRow });
             });
 
-            jQuery.sap.log.info("[overlap-check] keyFields=" + JSON.stringify(aKeyFields));
-            jQuery.sap.log.info("[overlap-check] groups=" + JSON.stringify(Object.keys(oGroups).map(function (k) {
+            console.log("[overlap-check] keyFields=", aKeyFields);
+            console.log("[overlap-check] groups=", Object.keys(oGroups).map(function (k) {
                 return { key: k, rowIdxs: oGroups[k].map(function (o) { return o.idx; }) };
-            })));
+            }));
+            console.log("[overlap-check] sStartField=", sStartField, "sEndField=", sEndField);
+            console.log("[overlap-check] sample row[0]=", aRows[0], "row[last]=", aRows[aRows.length - 1]);
 
             var bOverlap = false;
             Object.keys(oGroups).forEach(function (sGK) {
@@ -997,8 +999,8 @@ sap.ui.define([
                         var asEnd   = fnNormDate(aGrp[ii].row[sEndField]);
                         var bsStart = fnNormDate(aGrp[jj].row[sStartField]);
                         var bsEnd   = fnNormDate(aGrp[jj].row[sEndField]);
-                        jQuery.sap.log.info("[overlap-check] cmp idx=" + aGrp[ii].idx + " vs " + aGrp[jj].idx +
-                                            " A=" + asStart + ".." + asEnd + " B=" + bsStart + ".." + bsEnd);
+                        console.log("[overlap-check] cmp idx=" + aGrp[ii].idx + " vs " + aGrp[jj].idx +
+                                    " A=" + asStart + ".." + asEnd + " B=" + bsStart + ".." + bsEnd);
                         if (asStart && asEnd && bsStart && bsEnd) {
                             if (asStart <= bsEnd && bsStart <= asEnd) { bOverlap = true; }
                         }
