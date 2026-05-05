@@ -858,6 +858,23 @@ sap.ui.define([
                 }
             });
 
+            // Validate header labels match what is expected (same exclusions as download)
+            var aExpectedLabels = aColumns.filter(function (oCol) {
+                var sName = (oCol.name  || "").toUpperCase();
+                var sLbl  = (oCol.label || "").toLowerCase().trim();
+                if (sName === "PRODUCTALLOCATIONOBJECTUUID") { return false; }
+                if (sLbl === "avbl qty" || sLbl === "cnsmd qty") { return false; }
+                return !!sLbl;
+            }).map(function (oCol) { return (oCol.label || "").toLowerCase().trim(); });
+
+            var aFileLabels = Object.keys(oLabelToHeaderIdx);
+            var bLabelsOk = aExpectedLabels.length === aFileLabels.length &&
+                aExpectedLabels.every(function (s) { return oLabelToHeaderIdx[s] !== undefined; });
+            if (!bLabelsOk) {
+                MessageBox.error("ERROR!: labels in file", { actions: ["OK"] });
+                return;
+            }
+
             // Validate Allocation Object in file matches screen
             var oAllocCol = aColumns.filter(function (oCol) {
                 return (oCol.name || "").toUpperCase() === "PRODUCTALLOCATIONOBJECT";
