@@ -10,10 +10,12 @@ sap.ui.define([
     "sap/m/Input",
     "sap/m/Label",
     "sap/m/DatePicker",
+    "sap/m/SelectDialog",
+    "sap/m/StandardListItem",
     "sap/ui/table/Column",
     "sap/ui/table/RowSettings",
     "sap/ui/core/format/DateFormat"
-], function (Controller, History, JSONModel, Filter, FilterOperator, MessageBox, MessageToast, Text, Input, Label, DatePicker, UIColumn, RowSettings, DateFormat) {
+], function (Controller, History, JSONModel, Filter, FilterOperator, MessageBox, MessageToast, Text, Input, Label, DatePicker, SelectDialog, StandardListItem, UIColumn, RowSettings, DateFormat) {
     "use strict";
 
     var EDITABLE_FIELDS = [
@@ -346,11 +348,17 @@ sap.ui.define([
                     }
                     oTemplate = new Input(oInputCfg).addStyleClass("sapUiSizeCompact");
                 } else {
+                    var sVHField = sFieldName;
+                    var sVHLabel = oCol.label || sFieldName;
                     oTemplate = new Input({
                         value: "{detailModel>" + sFieldName + "}",
                         editable: "{= ${detailModel>_isNew} === true }",
                         required: "{= ${detailModel>_isNew} === true }",
                         valueState: "{= ${detailModel>_err_" + sFieldName + "} ? 'Error' : 'None' }",
+                        showValueHelp: "{= ${detailModel>_isNew} === true }",
+                        valueHelpRequest: function (oEvent) {
+                            that._onValueHelpRequest(oEvent, sVHField, sVHLabel);
+                        },
                         change: that._onFieldChange.bind(that),
                         liveChange: that._onFieldChange.bind(that)
                     }).addStyleClass("sapUiSizeCompact");
@@ -1044,6 +1052,66 @@ sap.ui.define([
                 }
             });
             return bOverlap;
+        },
+
+        _onValueHelpRequest: function (oEvent, sFieldName, sLabel) {
+            var oInput = oEvent.getSource();
+            var oCtx = oInput.getBindingContext("detailModel");
+            var that = this;
+
+            var oVHModel = new JSONModel({ items: [] });
+
+            var oDialog = new SelectDialog({
+                title: "Search Help: " + sLabel,
+                noDataText: "No data",
+                search: function (oEv) {
+                    that._loadValueHelp(sFieldName, oEv.getParameter("value"), oVHModel);
+                },
+                liveChange: function (oEv) {
+                    that._loadValueHelp(sFieldName, oEv.getParameter("value"), oVHModel);
+                },
+                confirm: function (oEv) {
+                    var oItem = oEv.getParameter("selectedItem");
+                    if (oItem && oCtx) {
+                        var sClave = oItem.getTitle();
+                        oCtx.getModel().setProperty(oCtx.getPath() + "/" + sFieldName, sClave);
+                    }
+                    oDialog.destroy();
+                },
+                cancel: function () { oDialog.destroy(); }
+            });
+
+            oDialog.setModel(oVHModel);
+            oDialog.bindAggregation("items", {
+                path: "/items",
+                template: new StandardListItem({
+                    title: "{Clave}",
+                    description: "{Desc}"
+                })
+            });
+
+            this._loadValueHelp(sFieldName, "", oVHModel);
+            oDialog.open();
+        },
+
+        _loadValueHelp: function (sSource, sSearch, oVHModel) {
+            var oODataModel = this.getOwnerComponent().getModel();
+            if (!oODataModel) { return; }
+            oODataModel.callFunction("/GetValueHelp", {
+                method: "GET",
+                urlParameters: {
+                    source: sSource,
+                    search: sSearch || ""
+                },
+                success: function (oData) {
+                    var aItems = (oData && oData.results) ? oData.results : (oData ? [oData] : []);
+                    oVHModel.setProperty("/items", aItems);
+                },
+                error: function (oErr) {
+                    jQuery.sap.log.error("ValueHelp call failed: " + (oErr && oErr.message ? oErr.message : ""));
+                    oVHModel.setProperty("/items", []);
+                }
+            });
         },
 
         _onFieldChange: function (oEvent) {
