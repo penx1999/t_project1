@@ -1097,11 +1097,13 @@ sap.ui.define([
         _loadValueHelp: function (sSource, sSearch, oVHModel) {
             var oODataModel = this.getOwnerComponent().getModel();
             if (!oODataModel) { return; }
+            var sAlloc = this.getView().getModel("detailModel").getProperty("/productAllocationObject") || "";
             oODataModel.callFunction("/GetValueHelp", {
                 method: "GET",
                 urlParameters: {
                     source: sSource,
-                    search: sSearch || ""
+                    search: sSearch || "",
+                    allocationObject: sAlloc
                 },
                 success: function (oData) {
                     var aItems = (oData && oData.results) ? oData.results : (oData ? [oData] : []);
