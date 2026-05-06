@@ -1098,13 +1098,15 @@ sap.ui.define([
             var oODataModel = this.getOwnerComponent().getModel();
             if (!oODataModel) { return; }
             var sAlloc = this.getView().getModel("detailModel").getProperty("/productAllocationObject") || "";
+            var sServiceUrl = (oODataModel.sServiceUrl || "").replace(/\/$/, "");
+            var oParams = { source: sSource, search: sSearch || "", allocationObject: sAlloc };
+            var sQuery = Object.keys(oParams).map(function (k) {
+                return encodeURIComponent(k) + "=" + encodeURIComponent(oParams[k]);
+            }).join("&");
+            console.log("[ValueHelp] GET " + sServiceUrl + "/GetValueHelp?" + sQuery);
             oODataModel.callFunction("/GetValueHelp", {
                 method: "GET",
-                urlParameters: {
-                    source: sSource,
-                    search: sSearch || "",
-                    allocationObject: sAlloc
-                },
+                urlParameters: oParams,
                 success: function (oData) {
                     var aItems = (oData && oData.results) ? oData.results : (oData ? [oData] : []);
                     oVHModel.setProperty("/items", aItems);
