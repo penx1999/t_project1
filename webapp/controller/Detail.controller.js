@@ -966,8 +966,56 @@ sap.ui.define([
                 }
             }
 
-            // Date overlap validation across existing + candidate rows (same logic as Save)
-            var aAllRows = aExistingRows.concat(aCandidateRows);
+            // Compute key fields (same rule as _hasDateOverlap / Save validation)
+            var aKeyFields = this._getOverlapKeyFields(aColumns);
+
+            // Build match key = keyFields + normalized start + normalized end
+            var fnMatchKey = function (oRow) {
+                var aParts = aKeyFields.map(function (f) {
+                    var v = oRow[f];
+                    return String(v == null ? "" : v).trim();
+                });
+                aParts.push(sStartField ? fnNormDate(oRow[sStartField]) : "");
+                aParts.push(sEndField   ? fnNormDate(oRow[sEndField])   : "");
+                return aParts.join("|");
+            };
+
+            // Try to merge each candidate into an existing row with identical match key.
+            // If matched: copy non-key (and non-date) field values from candidate into existing,
+            // and remove the candidate from the new-rows list.
+            var oExistingByKey = {};
+            aExistingRows.forEach(function (oRow, iIdx) {
+                var k = fnMatchKey(oRow);
+                if (!oExistingByKey[k]) { oExistingByKey[k] = iIdx; }
+            });
+
+            var aRemainingCandidates = [];
+            var iUpdatedCount = 0;
+            aCandidateRows.forEach(function (oCand) {
+                var k = fnMatchKey(oCand);
+                var iIdx = oExistingByKey[k];
+                if (iIdx !== undefined) {
+                    var oTarget = aExistingRows[iIdx];
+                    aColumns.forEach(function (oCol) {
+                        var sName = oCol.name;
+                        var sUp = sName.toUpperCase();
+                        if (aKeyFields.indexOf(sName) !== -1) { return; }
+                        if (sUp === "PRODALLOCPERDSTARTUTCDATE" || sUp === "PRODALLOCPERIODENDUTCDATE") { return; }
+                        if (sUp === "PRODUCTALLOCATIONOBJECTUUID") { return; }
+                        var sLbl = (oCol.label || "").toLowerCase().trim();
+                        if (sLbl === "avbl qty" || sLbl === "cnsmd qty") { return; }
+                        if (oCand[sName] !== undefined) {
+                            oTarget[sName] = oCand[sName];
+                        }
+                    });
+                    iUpdatedCount++;
+                } else {
+                    aRemainingCandidates.push(oCand);
+                }
+            });
+
+            // Date overlap validation across existing + remaining new candidates
+            var aAllRows = aExistingRows.concat(aRemainingCandidates);
             if (this._hasDateOverlap(aAllRows, aColumns)) {
                 MessageBox.error("ERROR! Dates in file!", { actions: ["OK"] });
                 return;
@@ -975,7 +1023,7 @@ sap.ui.define([
 
             // Validation passed: commit rows
             var aRows = aExistingRows;
-            aCandidateRows.forEach(function (oNewRow) {
+            aRemainingCandidates.forEach(function (oNewRow) {
                 aRows.push(oNewRow);
                 this._oOriginalData.push(JSON.parse(JSON.stringify(oNewRow)));
             }, this);
@@ -985,7 +1033,27 @@ sap.ui.define([
             oModel.setProperty("/rowCount", iNewRowCount);
             oModel.setProperty("/hasChanges", true);
 
-            MessageToast.show(aDataRows.length + " row(s) loaded from file.");
+            var sMsg = aRemainingCandidates.length + " row(s) loaded";
+            if (iUpdatedCount > 0) { sMsg += ", " + iUpdatedCount + " row(s) updated"; }
+            sMsg += " from file.";
+            MessageToast.show(sMsg);
+        },
+
+        _getOverlapKeyFields: function (aColumns) {
+            var iCsIdx = -1;
+            aColumns.forEach(function (oCol, iIdx) {
+                if (oCol.name.toUpperCase().indexOf("STATUS") !== -1) { iCsIdx = iIdx; }
+            });
+            var aNonKey = ["PRODALLOCPERDSTARTUTCDATE", "PRODALLOCPERIODENDUTCDATE",
+                           "PRODUCTALLOCATIONQUANTITY", "ZZRFCUT",
+                           "PRODALLOCCHARCVALUECOMBNCMNT", "PRODUCTALLOCATIONOBJECTUUID"];
+            return (iCsIdx >= 0 ? aColumns.slice(0, iCsIdx + 1) : aColumns).filter(function (c) {
+                var u = c.name.toUpperCase();
+                return aNonKey.indexOf(u) === -1 &&
+                       u.indexOf("STATUS") === -1 &&
+                       u.indexOf("AVBL")   === -1 &&
+                       u.indexOf("CNSMD")  === -1;
+            }).map(function (c) { return c.name; });
         },
 
         _hasDateOverlap: function (aRows, aColumns) {
