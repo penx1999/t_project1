@@ -420,6 +420,9 @@ sap.ui.define([
         },
 
         _showUnsavedPopup: function (fnOnAbandon, fnOnContinue) {
+            if (this._bUnsavedPopupOpen) { return; }
+            this._bUnsavedPopupOpen = true;
+            var that = this;
             var oBundle = this.getView().getModel("i18n").getResourceBundle();
             var oDialog = new sap.m.Dialog({
                 title: oBundle.getText("warningTitle"),
@@ -438,7 +441,10 @@ sap.ui.define([
                     type: "Reject",
                     press: function () { oDialog.close(); fnOnAbandon(); }
                 }),
-                afterClose: function () { oDialog.destroy(); }
+                afterClose: function () {
+                    that._bUnsavedPopupOpen = false;
+                    oDialog.destroy();
+                }
             });
             oDialog.open();
         },
