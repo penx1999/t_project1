@@ -91,8 +91,12 @@ sap.ui.define([
                 oOwner._bPreventDetailReload = false;
                 var that = this;
                 this._showUnsavedPopup(function () {
-                    that.getView().getModel("detailModel").setProperty("/hasChanges", false);
-                    that._doNavBack();
+                    var oDetailModel = that.getView().getModel("detailModel");
+                    oDetailModel.setProperty("/hasChanges", false);
+                    oDetailModel.setProperty("/messageVisible", false);
+                    oDetailModel.setProperty("/messageText", "");
+                    oDetailModel.setProperty("/messageType", "None");
+                    that.getOwnerComponent().getRouter().navTo("RouteListReport", {}, true);
                 });
                 return;
             }
