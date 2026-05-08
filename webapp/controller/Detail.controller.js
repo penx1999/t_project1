@@ -403,7 +403,14 @@ sap.ui.define([
             var oModel = this.getView().getModel("detailModel");
             if (oModel.getProperty("/hasChanges")) {
                 var that = this;
-                this._showUnsavedPopup(function () { that._doNavBack(); });
+                this._showUnsavedPopup(function () {
+                    var oDetailModel = that.getView().getModel("detailModel");
+                    oDetailModel.setProperty("/hasChanges", false);
+                    oDetailModel.setProperty("/messageVisible", false);
+                    oDetailModel.setProperty("/messageText", "");
+                    oDetailModel.setProperty("/messageType", "None");
+                    that.getOwnerComponent().getRouter().navTo("RouteListReport", {}, true);
+                });
                 return;
             }
             this._doNavBack();
