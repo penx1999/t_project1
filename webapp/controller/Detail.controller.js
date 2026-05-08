@@ -533,8 +533,8 @@ sap.ui.define([
 
             oModel.setProperty("/rows", aRows);
 
-            var iNewRowCount = Math.max(aRows.length, 5);
-            oModel.setProperty("/rowCount", Math.min(iNewRowCount, 15));
+            var iNewRowCount = Math.min(aRows.length, 15);
+            oModel.setProperty("/rowCount", iNewRowCount);
 
             oTable.clearSelection();
 
