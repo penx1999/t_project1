@@ -949,7 +949,7 @@ sap.ui.define([
                     if (iIdx === undefined) { return; }
                     var v = aXlsxRow[iIdx];
                     if (v === undefined || v === null) { return; }
-                    var sVal = String(v);
+                    var sVal = String(v).trim();
                     oNewRow[oCol.name] = sVal;
                     oNewRow[oCol.name + "_old"] = sVal;
                 });
