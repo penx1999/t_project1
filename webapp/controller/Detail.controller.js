@@ -837,7 +837,7 @@ sap.ui.define([
                 oReader.onload = function (e) {
                     try {
                         var oData = new Uint8Array(e.target.result);
-                        var oWb = XLSX.read(oData, { type: "array" });
+                        var oWb = XLSX.read(oData, { type: "array", cellDates: true });
                         var sFirstSheet = oWb.SheetNames[0];
                         var oWs = oWb.Sheets[sFirstSheet];
                         var aAoA = XLSX.utils.sheet_to_json(oWs, { header: 1, defval: "", blankrows: true });
@@ -925,7 +925,54 @@ sap.ui.define([
 
             var aExistingRows = oModel.getProperty("/rows") || [];
 
+            // Identify date fields up front
+            var oDateFieldSet = {};
+            aColumns.forEach(function (oCol) {
+                var u = (oCol.name || "").toUpperCase();
+                if (u === "PRODALLOCPERDSTARTUTCDATE" || u === "PRODALLOCPERIODENDUTCDATE") {
+                    oDateFieldSet[oCol.name] = true;
+                }
+            });
+
+            // Robust date parser: accepts Date, number (Excel serial), or string in common formats.
+            // Returns "yyyymmdd" if valid, "" if input is empty, null if invalid.
+            var fnParseDateCell = function (v) {
+                if (v === undefined || v === null || v === "") { return ""; }
+                var d = null;
+                if (v instanceof Date) {
+                    d = v;
+                } else if (typeof v === "number") {
+                    // Excel serial date (days since 1899-12-30)
+                    var iEpoch = Date.UTC(1899, 11, 30);
+                    d = new Date(iEpoch + Math.round(v) * 86400000);
+                } else {
+                    var s = String(v).trim();
+                    if (!s) { return ""; }
+                    var m;
+                    if ((m = s.match(/^(\d{4})(\d{2})(\d{2})$/))) {
+                        d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+                        if (d.getUTCFullYear() !== +m[1] || (d.getUTCMonth() + 1) !== +m[2] || d.getUTCDate() !== +m[3]) { return null; }
+                    } else if ((m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/))) {
+                        d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+                        if (d.getUTCFullYear() !== +m[1] || (d.getUTCMonth() + 1) !== +m[2] || d.getUTCDate() !== +m[3]) { return null; }
+                    } else if ((m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/))) {
+                        d = new Date(Date.UTC(+m[3], +m[2] - 1, +m[1]));
+                        if (d.getUTCFullYear() !== +m[3] || (d.getUTCMonth() + 1) !== +m[2] || d.getUTCDate() !== +m[1]) { return null; }
+                    } else {
+                        var t = Date.parse(s);
+                        if (isNaN(t)) { return null; }
+                        d = new Date(t);
+                    }
+                }
+                if (!d || isNaN(d.getTime())) { return null; }
+                var yyyy = String(d.getUTCFullYear());
+                var mm = ("0" + (d.getUTCMonth() + 1)).slice(-2);
+                var dd = ("0" + d.getUTCDate()).slice(-2);
+                return yyyy + mm + dd;
+            };
+
             // Build candidate new rows (not yet pushed)
+            var bInvalidDate = false;
             var aCandidateRows = aDataRows.map(function (aXlsxRow) {
                 var oNewRow = {};
                 aColumns.forEach(function (oCol) {
@@ -949,12 +996,24 @@ sap.ui.define([
                     if (iIdx === undefined) { return; }
                     var v = aXlsxRow[iIdx];
                     if (v === undefined || v === null) { return; }
-                    var sVal = String(v).trim();
+                    var sVal;
+                    if (oDateFieldSet[oCol.name]) {
+                        var sParsed = fnParseDateCell(v);
+                        if (sParsed === null) { bInvalidDate = true; sVal = ""; }
+                        else { sVal = sParsed; }
+                    } else {
+                        sVal = String(v).trim();
+                    }
                     oNewRow[oCol.name] = sVal;
                     oNewRow[oCol.name + "_old"] = sVal;
                 });
                 return oNewRow;
             });
+
+            if (bInvalidDate) {
+                MessageBox.error("ERROR! Dates in file!", { actions: ["OK"] });
+                return;
+            }
 
             // Per-row date range validation: end date must be after start date
             var sStartField = null, sEndField = null;
