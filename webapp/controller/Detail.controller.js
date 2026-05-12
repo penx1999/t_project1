@@ -942,9 +942,21 @@ sap.ui.define([
                 if (v instanceof Date) {
                     d = v;
                 } else if (typeof v === "number") {
-                    // Excel serial date (days since 1899-12-30)
-                    var iEpoch = Date.UTC(1899, 11, 30);
-                    d = new Date(iEpoch + Math.round(v) * 86400000);
+                    var n = Math.round(v);
+                    if (n >= 18000101 && n <= 22001231) {
+                        // yyyymmdd numeric
+                        var ny = Math.floor(n / 10000);
+                        var nm = Math.floor((n % 10000) / 100);
+                        var nd = n % 100;
+                        d = new Date(Date.UTC(ny, nm - 1, nd));
+                        if (d.getUTCFullYear() !== ny || (d.getUTCMonth() + 1) !== nm || d.getUTCDate() !== nd) { return null; }
+                    } else if (n >= 1 && n <= 2958465) {
+                        // Excel serial date (days since 1899-12-30)
+                        var iEpoch = Date.UTC(1899, 11, 30);
+                        d = new Date(iEpoch + n * 86400000);
+                    } else {
+                        return null;
+                    }
                 } else {
                     var s = String(v).trim();
                     if (!s) { return ""; }
