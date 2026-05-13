@@ -711,8 +711,8 @@ sap.ui.define([
 
         _executeDownload: function (sFormat, bWithDesc) {
             var that = this;
-            if (sFormat !== "xlsx") {
-                MessageToast.show("CSV download - pending implementation");
+            if (sFormat === "csv") {
+                this._generateCsv(bWithDesc);
                 return;
             }
             this._loadSheetJS().then(function (XLSX) {
@@ -720,6 +720,74 @@ sap.ui.define([
             }).catch(function () {
                 MessageBox.error("Could not load Excel library.");
             });
+        },
+
+        _generateCsv: function (bWithDesc) {
+            var oModel = this.getView().getModel("detailModel");
+            var aExcludedLabels = ["avbl qty", "cnsmd qty"];
+            var aColumns = (oModel.getProperty("/columns") || []).filter(function (oCol) {
+                var sName = (oCol.name  || "").toUpperCase();
+                var sLbl  = (oCol.label || "").toLowerCase().trim();
+                if (sName === "PRODUCTALLOCATIONOBJECTUUID") { return false; }
+                if (aExcludedLabels.indexOf(sLbl) !== -1) { return false; }
+                return true;
+            });
+            var aRows = oModel.getProperty("/rows") || [];
+
+            var aAoA = [
+                ["Activation Status",  "Activation Status - Description"],
+                ["01",                 "Inactive"],
+                ["02",                 "Active"],
+                [],
+                ["Constraint Status",  "Constraint Status - Description"],
+                ["01",                 "Unrestricted Availablity"],
+                ["02",                 "Restricted Availablity"],
+                ["03",                 "No Availability"],
+                ["04",                 "Not Relevant"],
+                ["05",                 "As in Sequence Constraint"],
+                [],
+                ["Delete CVC",         "Delete CVC - Description"],
+                ["",                   "No Deletion"],
+                ["1",                  "Standard Deletion"],
+                ["2",                  "Deletion with Consumptions"],
+                []
+            ];
+
+            var aHeader = aColumns.map(function (oCol) { return oCol.label || oCol.name; });
+            aAoA.push(aHeader);
+
+            aRows.forEach(function (oRow) {
+                var aRow = aColumns.map(function (oCol) {
+                    var v = oRow[oCol.name];
+                    return (v === undefined || v === null) ? "" : v;
+                });
+                aAoA.push(aRow);
+            });
+
+            var sSep = ";";
+            var fnEscape = function (v) {
+                var s = String(v == null ? "" : v);
+                if (s.indexOf(sSep) !== -1 || s.indexOf("\"") !== -1 || s.indexOf("\n") !== -1 || s.indexOf("\r") !== -1) {
+                    s = "\"" + s.replace(/"/g, "\"\"") + "\"";
+                }
+                return s;
+            };
+            var sCsv = aAoA.map(function (aRow) {
+                return aRow.map(fnEscape).join(sSep);
+            }).join("\r\n");
+
+            // UTF-8 BOM so Excel detects encoding correctly
+            var sContent = "\uFEFF" + sCsv;
+            var oBlob = new Blob([sContent], { type: "text/csv;charset=utf-8;" });
+            var sFileName = this._buildDownloadFileName("csv");
+            var sUrl = URL.createObjectURL(oBlob);
+            var oLink = document.createElement("a");
+            oLink.href = sUrl;
+            oLink.download = sFileName;
+            document.body.appendChild(oLink);
+            oLink.click();
+            document.body.removeChild(oLink);
+            URL.revokeObjectURL(sUrl);
         },
 
         _loadSheetJS: function () {
