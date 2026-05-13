@@ -672,7 +672,7 @@ sap.ui.define([
         onDownload: function () {
             var that = this;
             if (!this._oDownloadDialog) {
-                var oCbDesc = new sap.m.CheckBox({ text: "With Descriptions", selected: false });
+                var oCbDesc = new sap.m.CheckBox({ text: "With Descriptions", selected: false, visible: false });
                 var oRbgFormat = new sap.m.RadioButtonGroup({
                     columns: 1,
                     selectedIndex: 0,
