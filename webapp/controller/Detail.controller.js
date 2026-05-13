@@ -148,10 +148,15 @@ sap.ui.define([
                         return parseInt(a.position) - parseInt(b.position);
                     });
 
+                    var bEn = that._getSapLang() === "en";
                     var aColumns = aFields.map(function (oField) {
+                        var sLabel = oField.description || oField.name;
+                        if (bEn && (oField.name || "").toUpperCase() === "PRODALLOCCHARCVALUECOMBNCMNT") {
+                            sLabel = "Comment";
+                        }
                         return {
                             name: oField.name,
-                            label: oField.description || oField.name
+                            label: sLabel
                         };
                     });
 
@@ -270,11 +275,12 @@ sap.ui.define([
                 var sFieldName = oCol.name;
                 var sFieldUpper = sFieldName.toUpperCase();
 
-                if (sFieldUpper === "PRODUCTALLOCATIONOBJECTUUID") {
+                if (sFieldUpper === "PRODUCTALLOCATIONOBJECTUUID" ||
+                    sFieldUpper === "PRODUCTALLOCATIONOBJECT") {
                     return;
                 }
-                
-                var bNonEditableText = (sFieldUpper === "PRODUCTALLOCATIONOBJECT");
+
+                var bNonEditableText = false;
                 
                 var sLabelUpper = (oCol.label || "").toUpperCase().trim();
                 var bNeverEditable = (sLabelUpper === "AVBL QTY" || sLabelUpper === "CNSMD QTY");
