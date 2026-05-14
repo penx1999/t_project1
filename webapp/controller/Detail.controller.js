@@ -1329,14 +1329,15 @@ sap.ui.define([
             if (!oODataModel) { return; }
             var sAlloc = this.getView().getModel("detailModel").getProperty("/productAllocationObject") || "";
             var sServiceUrl = (oODataModel.sServiceUrl || "").replace(/\/$/, "");
-            var oParams = { source: sSource, search: sSearch || "", allocationObject: sAlloc };
-            var sQuery = Object.keys(oParams).map(function (k) {
-                return encodeURIComponent(k) + "=" + encodeURIComponent(oParams[k]);
-            }).join("&");
-            console.log("[ValueHelp] GET " + sServiceUrl + "/GetValueHelp?" + sQuery);
-            oODataModel.callFunction("/GetValueHelp", {
-                method: "GET",
-                urlParameters: oParams,
+            var aFilters = [
+                new Filter("source",           FilterOperator.EQ, sSource),
+                new Filter("search",           FilterOperator.EQ, sSearch || ""),
+                new Filter("allocationObject", FilterOperator.EQ, sAlloc)
+            ];
+            console.log("[ValueHelp] GET " + sServiceUrl + "/ValueHelpSet?$filter=" +
+                "source eq '" + sSource + "' and search eq '" + (sSearch || "") + "' and allocationObject eq '" + sAlloc + "'");
+            oODataModel.read("/ValueHelpSet", {
+                filters: aFilters,
                 success: function (oData) {
                     var aItems = (oData && oData.results) ? oData.results : (oData ? [oData] : []);
                     oVHModel.setProperty("/items", aItems);
