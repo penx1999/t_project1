@@ -1331,11 +1331,10 @@ sap.ui.define([
             var sServiceUrl = (oODataModel.sServiceUrl || "").replace(/\/$/, "");
             var aFilters = [
                 new Filter("source",           FilterOperator.EQ, sSource),
-                new Filter("search",           FilterOperator.EQ, sSearch || ""),
                 new Filter("allocationObject", FilterOperator.EQ, sAlloc)
             ];
             console.log("[ValueHelp] GET " + sServiceUrl + "/ValueHelpSet?$filter=" +
-                "source eq '" + sSource + "' and search eq '" + (sSearch || "") + "' and allocationObject eq '" + sAlloc + "'");
+                "source eq '" + sSource + "' and allocationObject eq '" + sAlloc + "'");
             oODataModel.read("/ValueHelpSet", {
                 filters: aFilters,
                 success: function (oData) {
