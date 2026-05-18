@@ -558,7 +558,7 @@ sap.ui.define([
             }
 
             if (aSelectedIndices.length > 1) {
-                MessageToast.show("Solo puede copiar una fila a la vez");
+                MessageToast.show(this.getView().getModel("i18n").getResourceBundle().getText("msgSelectOneItem"));
                 return;
             }
 
