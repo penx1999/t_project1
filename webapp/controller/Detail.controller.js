@@ -553,7 +553,7 @@ sap.ui.define([
             var aSelectedIndices = oTable.getSelectedIndices();
 
             if (aSelectedIndices.length === 0) {
-                MessageToast.show("Seleccione una fila para copiar");
+                MessageToast.show(this.getView().getModel("i18n").getResourceBundle().getText("msgSelectOneItem"));
                 return;
             }
 
