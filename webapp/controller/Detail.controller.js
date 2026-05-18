@@ -507,7 +507,7 @@ sap.ui.define([
             var aSelectedIndices = oTable.getSelectedIndices();
 
             if (aSelectedIndices.length === 0) {
-                MessageToast.show("Seleccione al menos una fila para eliminar");
+                MessageToast.show(this.getView().getModel("i18n").getResourceBundle().getText("msgSelectItem"));
                 return;
             }
 
