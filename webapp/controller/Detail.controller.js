@@ -207,14 +207,18 @@ sap.ui.define([
                                 PRODALLOCPERDSTARTUTCDATETIME: oEntry.PRODALLOCPERDSTARTUTCDATETIME,
                                 PRODALLOCPERIODENDUTCDATETIME: oEntry.PRODALLOCPERIODENDUTCDATETIME,
                                 productallocationsequence: oEntry.productallocationsequence || "",
-                                ind_ope: oEntry.ind_ope || ""
+                                ind_ope: oEntry.ind_ope || "",
+                                data_element: oEntry.data_element || ""
                             };
 
                             if (!that._oFieldMetadata[oField.name]) {
                                 that._oFieldMetadata[oField.name] = {
                                     tabname: oEntry.tabname || oField.tablename || "",
-                                    position: oField.position || ""
+                                    position: oField.position || "",
+                                    data_element: oEntry.data_element || ""
                                 };
+                            } else if (!that._oFieldMetadata[oField.name].data_element && oEntry.data_element) {
+                                that._oFieldMetadata[oField.name].data_element = oEntry.data_element;
                             }
                         });
                     });
@@ -1289,16 +1293,35 @@ sap.ui.define([
             var oCtx = oInput.getBindingContext("detailModel");
             var that = this;
 
+            // Resolve data_element from cell metadata (existing rows) or field-level fallback (new rows)
+            var sDataElement = "";
+            if (oCtx) {
+                var sPath = oCtx.getPath();
+                var iRowIdx = parseInt((sPath.match(/\/rows\/(\d+)/) || [])[1], 10);
+                if (!isNaN(iRowIdx)) {
+                    var oCellMeta = (this._oCellKeys || {})[iRowIdx + "_" + sFieldName];
+                    if (oCellMeta && oCellMeta.data_element) {
+                        sDataElement = oCellMeta.data_element;
+                    }
+                }
+            }
+            if (!sDataElement) {
+                var oFieldMeta = (this._oFieldMetadata || {})[sFieldName];
+                if (oFieldMeta && oFieldMeta.data_element) {
+                    sDataElement = oFieldMeta.data_element;
+                }
+            }
+
             var oVHModel = new JSONModel({ items: [] });
 
             var oDialog = new SelectDialog({
                 title: "Search Help: " + sLabel,
                 noDataText: "No data",
                 search: function (oEv) {
-                    that._loadValueHelp(sFieldName, oEv.getParameter("value"), oVHModel);
+                    that._loadValueHelp(sFieldName, oEv.getParameter("value"), oVHModel, sDataElement);
                 },
                 liveChange: function (oEv) {
-                    that._loadValueHelp(sFieldName, oEv.getParameter("value"), oVHModel);
+                    that._loadValueHelp(sFieldName, oEv.getParameter("value"), oVHModel, sDataElement);
                 },
                 confirm: function (oEv) {
                     var oItem = oEv.getParameter("selectedItem");
@@ -1320,21 +1343,23 @@ sap.ui.define([
                 })
             });
 
-            this._loadValueHelp(sFieldName, "", oVHModel);
+            this._loadValueHelp(sFieldName, "", oVHModel, sDataElement);
             oDialog.open();
         },
 
-        _loadValueHelp: function (sSource, sSearch, oVHModel) {
+        _loadValueHelp: function (sSource, sSearch, oVHModel, sDataElement) {
             var oODataModel = this.getOwnerComponent().getModel();
             if (!oODataModel) { return; }
             var sAlloc = this.getView().getModel("detailModel").getProperty("/productAllocationObject") || "";
             var sServiceUrl = (oODataModel.sServiceUrl || "").replace(/\/$/, "");
             var aFilters = [
                 new Filter("source",           FilterOperator.EQ, sSource),
-                new Filter("allocationObject", FilterOperator.EQ, sAlloc)
+                new Filter("allocationObject", FilterOperator.EQ, sAlloc),
+                new Filter("data_element",     FilterOperator.EQ, sDataElement || "")
             ];
             console.log("[ValueHelp] GET " + sServiceUrl + "/ValueHelpSet?$filter=" +
-                "source eq '" + sSource + "' and allocationObject eq '" + sAlloc + "'");
+                "source eq '" + sSource + "' and allocationObject eq '" + sAlloc +
+                "' and data_element eq '" + (sDataElement || "") + "'");
             oODataModel.read("/ValueHelpSet", {
                 filters: aFilters,
                 success: function (oData) {
