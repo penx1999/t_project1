@@ -12,7 +12,7 @@ sap.ui.define([
 
         onInit: function () {
             var oModel = new JSONModel({
-                filterProdAlloc: "*",
+                filterProdAlloc: "",
                 QuotaResults: [],
                 detailEnabled: false,
                 selectedItems: []
@@ -48,28 +48,23 @@ sap.ui.define([
             }
         },
 
-        onAfterRendering: function () {
-            if (!this._bAutoSearchDone) {
-                this._bAutoSearchDone = true;
-                var that = this;
-                setTimeout(function () { that.onSearch(); }, 0);
-            }
-        },
-
         onSearch: function () {
             var oModel = this.getView().getModel();
-            var sProdAlloc = oModel.getProperty("/filterProdAlloc");
+            var sProdAlloc = (oModel.getProperty("/filterProdAlloc") || "").trim();
             var oBundle = this.getView().getModel("i18n").getResourceBundle();
-
-            if (!sProdAlloc) {
-                MessageBox.warning(oBundle.getText("msgProdAllocRequired"));
-                return;
-            }
 
             var oODataModel = this.getOwnerComponent().getModel();
             var aFilters = [];
 
-            aFilters.push(new Filter("PRODUCTALLOCATIONOBJECT", FilterOperator.EQ, sProdAlloc));
+            // Empty or '*' alone -> no filter (read all). Otherwise, '*' acts as wildcard via Contains.
+            if (sProdAlloc && sProdAlloc !== "*") {
+                if (sProdAlloc.indexOf("*") >= 0) {
+                    var sPattern = sProdAlloc.replace(/\*/g, "");
+                    aFilters.push(new Filter("PRODUCTALLOCATIONOBJECT", FilterOperator.Contains, sPattern));
+                } else {
+                    aFilters.push(new Filter("PRODUCTALLOCATIONOBJECT", FilterOperator.EQ, sProdAlloc));
+                }
+            }
 
             var that = this;
 

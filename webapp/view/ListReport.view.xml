@@ -42,7 +42,7 @@
                     <FlexBox wrap="Wrap" alignItems="End">
 
                         <VBox class="sapUiSmallMarginEnd" width="18rem">
-                            <Label text="{i18n>ProdAllocObj}" required="true" labelFor="idProdAlloc"/>
+                            <Label text="{i18n>ProdAllocObj}" labelFor="idProdAlloc"/>
                             <Input
                                 id="idProdAlloc"
                                 value="{/filterProdAlloc}"
