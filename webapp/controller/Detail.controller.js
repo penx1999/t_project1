@@ -173,6 +173,15 @@ sap.ui.define([
 
                     that._oCellKeys = {};
 
+                    // Seed per-field metadata from the DynamicField level (data_element here applies to all cells of the column)
+                    aFields.forEach(function (oField) {
+                        that._oFieldMetadata[oField.name] = {
+                            tabname: oField.tablename || "",
+                            position: oField.position || "",
+                            data_element: oField.data_element || ""
+                        };
+                    });
+
                     aFields.forEach(function (oField) {
                         var aData = (oField.DataSetAsoc && oField.DataSetAsoc.results) ? oField.DataSetAsoc.results : [];
                         aData.forEach(function (oEntry, iIdx) {
