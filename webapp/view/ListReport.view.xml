@@ -24,13 +24,11 @@
                         text="{i18n>searchButton}"
                         type="Emphasized"
                         icon="sap-icon://search"
-                        press=".onSearch"
-                        visible="false"/>
+                        press=".onSearch"/>
                     <Button
                         text="{i18n>clearButton}"
                         icon="sap-icon://clear-filter"
-                        press=".onClear"
-                        visible="false"/>
+                        press=".onClear"/>
                 </f:actions>
             </f:DynamicPageTitle>
         </f:title>
@@ -43,7 +41,7 @@
                 <VBox class="sapUiSmallMarginBeginEnd sapUiSmallMarginTopBottom">
                     <FlexBox wrap="Wrap" alignItems="End">
 
-                        <VBox class="sapUiSmallMarginEnd" width="18rem" visible="false">
+                        <VBox class="sapUiSmallMarginEnd" width="18rem">
                             <Label text="{i18n>ProdAllocObj}" required="true" labelFor="idProdAlloc"/>
                             <Input
                                 id="idProdAlloc"
