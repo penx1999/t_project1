@@ -14,8 +14,9 @@ sap.ui.define([
     "sap/m/StandardListItem",
     "sap/ui/table/Column",
     "sap/ui/table/RowSettings",
-    "sap/ui/core/format/DateFormat"
-], function (Controller, History, JSONModel, Filter, FilterOperator, MessageBox, MessageToast, Text, Input, Label, DatePicker, SelectDialog, StandardListItem, UIColumn, RowSettings, DateFormat) {
+    "sap/ui/core/format/DateFormat",
+    "sap/ui/core/BusyIndicator"
+], function (Controller, History, JSONModel, Filter, FilterOperator, MessageBox, MessageToast, Text, Input, Label, DatePicker, SelectDialog, StandardListItem, UIColumn, RowSettings, DateFormat, BusyIndicator) {
     "use strict";
 
     var EDITABLE_FIELDS = [
@@ -1326,11 +1327,12 @@ sap.ui.define([
             var oDialog = new SelectDialog({
                 title: "Search Help: " + sLabel,
                 noDataText: "No data",
+                busyIndicatorDelay: 0,
                 search: function (oEv) {
-                    that._loadValueHelp(sFieldName, oEv.getParameter("value"), oVHModel, sDataElement);
+                    that._loadValueHelp(sFieldName, oEv.getParameter("value"), oVHModel, sDataElement, oDialog);
                 },
                 liveChange: function (oEv) {
-                    that._loadValueHelp(sFieldName, oEv.getParameter("value"), oVHModel, sDataElement);
+                    that._loadValueHelp(sFieldName, oEv.getParameter("value"), oVHModel, sDataElement, oDialog);
                 },
                 confirm: function (oEv) {
                     var oItem = oEv.getParameter("selectedItem");
@@ -1352,11 +1354,11 @@ sap.ui.define([
                 })
             });
 
-            this._loadValueHelp(sFieldName, "", oVHModel, sDataElement);
             oDialog.open();
+            this._loadValueHelp(sFieldName, "", oVHModel, sDataElement, oDialog);
         },
 
-        _loadValueHelp: function (sSource, sSearch, oVHModel, sDataElement) {
+        _loadValueHelp: function (sSource, sSearch, oVHModel, sDataElement, oDialog) {
             var oODataModel = this.getOwnerComponent().getModel();
             if (!oODataModel) { return; }
             var sAlloc = this.getView().getModel("detailModel").getProperty("/productAllocationObject") || "";
@@ -1369,15 +1371,18 @@ sap.ui.define([
             console.log("[ValueHelp] GET " + sServiceUrl + "/ValueHelpSet?$filter=" +
                 "source eq '" + sSource + "' and allocationObject eq '" + sAlloc +
                 "' and data_element eq '" + (sDataElement || "") + "'");
+            BusyIndicator.show(0);
             oODataModel.read("/ValueHelpSet", {
                 filters: aFilters,
                 success: function (oData) {
                     var aItems = (oData && oData.results) ? oData.results : (oData ? [oData] : []);
                     oVHModel.setProperty("/items", aItems);
+                    BusyIndicator.hide();
                 },
                 error: function (oErr) {
                     jQuery.sap.log.error("ValueHelp call failed: " + (oErr && oErr.message ? oErr.message : ""));
                     oVHModel.setProperty("/items", []);
+                    BusyIndicator.hide();
                 }
             });
         },
