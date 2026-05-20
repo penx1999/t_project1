@@ -56,14 +56,14 @@ sap.ui.define([
             var oODataModel = this.getOwnerComponent().getModel();
             var aFilters = [];
 
-            // Empty or '*' alone -> no filter (read all). Otherwise, '*' acts as wildcard via Contains.
-            if (sProdAlloc && sProdAlloc !== "*") {
-                if (sProdAlloc.indexOf("*") >= 0) {
-                    var sPattern = sProdAlloc.replace(/\*/g, "");
-                    aFilters.push(new Filter("PRODUCTALLOCATIONOBJECT", FilterOperator.Contains, sPattern));
-                } else {
-                    aFilters.push(new Filter("PRODUCTALLOCATIONOBJECT", FilterOperator.EQ, sProdAlloc));
-                }
+            // Empty -> treat as '*' (read all). Backend expects this filter to be present.
+            if (!sProdAlloc) { sProdAlloc = "*"; }
+
+            if (sProdAlloc.indexOf("*") >= 0 && sProdAlloc !== "*") {
+                var sPattern = sProdAlloc.replace(/\*/g, "");
+                aFilters.push(new Filter("PRODUCTALLOCATIONOBJECT", FilterOperator.Contains, sPattern));
+            } else {
+                aFilters.push(new Filter("PRODUCTALLOCATIONOBJECT", FilterOperator.EQ, sProdAlloc));
             }
 
             var that = this;
