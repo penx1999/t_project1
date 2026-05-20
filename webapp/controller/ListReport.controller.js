@@ -13,6 +13,7 @@ sap.ui.define([
         onInit: function () {
             var oModel = new JSONModel({
                 filterProdAlloc: "",
+                filterDescription: "",
                 QuotaResults: [],
                 detailEnabled: false,
                 selectedItems: []
@@ -66,6 +67,15 @@ sap.ui.define([
                 aFilters.push(new Filter("PRODUCTALLOCATIONOBJECT", FilterOperator.EQ, sProdAlloc));
             }
 
+            var sDescription = (oModel.getProperty("/filterDescription") || "").trim();
+            if (!sDescription) { sDescription = "*"; }
+            if (sDescription.indexOf("*") >= 0 && sDescription !== "*") {
+                var sDescPattern = sDescription.replace(/\*/g, "");
+                aFilters.push(new Filter("DESCRIPTION", FilterOperator.Contains, sDescPattern));
+            } else {
+                aFilters.push(new Filter("DESCRIPTION", FilterOperator.EQ, sDescription));
+            }
+
             var that = this;
 
             oODataModel.read("/PROD_ALLOCSet", {
@@ -100,6 +110,7 @@ sap.ui.define([
         onClear: function () {
             var oModel = this.getView().getModel();
             oModel.setProperty("/filterProdAlloc", "");
+            oModel.setProperty("/filterDescription", "");
             oModel.setProperty("/QuotaResults", []);
             oModel.setProperty("/detailEnabled", false);
             oModel.setProperty("/selectedItems", []);

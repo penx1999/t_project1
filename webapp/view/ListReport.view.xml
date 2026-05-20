@@ -51,6 +51,16 @@
                                 submit=".onSearch"/>
                         </VBox>
 
+                        <VBox class="sapUiSmallMarginEnd" width="18rem">
+                            <Label text="{i18n>Description}" labelFor="idDescription"/>
+                            <Input
+                                id="idDescription"
+                                value="{/filterDescription}"
+                                maxLength="60"
+                                placeholder="{i18n>placeholderDescription}"
+                                submit=".onSearch"/>
+                        </VBox>
+
                     </FlexBox>
                 </VBox>
             </f:DynamicPageHeader>
@@ -95,12 +105,16 @@
                     <Column>
                         <Text text="{i18n>ProdAllocObj}"/>
                     </Column>
+                    <Column>
+                        <Text text="{i18n>Description}"/>
+                    </Column>
                 </columns>
 
                 <items>
                     <ColumnListItem type="Active" press=".onItemPress">
                         <cells>
                             <Text text="{PRODUCTALLOCATIONOBJECT}"/>
+                            <Text text="{DESCRIPTION}"/>
                         </cells>
                     </ColumnListItem>
                 </items>
