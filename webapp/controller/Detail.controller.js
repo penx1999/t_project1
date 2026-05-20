@@ -1329,10 +1329,40 @@ sap.ui.define([
                 noDataText: "No data",
                 busyIndicatorDelay: 0,
                 search: function (oEv) {
-                    that._loadValueHelp(sFieldName, oEv.getParameter("value"), oVHModel, sDataElement, oDialog);
+                    var sQuery = oEv.getParameter("value") || "";
+                    var oBinding = oEv.getSource().getBinding("items");
+                    if (oBinding) {
+                        if (sQuery) {
+                            var sPattern = sQuery.replace(/\*/g, "");
+                            oBinding.filter([new Filter({
+                                filters: [
+                                    new Filter("Clave", FilterOperator.Contains, sPattern),
+                                    new Filter("Desc",  FilterOperator.Contains, sPattern)
+                                ],
+                                and: false
+                            })]);
+                        } else {
+                            oBinding.filter([]);
+                        }
+                    }
                 },
                 liveChange: function (oEv) {
-                    that._loadValueHelp(sFieldName, oEv.getParameter("value"), oVHModel, sDataElement, oDialog);
+                    var sQuery = oEv.getParameter("value") || "";
+                    var oBinding = oEv.getSource().getBinding("items");
+                    if (oBinding) {
+                        if (sQuery) {
+                            var sPattern = sQuery.replace(/\*/g, "");
+                            oBinding.filter([new Filter({
+                                filters: [
+                                    new Filter("Clave", FilterOperator.Contains, sPattern),
+                                    new Filter("Desc",  FilterOperator.Contains, sPattern)
+                                ],
+                                and: false
+                            })]);
+                        } else {
+                            oBinding.filter([]);
+                        }
+                    }
                 },
                 confirm: function (oEv) {
                     var oItem = oEv.getParameter("selectedItem");
