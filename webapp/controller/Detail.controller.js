@@ -1334,19 +1334,9 @@ sap.ui.define([
                     var sQuery = oEv.getParameter("value") || "";
                     var oBinding = oEv.getSource().getBinding("items");
                     if (oBinding) {
-                        if (sQuery) {
-                            var sPattern = sQuery.replace(/\*/g, "");
-                            oBinding.filter([new Filter({
-                                filters: [
-                                    new Filter("Clave", FilterOperator.Contains, sPattern),
-                                    new Filter("Desc",  FilterOperator.Contains, sPattern)
-                                ],
-                                and: false
-                            })]);
-                        } else {
-                            oBinding.filter([]);
-                        }
+                        oBinding.filter([]);
                     }
+                    that._loadValueHelp(sQuery || "*", "", oVHModel, sDataElement, oDialog);
                 },
                 liveChange: function (oEv) {
                     var sQuery = oEv.getParameter("value") || "";
@@ -1397,7 +1387,7 @@ sap.ui.define([
             });
 
             oDialog.open();
-            this._loadValueHelp(sFieldName, "", oVHModel, sDataElement, oDialog);
+            this._loadValueHelp("*", "", oVHModel, sDataElement, oDialog);
         },
 
         _loadValueHelp: function (sSource, sSearch, oVHModel, sDataElement, oDialog) {
