@@ -4,6 +4,7 @@ sap.ui.define([
     "sap/ui/model/json/JSONModel",
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
+    "sap/ui/core/CustomData",
     "sap/m/MessageBox",
     "sap/m/MessageToast",
     "sap/m/Text",
@@ -16,7 +17,7 @@ sap.ui.define([
     "sap/ui/table/RowSettings",
     "sap/ui/core/format/DateFormat",
     "sap/ui/core/BusyIndicator"
-], function (Controller, History, JSONModel, Filter, FilterOperator, MessageBox, MessageToast, Text, Input, Label, DatePicker, SelectDialog, StandardListItem, UIColumn, RowSettings, DateFormat, BusyIndicator) {
+], function (Controller, History, JSONModel, Filter, FilterOperator, CustomData, MessageBox, MessageToast, Text, Input, Label, DatePicker, SelectDialog, StandardListItem, UIColumn, RowSettings, DateFormat, BusyIndicator) {
     "use strict";
 
     var EDITABLE_FIELDS = [
@@ -1367,7 +1368,7 @@ sap.ui.define([
                 confirm: function (oEv) {
                     var oItem = oEv.getParameter("selectedItem");
                     if (oItem && oCtx) {
-                        var sClave = oItem.getTitle();
+                        var sClave = oItem.data("Clave");
                         oCtx.getModel().setProperty(oCtx.getPath() + "/" + sFieldName, sClave);
                     }
                     oDialog.destroy();
@@ -1379,8 +1380,18 @@ sap.ui.define([
             oDialog.bindAggregation("items", {
                 path: "/items",
                 template: new StandardListItem({
-                    title: "{Clave}",
-                    description: "{Desc}"
+                    title: {
+                        parts: ["Clave", "Desc"],
+                        formatter: function (sClave, sDesc) {
+                            return sDesc ? sClave + " - " + sDesc : sClave;
+                        }
+                    },
+                    customData: [
+                        new CustomData({
+                            key: "Clave",
+                            value: "{Clave}"
+                        })
+                    ]
                 })
             });
 
