@@ -1328,6 +1328,7 @@ sap.ui.define([
             var oDialog = new SelectDialog({
                 title: "Search Help: " + sLabel,
                 noDataText: "No data",
+                contentWidth: "80rem",
                 busyIndicatorDelay: 0,
                 search: function (oEv) {
                     var sQuery = oEv.getParameter("value") || "";
