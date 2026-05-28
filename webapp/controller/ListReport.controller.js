@@ -57,24 +57,10 @@ sap.ui.define([
             var oODataModel = this.getOwnerComponent().getModel();
             var aFilters = [];
 
-            // Empty -> treat as '*' (read all). Backend expects this filter to be present.
-            if (!sProdAlloc) { sProdAlloc = "*"; }
-
-            if (sProdAlloc.indexOf("*") >= 0 && sProdAlloc !== "*") {
-                var sPattern = sProdAlloc.replace(/\*/g, "");
-                aFilters.push(new Filter("PRODUCTALLOCATIONOBJECT", FilterOperator.Contains, sPattern));
-            } else {
-                aFilters.push(new Filter("PRODUCTALLOCATIONOBJECT", FilterOperator.EQ, sProdAlloc));
-            }
+            aFilters.push(new Filter("PRODUCTALLOCATIONOBJECT", FilterOperator.EQ, sProdAlloc || "*"));
 
             var sDescription = (oModel.getProperty("/filterDescription") || "").trim();
-            if (!sDescription) { sDescription = "*"; }
-            if (sDescription.indexOf("*") >= 0 && sDescription !== "*") {
-                var sDescPattern = sDescription.replace(/\*/g, "");
-                aFilters.push(new Filter("DESCRIPTION", FilterOperator.Contains, sDescPattern));
-            } else {
-                aFilters.push(new Filter("DESCRIPTION", FilterOperator.EQ, sDescription));
-            }
+            aFilters.push(new Filter("DESCRIPTION", FilterOperator.EQ, sDescription || "*"));
 
             var that = this;
 
