@@ -823,7 +823,7 @@ sap.ui.define([
 
                 aAcc.push({
                     name: oCol.name,
-                    label: bProdDesc ? sPreviousLabel : (oCol.label || oCol.name)
+                    label: bProdDesc ? sPreviousLabel + " - Description" : (oCol.label || oCol.name)
                 });
 
                 if (!bProdDesc) {
