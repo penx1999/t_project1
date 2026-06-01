@@ -810,7 +810,6 @@ sap.ui.define([
         _getDownloadColumns: function (bWithDesc) {
             var oModel = this.getView().getModel("detailModel");
             var aExcludedLabels = ["avbl qty", "cnsmd qty"];
-            var sPreviousLabel = "";
 
             return (oModel.getProperty("/columns") || []).reduce(function (aAcc, oCol) {
                 var sName = (oCol.name  || "").toUpperCase();
@@ -821,14 +820,17 @@ sap.ui.define([
                 if (aExcludedLabels.indexOf(sLbl) !== -1) { return aAcc; }
                 if (bProdDesc && !bWithDesc) { return aAcc; }
 
+                var sLabel = oCol.label || oCol.name;
+                if (bProdDesc) {
+                    var oPreviousColumn = aAcc[aAcc.length - 1];
+                    var sPreviousLabel = oPreviousColumn ? oPreviousColumn.label : sLabel;
+                    sLabel = sPreviousLabel + " - Description";
+                }
+
                 aAcc.push({
                     name: oCol.name,
-                    label: bProdDesc ? sPreviousLabel + " - Description" : (oCol.label || oCol.name)
+                    label: sLabel
                 });
-
-                if (!bProdDesc) {
-                    sPreviousLabel = oCol.label || oCol.name;
-                }
 
                 return aAcc;
             }.bind(this), []);
