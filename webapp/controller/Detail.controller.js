@@ -743,14 +743,7 @@ sap.ui.define([
 
         _generateCsv: function (bWithDesc) {
             var oModel = this.getView().getModel("detailModel");
-            var aExcludedLabels = ["avbl qty", "cnsmd qty"];
-            var aColumns = (oModel.getProperty("/columns") || []).filter(function (oCol) {
-                var sName = (oCol.name  || "").toUpperCase();
-                var sLbl  = (oCol.label || "").toLowerCase().trim();
-                if (sName === "PRODUCTALLOCATIONOBJECTUUID") { return false; }
-                if (aExcludedLabels.indexOf(sLbl) !== -1) { return false; }
-                return true;
-            });
+            var aColumns = this._getDownloadColumns(bWithDesc);
             var aRows = oModel.getProperty("/rows") || [];
 
             var aAoA = [
@@ -809,6 +802,38 @@ sap.ui.define([
             URL.revokeObjectURL(sUrl);
         },
 
+        _isProdDescColumn: function (oCol) {
+            var sName = (oCol.name || "").toUpperCase();
+            return sName.indexOf("PROD") === 0 && sName.lastIndexOf("DESC") === sName.length - 4;
+        },
+
+        _getDownloadColumns: function (bWithDesc) {
+            var oModel = this.getView().getModel("detailModel");
+            var aExcludedLabels = ["avbl qty", "cnsmd qty"];
+            var sPreviousLabel = "";
+
+            return (oModel.getProperty("/columns") || []).reduce(function (aAcc, oCol) {
+                var sName = (oCol.name  || "").toUpperCase();
+                var sLbl  = (oCol.label || "").toLowerCase().trim();
+                var bProdDesc = this._isProdDescColumn(oCol);
+
+                if (sName === "PRODUCTALLOCATIONOBJECTUUID") { return aAcc; }
+                if (aExcludedLabels.indexOf(sLbl) !== -1) { return aAcc; }
+                if (bProdDesc && !bWithDesc) { return aAcc; }
+
+                aAcc.push({
+                    name: oCol.name,
+                    label: bProdDesc ? sPreviousLabel : (oCol.label || oCol.name)
+                });
+
+                if (!bProdDesc) {
+                    sPreviousLabel = oCol.label || oCol.name;
+                }
+
+                return aAcc;
+            }.bind(this), []);
+        },
+
         _loadSheetJS: function () {
             return new Promise(function (resolve, reject) {
                 if (window.XLSX) { resolve(window.XLSX); return; }
@@ -832,14 +857,7 @@ sap.ui.define([
 
         _generateXlsx: function (XLSX, bWithDesc) {
             var oModel = this.getView().getModel("detailModel");
-            var aExcludedLabels = ["avbl qty", "cnsmd qty"];
-            var aColumns = (oModel.getProperty("/columns") || []).filter(function (oCol) {
-                var sName = (oCol.name  || "").toUpperCase();
-                var sLbl  = (oCol.label || "").toLowerCase().trim();
-                if (sName === "PRODUCTALLOCATIONOBJECTUUID") { return false; }
-                if (aExcludedLabels.indexOf(sLbl) !== -1) { return false; }
-                return true;
-            });
+            var aColumns = this._getDownloadColumns(bWithDesc);
             var aRows = oModel.getProperty("/rows") || [];
 
             // First 16 reference lines (lines 1-15 with content, line 16 blank)
