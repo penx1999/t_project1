@@ -991,8 +991,9 @@ sap.ui.define([
             // Map header label -> column index in header array
             var oLabelToHeaderIdx = {};
             aHeader.forEach(function (sLbl, i) {
-                if (sLbl !== undefined && sLbl !== null && String(sLbl).trim() !== "") {
-                    oLabelToHeaderIdx[String(sLbl).toLowerCase().trim()] = i;
+                var sHeaderLabel = String(sLbl == null ? "" : sLbl).toLowerCase().trim();
+                if (sHeaderLabel && sHeaderLabel.lastIndexOf(" - description") !== sHeaderLabel.length - 14) {
+                    oLabelToHeaderIdx[sHeaderLabel] = i;
                 }
             });
 
@@ -1002,8 +1003,9 @@ sap.ui.define([
                 var sLbl  = (oCol.label || "").toLowerCase().trim();
                 if (sName === "PRODUCTALLOCATIONOBJECTUUID") { return false; }
                 if (sLbl === "avbl qty" || sLbl === "cnsmd qty") { return false; }
+                if (this._isProdDescColumn(oCol)) { return false; }
                 return !!sLbl;
-            }).map(function (oCol) { return (oCol.label || "").toLowerCase().trim(); });
+            }.bind(this)).map(function (oCol) { return (oCol.label || "").toLowerCase().trim(); });
 
             var aFileLabels = Object.keys(oLabelToHeaderIdx);
             var bLabelsOk = aExpectedLabels.length === aFileLabels.length &&
@@ -1115,6 +1117,7 @@ sap.ui.define([
                 oNewRow["_isNew"] = true;
 
                 aColumns.forEach(function (oCol) {
+                    if (this._isProdDescColumn(oCol)) { return; }
                     var sLbl = (oCol.label || "").toLowerCase().trim();
                     if (!sLbl) { return; }
                     var iIdx = oLabelToHeaderIdx[sLbl];
@@ -1131,7 +1134,7 @@ sap.ui.define([
                     }
                     oNewRow[oCol.name] = sVal;
                     oNewRow[oCol.name + "_old"] = sVal;
-                });
+                }.bind(this));
                 return oNewRow;
             });
 
