@@ -266,13 +266,17 @@ sap.ui.define([
             if (!oTable) { return; }
 
             var that = this;
+            var aVisibleColumns = aColumns.filter(function (oCol) {
+                var sName = (oCol.name || "").toUpperCase();
+                return !(sName.indexOf("PROD") === 0 && sName.lastIndexOf("DESC") === sName.length - 4);
+            });
 
             oTable.destroyColumns();
 
             var sColWidth = "150px";
 
             var iStatusIdx = -1;
-            aColumns.forEach(function (oCol, iIdx) {
+            aVisibleColumns.forEach(function (oCol, iIdx) {
                 if (iStatusIdx === -1 && oCol.name.toUpperCase().indexOf("STATUS") !== -1) {
                     iStatusIdx = iIdx;
                 }
@@ -280,13 +284,13 @@ sap.ui.define([
 
             var iFixedCount = (iStatusIdx > 0) ? iStatusIdx : 0;
 
-            jQuery.sap.log.info("Detail._buildTable: columns=" + JSON.stringify(aColumns.map(function(c){ return c.name; })) + " | iStatusIdx=" + iStatusIdx + " | iFixedCount=" + iFixedCount);
+            jQuery.sap.log.info("Detail._buildTable: columns=" + JSON.stringify(aVisibleColumns.map(function(c){ return c.name; })) + " | iStatusIdx=" + iStatusIdx + " | iFixedCount=" + iFixedCount);
 
             var oDateFormat = DateFormat.getDateInstance({
                 style: "medium"
             });
 
-            aColumns.forEach(function (oCol) {
+            aVisibleColumns.forEach(function (oCol) {
                 var sFieldName = oCol.name;
                 var sFieldUpper = sFieldName.toUpperCase();
 
