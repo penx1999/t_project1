@@ -115,14 +115,12 @@
       "targets": {
         "TargetListReport": {
           "type": "View",
-          "viewType": "XML",
-          "viewName": "t_project1.view.ListReport",
+          "name": "t_project1.view.ListReport",
           "level": 1
         },
         "TargetDetail": {
           "type": "View",
-          "viewType": "XML",
-          "viewName": "t_project1.view.Detail",
+          "name": "t_project1.view.Detail",
           "level": 2
         }
       }
