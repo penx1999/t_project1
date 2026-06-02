@@ -1100,6 +1100,7 @@ sap.ui.define([
 
             // Build candidate new rows (not yet pushed)
             var bInvalidDate = false;
+            var oController = this;
             var aCandidateRows = aDataRows.map(function (aXlsxRow) {
                 var oNewRow = {};
                 aColumns.forEach(function (oCol) {
@@ -1117,7 +1118,7 @@ sap.ui.define([
                 oNewRow["_isNew"] = true;
 
                 aColumns.forEach(function (oCol) {
-                    if (this._isProdDescColumn(oCol)) { return; }
+                    if (oController._isProdDescColumn(oCol)) { return; }
                     var sLbl = (oCol.label || "").toLowerCase().trim();
                     if (!sLbl) { return; }
                     var iIdx = oLabelToHeaderIdx[sLbl];
@@ -1134,7 +1135,7 @@ sap.ui.define([
                     }
                     oNewRow[oCol.name] = sVal;
                     oNewRow[oCol.name + "_old"] = sVal;
-                }.bind(this));
+                });
                 return oNewRow;
             });
 
