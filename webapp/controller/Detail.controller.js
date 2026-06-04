@@ -1557,6 +1557,7 @@ sap.ui.define([
             var aColumns = oModel.getProperty("/columns") || [];
             var bDateError = false;
             var bRequiredError = false;
+            var oController = this;
 
             var aNonRequired = [
                 "PRODALLOCCHARCVALUECOMBNCMNT",
@@ -1597,7 +1598,7 @@ sap.ui.define([
                         var sFieldName = oCol.name;
                         var sFieldUpper = sFieldName.toUpperCase();
                         var sColLabelUpper = (oCol.label || "").toUpperCase().trim();
-                        if (this._isProdDescColumn(oCol)) { return; }
+                        if (oController._isProdDescColumn(oCol)) { return; }
                         if (aNonRequired.indexOf(sFieldUpper) !== -1) { return; }
                         if (sColLabelUpper === "AVBL QTY" || sColLabelUpper === "CNSMD QTY") { return; }
                         var sValue = (oRowData[sFieldName] || "").toString().trim();
@@ -1605,7 +1606,7 @@ sap.ui.define([
                             oRowData["_err_" + sFieldName] = true;
                             bRequiredError = true;
                         }
-                    }.bind(this));
+                    });
                 }
 
                 var sStart = sStartField ? fnNormDate(oRowData[sStartField]) : "";
