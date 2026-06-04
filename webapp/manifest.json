@@ -116,11 +116,13 @@
         "TargetListReport": {
           "type": "View",
           "name": "t_project1.view.ListReport",
+          "viewType": "XML",
           "level": 1
         },
         "TargetDetail": {
           "type": "View",
           "name": "t_project1.view.Detail",
+          "viewType": "XML",
           "level": 2
         }
       }
