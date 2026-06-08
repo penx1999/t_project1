@@ -20,6 +20,13 @@
                 </contentMiddle>
                 <contentRight>
                     <Button
+                        id="idEditButton"
+                        text="Edit"
+                        type="Emphasized"
+                        icon="sap-icon://edit"
+                        visible="{= ${detailModel>/editMode} !== true }"
+                        press=".onEdit"/>
+                    <Button
                         id="idCancelButton"
                         text="{i18n>cancelButton}"
                         type="Default"
@@ -70,6 +77,7 @@
                             displayFormat="dd/MM/yyyy"
                             valueFormat="dd/MM/yyyy"
                             change=".onDateChange"
+                            enabled="{detailModel>/editMode}"
                             width="140px"/>
                         <Text text=" – " class="sapUiSmallMarginBeginEnd"/>
                         <DatePicker
@@ -78,6 +86,7 @@
                             displayFormat="dd/MM/yyyy"
                             valueFormat="dd/MM/yyyy"
                             change=".onDateChange"
+                            enabled="{detailModel>/editMode}"
                             width="140px"/>
                     </HBox>
                 </content>
@@ -110,28 +119,33 @@
                                     text="{i18n>newButton}"
                                     icon="sap-icon://add"
                                     type="Transparent"
+                                    enabled="{detailModel>/editMode}"
                                     press=".onAddNewRow"/>
                                 <Button
                                     id="idDeleteRowButton"
                                     text="{i18n>deleteButton}"
                                     icon="sap-icon://delete"
                                     type="Transparent"
+                                    enabled="{detailModel>/editMode}"
                                     press=".onDeleteRows"/>
                                 <Button
                                     id="idCopyRowButton"
                                     text="{i18n>copyButton}"
                                     icon="sap-icon://copy"
                                     type="Transparent"
+                                    enabled="{detailModel>/editMode}"
                                     press=".onCopyRow"/>
                                 <Button
                                     id="idChangeStatusButton"
                                     text="{i18n>changeStatusButton}"
                                     type="Transparent"
+                                    enabled="{detailModel>/editMode}"
                                     press=".onOpenChangeStatusMenu"/>
                                 <Button
                                     id="idChangeConstraintStatusButton"
                                     text="{i18n>changeConstraintStatusButton}"
                                     type="Transparent"
+                                    enabled="{detailModel>/editMode}"
                                     press=".onOpenChangeConstraintStatusMenu"/>
                                 <Button
                                     id="idDownloadButton"
@@ -144,6 +158,7 @@
                                     icon="sap-icon://upload"
                                     type="Transparent"
                                     tooltip="Upload"
+                                    enabled="{detailModel>/editMode}"
                                     press=".onUpload"/>
                             </OverflowToolbar>
                         </t:extension>

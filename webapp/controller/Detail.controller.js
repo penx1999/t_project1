@@ -56,6 +56,7 @@ sap.ui.define([
                 rowCount: 5,
                 busy: false,
                 hasChanges: false,
+                editMode: false,
                 fec_ini: this._formatDateValue(oFirstOfMonth),
                 fec_fin: this._formatDateValue(oNextYear),
                 messageText: "",
@@ -109,7 +110,12 @@ sap.ui.define([
             oModel.setProperty("/messageVisible", false);
             oModel.setProperty("/messageText", "");
             oModel.setProperty("/messageType", "None");
+            oModel.setProperty("/editMode", false);
             this._loadDynamicFields(sQuotaId);
+        },
+
+        onEdit: function () {
+            this.getView().getModel("detailModel").setProperty("/editMode", true);
         },
 
         onDateChange: function () {
@@ -245,6 +251,7 @@ sap.ui.define([
                     oModel.setProperty("/rowCount", aRows.length || 1);
                     oModel.setProperty("/tableTitle", sTitle);
                     oModel.setProperty("/hasChanges", false);
+                    oModel.setProperty("/editMode", false);
                     oModel.setProperty("/busy", false);
 
                     that._buildTable(aColumns);
@@ -355,7 +362,7 @@ sap.ui.define([
                         valueFormat: "yyyy-MM-dd",
                         displayFormat: "medium",
                         placeholder: " ",
-                        editable: "{= ${detailModel>_isNew} === true }",
+                        editable: "{detailModel>/editMode}",
                         required: "{= ${detailModel>_isNew} === true }",
                         valueState: "{= ${detailModel>_err_" + sFieldName + "} ? 'Error' : 'None' }",
                         change: fnDateChange
@@ -368,6 +375,7 @@ sap.ui.define([
                 } else if (bEditableField) {
                     var oInputCfg = {
                         value: "{detailModel>" + sFieldName + "}",
+                        editable: "{detailModel>/editMode}",
                         change: that._onFieldChange.bind(that),
                         liveChange: that._onFieldChange.bind(that)
                     };
@@ -381,10 +389,10 @@ sap.ui.define([
                     var sVHLabel = oCol.label || sFieldName;
                     oTemplate = new Input({
                         value: "{detailModel>" + sFieldName + "}",
-                        editable: "{= ${detailModel>_isNew} === true }",
+                        editable: "{= ${detailModel>/editMode} === true && ${detailModel>_isNew} === true }",
                         required: "{= ${detailModel>_isNew} === true }",
                         valueState: "{= ${detailModel>_err_" + sFieldName + "} ? 'Error' : 'None' }",
-                        showValueHelp: "{= ${detailModel>_isNew} === true }",
+                        showValueHelp: "{= ${detailModel>/editMode} === true && ${detailModel>_isNew} === true }",
                         valueHelpRequest: function (oEvent) {
                             that._onValueHelpRequest(oEvent, sVHField, sVHLabel);
                         },
