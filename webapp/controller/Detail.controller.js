@@ -362,7 +362,7 @@ sap.ui.define([
                         valueFormat: "yyyy-MM-dd",
                         displayFormat: "medium",
                         placeholder: " ",
-                        editable: "{detailModel>/editMode}",
+                        editable: "{= ${detailModel>/editMode} === true && ${detailModel>_isNew} === true }",
                         required: "{= ${detailModel>_isNew} === true }",
                         valueState: "{= ${detailModel>_err_" + sFieldName + "} ? 'Error' : 'None' }",
                         change: fnDateChange
