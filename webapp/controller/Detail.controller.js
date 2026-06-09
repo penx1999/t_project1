@@ -15,12 +15,14 @@ sap.ui.define([
     "sap/m/SearchField",
     "sap/m/VBox",
     "sap/m/Button",
-    "sap/ui/table/Table",
+    "sap/m/Table",
+    "sap/m/Column",
+    "sap/m/ColumnListItem",
     "sap/ui/table/Column",
     "sap/ui/table/RowSettings",
     "sap/ui/core/format/DateFormat",
     "sap/ui/core/BusyIndicator"
-], function (Controller, History, JSONModel, Filter, FilterOperator, CustomData, MessageBox, MessageToast, Text, Input, Label, DatePicker, Dialog, SearchField, VBox, Button, UITable, UIColumn, RowSettings, DateFormat, BusyIndicator) {
+], function (Controller, History, JSONModel, Filter, FilterOperator, CustomData, MessageBox, MessageToast, Text, Input, Label, DatePicker, Dialog, SearchField, VBox, Button, MTable, MColumn, ColumnListItem, UIColumn, RowSettings, DateFormat, BusyIndicator) {
     "use strict";
 
     var EDITABLE_FIELDS = [
@@ -1372,40 +1374,46 @@ sap.ui.define([
                     that._loadValueHelp(sQuery || "*", "", oVHModel, sDataElement, oDialog);
                 }
             });
-            var oValueHelpTable = new UITable({
-                visibleRowCount: 18,
-                selectionMode: "None",
-                rowActionCount: 0,
+            var oValueHelpTable = new MTable({
                 width: "100%",
+                mode: "None",
+                fixedLayout: true,
                 columns: [
-                    new UIColumn({
-                        label: new Label({ text: "Material Number" }),
-                        template: new Text({ text: "{Clave}", wrapping: false }),
-                        width: "30rem"
+                    new MColumn({
+                        width: "30rem",
+                        header: new Label({ text: "Material Number" })
                     }),
-                    new UIColumn({
-                        label: new Label({ text: "Description" }),
-                        template: new Text({ text: "{Desc}", wrapping: false })
+                    new MColumn({
+                        header: new Label({ text: "Description" })
                     })
                 ],
-                cellClick: function (oEv) {
-                    var oRowContext = oEv.getParameter("rowBindingContext");
-                    if (oRowContext && oCtx) {
-                        var sClave = oRowContext.getProperty("Clave");
-                        oCtx.getModel().setProperty(oCtx.getPath() + "/" + sFieldName, sClave);
-                        that._onFieldChange({});
-                    }
-                    oDialog.close();
+                items: {
+                    path: "/items",
+                    template: new ColumnListItem({
+                        type: "Active",
+                        cells: [
+                            new Text({ text: "{Clave}", wrapping: false }),
+                            new Text({ text: "{Desc}", wrapping: false })
+                        ],
+                        press: function (oEv) {
+                            var oRowContext = oEv.getSource().getBindingContext();
+                            if (!oRowContext || !oCtx) { return; }
+                            var sClave = oRowContext.getProperty("Clave");
+                            oCtx.getModel().setProperty(oCtx.getPath() + "/" + sFieldName, sClave);
+                            that._onFieldChange({});
+                            oDialog.close();
+                        }
+                    })
                 }
             });
 
             oValueHelpTable.setModel(oVHModel);
-            oValueHelpTable.bindRows("/items");
 
             oDialog = new Dialog({
                 title: "Search Help: " + sLabel,
                 contentWidth: "80rem",
                 contentHeight: "42rem",
+                verticalScrolling: true,
                 resizable: true,
                 draggable: true,
                 content: [
