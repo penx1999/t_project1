@@ -11,13 +11,16 @@ sap.ui.define([
     "sap/m/Input",
     "sap/m/Label",
     "sap/m/DatePicker",
-    "sap/m/SelectDialog",
-    "sap/m/StandardListItem",
+    "sap/m/Dialog",
+    "sap/m/SearchField",
+    "sap/m/VBox",
+    "sap/m/Button",
+    "sap/ui/table/Table",
     "sap/ui/table/Column",
     "sap/ui/table/RowSettings",
     "sap/ui/core/format/DateFormat",
     "sap/ui/core/BusyIndicator"
-], function (Controller, History, JSONModel, Filter, FilterOperator, CustomData, MessageBox, MessageToast, Text, Input, Label, DatePicker, SelectDialog, StandardListItem, UIColumn, RowSettings, DateFormat, BusyIndicator) {
+], function (Controller, History, JSONModel, Filter, FilterOperator, CustomData, MessageBox, MessageToast, Text, Input, Label, DatePicker, Dialog, SearchField, VBox, Button, UITable, UIColumn, RowSettings, DateFormat, BusyIndicator) {
     "use strict";
 
     var EDITABLE_FIELDS = [
@@ -1360,54 +1363,62 @@ sap.ui.define([
             }
 
             var oVHModel = new JSONModel({ items: [] });
-
-            var oDialog = new SelectDialog({
-                title: "Search Help: " + sLabel,
-                noDataText: "No data",
-                contentWidth: "80rem",
-                busyIndicatorDelay: 0,
+            var oDialog;
+            var oSearchField = new SearchField({
+                width: "100%",
+                placeholder: "Search",
                 search: function (oEv) {
-                    var sQuery = oEv.getParameter("value") || "";
-                    var oBinding = oEv.getSource().getBinding("items");
-                    if (oBinding) {
-                        oBinding.filter([]);
-                    }
+                    var sQuery = oEv.getParameter("query") || oEv.getParameter("value") || "";
                     that._loadValueHelp(sQuery || "*", "", oVHModel, sDataElement, oDialog);
-                },
-                liveChange: function (oEv) {
-                    var oBinding = oEv.getSource().getBinding("items");
-                    if (oBinding) {
-                        oBinding.filter([]);
-                    }
-                },
-                confirm: function (oEv) {
-                    var oItem = oEv.getParameter("selectedItem");
-                    if (oItem && oCtx) {
-                        var sClave = oItem.data("Clave");
+                }
+            });
+            var oValueHelpTable = new UITable({
+                visibleRowCount: 18,
+                selectionMode: "None",
+                rowActionCount: 0,
+                width: "100%",
+                columns: [
+                    new UIColumn({
+                        label: new Label({ text: "Material Number" }),
+                        template: new Text({ text: "{Clave}", wrapping: false }),
+                        width: "30rem"
+                    }),
+                    new UIColumn({
+                        label: new Label({ text: "Description" }),
+                        template: new Text({ text: "{Desc}", wrapping: false })
+                    })
+                ],
+                cellClick: function (oEv) {
+                    var oRowContext = oEv.getParameter("rowBindingContext");
+                    if (oRowContext && oCtx) {
+                        var sClave = oRowContext.getProperty("Clave");
                         oCtx.getModel().setProperty(oCtx.getPath() + "/" + sFieldName, sClave);
+                        that._onFieldChange({});
                     }
-                    oDialog.destroy();
-                },
-                cancel: function () { oDialog.destroy(); }
+                    oDialog.close();
+                }
             });
 
-            oDialog.setModel(oVHModel);
-            oDialog.bindAggregation("items", {
-                path: "/items",
-                template: new StandardListItem({
-                    title: {
-                        parts: ["Clave", "Desc"],
-                        formatter: function (sClave, sDesc) {
-                            return sDesc ? sClave + " - " + sDesc : sClave;
-                        }
-                    },
-                    customData: [
-                        new CustomData({
-                            key: "Clave",
-                            value: "{Clave}"
-                        })
-                    ]
-                })
+            oValueHelpTable.setModel(oVHModel);
+            oValueHelpTable.bindRows("/items");
+
+            oDialog = new Dialog({
+                title: "Search Help: " + sLabel,
+                contentWidth: "80rem",
+                contentHeight: "42rem",
+                resizable: true,
+                draggable: true,
+                content: [
+                    new VBox({
+                        width: "100%",
+                        items: [oSearchField, oValueHelpTable]
+                    })
+                ],
+                endButton: new Button({
+                    text: "Cancel",
+                    press: function () { oDialog.close(); }
+                }),
+                afterClose: function () { oDialog.destroy(); }
             });
 
             oDialog.open();
