@@ -77,7 +77,7 @@
                             displayFormat="dd/MM/yyyy"
                             valueFormat="dd/MM/yyyy"
                             change=".onDateChange"
-                            enabled="{detailModel>/editMode}"
+                            enabled="true"
                             width="140px"/>
                         <Text text=" – " class="sapUiSmallMarginBeginEnd"/>
                         <DatePicker
@@ -86,7 +86,7 @@
                             displayFormat="dd/MM/yyyy"
                             valueFormat="dd/MM/yyyy"
                             change=".onDateChange"
-                            enabled="{detailModel>/editMode}"
+                            enabled="true"
                             width="140px"/>
                     </HBox>
                 </content>
