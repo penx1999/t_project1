@@ -1381,7 +1381,7 @@ sap.ui.define([
                 columns: [
                     new MColumn({
                         width: "30rem",
-                        header: new Label({ text: "Material Number" })
+                        header: new Label({ text: sLabel })
                     }),
                     new MColumn({
                         header: new Label({ text: "Description" })
