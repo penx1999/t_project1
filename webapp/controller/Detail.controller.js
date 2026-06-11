@@ -564,9 +564,6 @@ sap.ui.define([
                     this._aDeletedRows.push({ rowIndex: iIndex, rowData: oRowCopy });
                 }
                 aRows.splice(iIndex, 1);
-                if (this._oOriginalData && this._oOriginalData[iIndex]) {
-                    this._oOriginalData.splice(iIndex, 1);
-                }
             }
 
             oModel.setProperty("/rows", aRows);
@@ -1734,6 +1731,7 @@ sap.ui.define([
                         oModel.setProperty("/messageType", sType);
                         oModel.setProperty("/messageVisible", true);
                         if (sType === "Error") {
+                            that._restoreDeletedRowsAfterSaveError();
                             oModel.setProperty("/busy", false);
                             return;
                         }
@@ -1749,6 +1747,7 @@ sap.ui.define([
                     that._loadDynamicFields(sObj);
                 })
                 .catch(function (oError) {
+                    that._restoreDeletedRowsAfterSaveError();
                     oModel.setProperty("/busy", false);
                     var sMsg = oBundle.getText("msgSaveError");
                     try {
@@ -1757,6 +1756,28 @@ sap.ui.define([
                     } catch (e) {}
                     MessageBox.error(sMsg);
                 });
+        },
+
+        _restoreDeletedRowsAfterSaveError: function () {
+            if (!this._aDeletedRows || this._aDeletedRows.length === 0) { return; }
+
+            var oModel = this.getView().getModel("detailModel");
+            var aRows = oModel.getProperty("/rows") || [];
+            var aDeletedRows = this._aDeletedRows.slice().sort(function (a, b) {
+                return a.rowIndex - b.rowIndex;
+            });
+
+            aDeletedRows.forEach(function (oDeletedEntry) {
+                var iIndex = Math.min(oDeletedEntry.rowIndex, aRows.length);
+                var oRowCopy = JSON.parse(JSON.stringify(oDeletedEntry.rowData));
+                aRows.splice(iIndex, 0, oRowCopy);
+            });
+
+            this._aDeletedRows = [];
+            this._hasDeletedRows = false;
+            oModel.setProperty("/rows", aRows);
+            oModel.setProperty("/rowCount", Math.min(aRows.length, 15));
+            oModel.setProperty("/hasChanges", this._getChangedRows().length > 0);
         },
 
         _buildPayloadArray: function (aChangedRows, sFecIni) {
