@@ -120,7 +120,11 @@ sap.ui.define([
         },
 
         onEdit: function () {
-            this.getView().getModel("detailModel").setProperty("/editMode", true);
+            var oModel = this.getView().getModel("detailModel");
+            oModel.setProperty("/messageVisible", false);
+            oModel.setProperty("/messageText", "");
+            oModel.setProperty("/messageType", "None");
+            oModel.setProperty("/editMode", true);
         },
 
         onDateChange: function () {
