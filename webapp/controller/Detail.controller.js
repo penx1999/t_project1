@@ -14,6 +14,7 @@ sap.ui.define([
     "sap/m/Dialog",
     "sap/m/SearchField",
     "sap/m/VBox",
+    "sap/m/HBox",
     "sap/m/Button",
     "sap/m/Table",
     "sap/m/Column",
@@ -22,7 +23,7 @@ sap.ui.define([
     "sap/ui/table/RowSettings",
     "sap/ui/core/format/DateFormat",
     "sap/ui/core/BusyIndicator"
-], function (Controller, History, JSONModel, Filter, FilterOperator, CustomData, MessageBox, MessageToast, Text, Input, Label, DatePicker, Dialog, SearchField, VBox, Button, MTable, MColumn, ColumnListItem, UIColumn, RowSettings, DateFormat, BusyIndicator) {
+], function (Controller, History, JSONModel, Filter, FilterOperator, CustomData, MessageBox, MessageToast, Text, Input, Label, DatePicker, Dialog, SearchField, VBox, HBox, Button, MTable, MColumn, ColumnListItem, UIColumn, RowSettings, DateFormat, BusyIndicator) {
     "use strict";
 
     var EDITABLE_FIELDS = [
@@ -1382,14 +1383,43 @@ sap.ui.define([
                 }
             }
 
-            var oVHModel = new JSONModel({ items: [], displayedCount: 0 });
+            var oVHModel = new JSONModel({
+                allItems: [],
+                items: [],
+                displayedCount: 0,
+                totalCount: 0,
+                pageSize: 100,
+                currentPage: 1,
+                totalPages: 1,
+                pageText: "Page 1 of 1",
+                canPrevious: false,
+                canNext: false
+            });
             var oDialog;
+            var fnApplyValueHelpPage = function (iPage) {
+                var aAllItems = oVHModel.getProperty("/allItems") || [];
+                var iPageSize = oVHModel.getProperty("/pageSize") || 100;
+                var iTotalPages = Math.max(Math.ceil(aAllItems.length / iPageSize), 1);
+                var iCurrentPage = Math.min(Math.max(iPage || 1, 1), iTotalPages);
+                var iStart = (iCurrentPage - 1) * iPageSize;
+                var aPageItems = aAllItems.slice(iStart, iStart + iPageSize);
+
+                oVHModel.setProperty("/items", aPageItems);
+                oVHModel.setProperty("/displayedCount", aPageItems.length);
+                oVHModel.setProperty("/totalCount", aAllItems.length);
+                oVHModel.setProperty("/currentPage", iCurrentPage);
+                oVHModel.setProperty("/totalPages", iTotalPages);
+                oVHModel.setProperty("/pageText", "Page " + iCurrentPage + " of " + iTotalPages);
+                oVHModel.setProperty("/canPrevious", iCurrentPage > 1);
+                oVHModel.setProperty("/canNext", iCurrentPage < iTotalPages);
+                console.log("ValueHelp records displayed on page:", aPageItems.length, "page:", iCurrentPage, "of:", iTotalPages, "total:", aAllItems.length);
+            };
             var oSearchField = new SearchField({
                 width: "100%",
                 placeholder: "Search",
                 search: function (oEv) {
                     var sQuery = oEv.getParameter("query") || oEv.getParameter("value") || "";
-                    that._loadValueHelp(sQuery || "*", "", oVHModel, sDataElement, oDialog);
+                    that._loadValueHelp(sQuery || "*", "", oVHModel, sDataElement, oDialog, fnApplyValueHelpPage);
                 }
             });
             var oValueHelpTable = new MTable({
@@ -1443,9 +1473,29 @@ sap.ui.define([
                                 text: {
                                     path: "/displayedCount",
                                     formatter: function (iCount) {
-                                        return "Records displayed: " + (iCount || 0);
+                                        return "Records displayed: " + (iCount || 0) + " of " + (oVHModel.getProperty("/totalCount") || 0);
                                     }
                                 }
+                            }),
+                            new HBox({
+                                alignItems: "Center",
+                                items: [
+                                    new Button({
+                                        text: "Previous",
+                                        enabled: "{/canPrevious}",
+                                        press: function () {
+                                            fnApplyValueHelpPage((oVHModel.getProperty("/currentPage") || 1) - 1);
+                                        }
+                                    }),
+                                    new Text({ text: "{/pageText}" }).addStyleClass("sapUiSmallMarginBeginEnd"),
+                                    new Button({
+                                        text: "Next",
+                                        enabled: "{/canNext}",
+                                        press: function () {
+                                            fnApplyValueHelpPage((oVHModel.getProperty("/currentPage") || 1) + 1);
+                                        }
+                                    })
+                                ]
                             }),
                             oValueHelpTable
                         ]
@@ -1461,10 +1511,10 @@ sap.ui.define([
             oDialog.setModel(oVHModel);
 
             oDialog.open();
-            this._loadValueHelp("*", "", oVHModel, sDataElement, oDialog);
+            this._loadValueHelp("*", "", oVHModel, sDataElement, oDialog, fnApplyValueHelpPage);
         },
 
-        _loadValueHelp: function (sSource, sSearch, oVHModel, sDataElement, oDialog) {
+        _loadValueHelp: function (sSource, sSearch, oVHModel, sDataElement, oDialog, fnApplyValueHelpPage) {
             var oODataModel = this.getOwnerComponent().getModel();
             if (!oODataModel) { return; }
             var sAlloc = this.getView().getModel("detailModel").getProperty("/productAllocationObject") || "";
@@ -1484,14 +1534,27 @@ sap.ui.define([
                     var aItems = (oData && oData.results) ? oData.results : (oData ? [oData] : []);
                     console.log("ValueHelp OData records returned:", aItems.length);
                     oVHModel.setSizeLimit(Math.max(aItems.length, 100));
-                    oVHModel.setProperty("/items", aItems);
-                    oVHModel.setProperty("/displayedCount", aItems.length);
+                    oVHModel.setProperty("/allItems", aItems);
+                    if (fnApplyValueHelpPage) {
+                        fnApplyValueHelpPage(1);
+                    } else {
+                        oVHModel.setProperty("/items", aItems);
+                        oVHModel.setProperty("/displayedCount", aItems.length);
+                        oVHModel.setProperty("/totalCount", aItems.length);
+                    }
                     BusyIndicator.hide();
                 },
                 error: function (oErr) {
                     jQuery.sap.log.error("ValueHelp call failed: " + (oErr && oErr.message ? oErr.message : ""));
+                    oVHModel.setProperty("/allItems", []);
                     oVHModel.setProperty("/items", []);
                     oVHModel.setProperty("/displayedCount", 0);
+                    oVHModel.setProperty("/totalCount", 0);
+                    oVHModel.setProperty("/currentPage", 1);
+                    oVHModel.setProperty("/totalPages", 1);
+                    oVHModel.setProperty("/pageText", "Page 1 of 1");
+                    oVHModel.setProperty("/canPrevious", false);
+                    oVHModel.setProperty("/canNext", false);
                     BusyIndicator.hide();
                 }
             });
