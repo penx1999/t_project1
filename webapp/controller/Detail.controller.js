@@ -1365,7 +1365,7 @@ sap.ui.define([
                 }
             }
 
-            var oVHModel = new JSONModel({ items: [] });
+            var oVHModel = new JSONModel({ items: [], displayedCount: 0 });
             var oDialog;
             var oSearchField = new SearchField({
                 width: "100%",
@@ -1420,7 +1420,18 @@ sap.ui.define([
                 content: [
                     new VBox({
                         width: "100%",
-                        items: [oSearchField, oValueHelpTable]
+                        items: [
+                            oSearchField,
+                            new Text({
+                                text: {
+                                    path: "/displayedCount",
+                                    formatter: function (iCount) {
+                                        return "Records displayed: " + (iCount || 0);
+                                    }
+                                }
+                            }),
+                            oValueHelpTable
+                        ]
                     })
                 ],
                 endButton: new Button({
@@ -1429,6 +1440,8 @@ sap.ui.define([
                 }),
                 afterClose: function () { oDialog.destroy(); }
             });
+
+            oDialog.setModel(oVHModel);
 
             oDialog.open();
             this._loadValueHelp("*", "", oVHModel, sDataElement, oDialog);
@@ -1454,11 +1467,13 @@ sap.ui.define([
                     var aItems = (oData && oData.results) ? oData.results : (oData ? [oData] : []);
                     console.log("ValueHelp OData records returned:", aItems.length);
                     oVHModel.setProperty("/items", aItems);
+                    oVHModel.setProperty("/displayedCount", aItems.length);
                     BusyIndicator.hide();
                 },
                 error: function (oErr) {
                     jQuery.sap.log.error("ValueHelp call failed: " + (oErr && oErr.message ? oErr.message : ""));
                     oVHModel.setProperty("/items", []);
+                    oVHModel.setProperty("/displayedCount", 0);
                     BusyIndicator.hide();
                 }
             });
