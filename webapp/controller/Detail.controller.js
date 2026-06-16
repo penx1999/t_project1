@@ -1452,6 +1452,7 @@ sap.ui.define([
                 filters: aFilters,
                 success: function (oData) {
                     var aItems = (oData && oData.results) ? oData.results : (oData ? [oData] : []);
+                    console.log("ValueHelp OData records returned:", aItems.length);
                     oVHModel.setProperty("/items", aItems);
                     BusyIndicator.hide();
                 },
