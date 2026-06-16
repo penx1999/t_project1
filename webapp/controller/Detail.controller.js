@@ -1483,6 +1483,7 @@ sap.ui.define([
                 success: function (oData) {
                     var aItems = (oData && oData.results) ? oData.results : (oData ? [oData] : []);
                     console.log("ValueHelp OData records returned:", aItems.length);
+                    oVHModel.setSizeLimit(Math.max(aItems.length, 100));
                     oVHModel.setProperty("/items", aItems);
                     oVHModel.setProperty("/displayedCount", aItems.length);
                     BusyIndicator.hide();
