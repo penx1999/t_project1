@@ -306,6 +306,13 @@ sap.ui.define([
                 style: "medium"
             });
 
+            var sConsumedQtyField = "";
+            aVisibleColumns.forEach(function (oCol) {
+                if ((oCol.label || "").toUpperCase().trim() === "CNSMD QTY") {
+                    sConsumedQtyField = oCol.name;
+                }
+            });
+
             aVisibleColumns.forEach(function (oCol) {
                 var sFieldName = oCol.name;
                 var sFieldUpper = sFieldName.toUpperCase();
@@ -382,9 +389,19 @@ sap.ui.define([
                         editable: false
                     }).addStyleClass("sapUiSizeCompact");
                 } else if (bEditableField) {
+                    var bLockWhenConsumed = sConsumedQtyField && (sLabelUpper === "QUOTA QTY" || sLabelUpper === "ROC");
                     var oInputCfg = {
                         value: "{detailModel>" + sFieldName + "}",
-                        editable: "{detailModel>/editMode}",
+                        editable: bLockWhenConsumed ? {
+                            parts: [
+                                { path: "detailModel>/editMode" },
+                                { path: "detailModel>" + sConsumedQtyField }
+                            ],
+                            formatter: function (bEditMode, vConsumedQty) {
+                                var fConsumedQty = parseFloat(String(vConsumedQty || "0").replace(/,/g, ""));
+                                return bEditMode === true && !(fConsumedQty > 0);
+                            }
+                        } : "{detailModel>/editMode}",
                         change: that._onFieldChange.bind(that),
                         liveChange: that._onFieldChange.bind(that)
                     };
