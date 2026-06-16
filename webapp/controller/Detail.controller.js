@@ -1413,7 +1413,6 @@ sap.ui.define([
                 oVHModel.setProperty("/canPrevious", iCurrentPage > 1);
                 oVHModel.setProperty("/canNext", iCurrentPage < iTotalPages);
                 console.log("ValueHelp records displayed on page:", aPageItems.length, "page:", iCurrentPage, "of:", iTotalPages, "total:", aAllItems.length);
-                console.log("ValueHelp first displayed keys:", aPageItems.slice(0, 10).map(function (oItem) { return oItem.Clave; }));
             };
             var oSearchField = new SearchField({
                 width: "100%",
@@ -1529,12 +1528,13 @@ sap.ui.define([
                 "source eq '" + sSource + "' and allocationObject eq '" + sAlloc +
                 "' and data_element eq '" + (sDataElement || "") + "'");
             BusyIndicator.show(0);
+            var iStartTime = Date.now();
             oODataModel.read("/ValueHelpSet", {
                 filters: aFilters,
                 success: function (oData) {
                     var aItems = (oData && oData.results) ? oData.results : (oData ? [oData] : []);
+                    console.log("ValueHelp OData response time ms:", Date.now() - iStartTime);
                     console.log("ValueHelp OData records returned:", aItems.length);
-                    console.log("ValueHelp first OData keys:", aItems.slice(0, 10).map(function (oItem) { return oItem.Clave; }));
                     oVHModel.setSizeLimit(Math.max(aItems.length, 100));
                     oVHModel.setProperty("/allItems", aItems);
                     if (fnApplyValueHelpPage) {
@@ -1547,6 +1547,7 @@ sap.ui.define([
                     BusyIndicator.hide();
                 },
                 error: function (oErr) {
+                    console.log("ValueHelp OData response time ms:", Date.now() - iStartTime);
                     jQuery.sap.log.error("ValueHelp call failed: " + (oErr && oErr.message ? oErr.message : ""));
                     oVHModel.setProperty("/allItems", []);
                     oVHModel.setProperty("/items", []);
