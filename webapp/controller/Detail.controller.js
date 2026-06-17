@@ -1391,9 +1391,8 @@ sap.ui.define([
                 pageSize: 100,
                 currentPage: 1,
                 totalPages: 1,
-                pageText: "Page 1 of 1",
-                canPrevious: false,
-                canNext: false
+                moreText: "[ 0 / 0 ]",
+                canMore: false
             });
             var oDialog;
             var fnApplyValueHelpPage = function (iPage) {
@@ -1401,18 +1400,17 @@ sap.ui.define([
                 var iPageSize = oVHModel.getProperty("/pageSize") || 100;
                 var iTotalPages = Math.max(Math.ceil(aAllItems.length / iPageSize), 1);
                 var iCurrentPage = Math.min(Math.max(iPage || 1, 1), iTotalPages);
-                var iStart = (iCurrentPage - 1) * iPageSize;
-                var aPageItems = aAllItems.slice(iStart, iStart + iPageSize);
+                var iDisplayCount = Math.min(iCurrentPage * iPageSize, aAllItems.length);
+                var aPageItems = aAllItems.slice(0, iDisplayCount);
 
                 oVHModel.setProperty("/items", aPageItems);
                 oVHModel.setProperty("/displayedCount", aPageItems.length);
                 oVHModel.setProperty("/totalCount", aAllItems.length);
                 oVHModel.setProperty("/currentPage", iCurrentPage);
                 oVHModel.setProperty("/totalPages", iTotalPages);
-                oVHModel.setProperty("/pageText", "Page " + iCurrentPage + " of " + iTotalPages);
-                oVHModel.setProperty("/canPrevious", iCurrentPage > 1);
-                oVHModel.setProperty("/canNext", iCurrentPage < iTotalPages);
-                console.log("ValueHelp records displayed on page:", aPageItems.length, "page:", iCurrentPage, "of:", iTotalPages, "total:", aAllItems.length);
+                oVHModel.setProperty("/moreText", "[ " + aPageItems.length + " / " + aAllItems.length + " ]");
+                oVHModel.setProperty("/canMore", aPageItems.length < aAllItems.length);
+                console.log("ValueHelp records displayed:", aPageItems.length, "total:", aAllItems.length);
             };
             var oSearchField = new SearchField({
                 width: "100%",
@@ -1469,35 +1467,22 @@ sap.ui.define([
                         width: "100%",
                         items: [
                             oSearchField,
-                            new Text({
-                                text: {
-                                    path: "/displayedCount",
-                                    formatter: function (iCount) {
-                                        return "Records displayed: " + (iCount || 0) + " of " + (oVHModel.getProperty("/totalCount") || 0);
-                                    }
-                                }
-                            }),
-                            new HBox({
+                            oValueHelpTable,
+                            new VBox({
+                                width: "100%",
                                 alignItems: "Center",
                                 items: [
                                     new Button({
-                                        text: "Previous",
-                                        enabled: "{/canPrevious}",
-                                        press: function () {
-                                            fnApplyValueHelpPage((oVHModel.getProperty("/currentPage") || 1) - 1);
-                                        }
-                                    }),
-                                    new Text({ text: "{/pageText}" }).addStyleClass("sapUiSmallMarginBeginEnd"),
-                                    new Button({
-                                        text: "Next",
-                                        enabled: "{/canNext}",
+                                        text: "More",
+                                        type: "Transparent",
+                                        enabled: "{/canMore}",
                                         press: function () {
                                             fnApplyValueHelpPage((oVHModel.getProperty("/currentPage") || 1) + 1);
                                         }
-                                    })
+                                    }),
+                                    new Text({ text: "{/moreText}" })
                                 ]
-                            }),
-                            oValueHelpTable
+                            })
                         ]
                     })
                 ],
@@ -1555,9 +1540,8 @@ sap.ui.define([
                     oVHModel.setProperty("/totalCount", 0);
                     oVHModel.setProperty("/currentPage", 1);
                     oVHModel.setProperty("/totalPages", 1);
-                    oVHModel.setProperty("/pageText", "Page 1 of 1");
-                    oVHModel.setProperty("/canPrevious", false);
-                    oVHModel.setProperty("/canNext", false);
+                    oVHModel.setProperty("/moreText", "[ 0 / 0 ]");
+                    oVHModel.setProperty("/canMore", false);
                     BusyIndicator.hide();
                 }
             });
