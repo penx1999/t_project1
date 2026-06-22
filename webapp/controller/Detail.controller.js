@@ -622,7 +622,11 @@ sap.ui.define([
 
             var aColumns = oModel.getProperty("/columns") || [];
             aColumns.forEach(function (oCol) {
+                var sLabel = (oCol.label || "").toLowerCase().trim();
                 oNewRow[oCol.name + "_old"] = "";
+                if (sLabel === "avbl qty" || sLabel === "cnsmd qty") {
+                    oNewRow[oCol.name] = "";
+                }
             });
 
             oNewRow["_isNew"] = true;
