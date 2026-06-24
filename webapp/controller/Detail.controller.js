@@ -772,8 +772,10 @@ sap.ui.define([
             }
             this._loadSheetJS().then(function (XLSX) {
                 that._generateXlsx(XLSX, bWithDesc);
-            }).catch(function () {
-                MessageBox.error("Could not load Excel library.");
+            }).catch(function (oError) {
+                jQuery.sap.log.error("Could not load Excel library.", oError && (oError.message || oError.toString ? oError.toString() : ""));
+                MessageToast.show("Excel library could not be loaded. Downloading CSV instead.");
+                that._generateCsv(bWithDesc);
             });
         },
 
@@ -877,8 +879,14 @@ sap.ui.define([
                 if (window.XLSX) { resolve(window.XLSX); return; }
                 var oScript = document.createElement("script");
                 oScript.src = "https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js";
-                oScript.onload = function () { resolve(window.XLSX); };
-                oScript.onerror = function (e) { reject(e); };
+                oScript.onload = function () {
+                    if (window.XLSX) {
+                        resolve(window.XLSX);
+                    } else {
+                        reject(new Error("SheetJS script loaded but XLSX object is not available."));
+                    }
+                };
+                oScript.onerror = function () { reject(new Error("SheetJS script could not be loaded from CDN.")); };
                 document.head.appendChild(oScript);
             });
         },
