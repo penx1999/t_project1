@@ -406,7 +406,7 @@ sap.ui.define([
                         editable: false
                     }).addStyleClass("sapUiSizeCompact");
                 } else if (bEditableField) {
-                    var bLockWhenConsumed = sConsumedQtyField && (sLabelUpper === "QUOTA QTY" || sLabelUpper === "ROC");
+                    var bLockWhenConsumed = sConsumedQtyField && sLabelUpper === "ROC";
                     var oInputCfg = {
                         value: "{detailModel>" + sFieldName + "}",
                         editable: bLockWhenConsumed ? {
@@ -1697,6 +1697,7 @@ sap.ui.define([
             var aColumns = oModel.getProperty("/columns") || [];
             var bDateError = false;
             var bRequiredError = false;
+            var bQuotaConsumedError = false;
             var oController = this;
 
             var aNonRequired = [
@@ -1723,11 +1724,14 @@ sap.ui.define([
                 return str;
             };
 
-            var sStartField = null, sEndField = null;
+            var sStartField = null, sEndField = null, sQuotaQtyField = null, sConsumedQtyField = null;
             aColumns.forEach(function (oCol) {
                 var u = oCol.name.toUpperCase();
+                var sLabelUpper = (oCol.label || "").toUpperCase().trim();
                 if (u === "PRODALLOCPERDSTARTUTCDATE") { sStartField = oCol.name; }
                 if (u === "PRODALLOCPERIODENDUTCDATE")  { sEndField   = oCol.name; }
+                if (sLabelUpper === "QUOTA QTY") { sQuotaQtyField = oCol.name; }
+                if (sLabelUpper === "CNSMD QTY") { sConsumedQtyField = oCol.name; }
             });
 
             aChangedRows.forEach(function (oChangedRow) {
@@ -1756,6 +1760,15 @@ sap.ui.define([
                     if (sEndField)   { oRowData["_err_" + sEndField]   = true; }
                     bDateError = true;
                 }
+
+                if (sQuotaQtyField && sConsumedQtyField) {
+                    var fQuotaQty = parseFloat(String(oRowData[sQuotaQtyField] || "0").replace(/,/g, ""));
+                    var fConsumedQty = parseFloat(String(oRowData[sConsumedQtyField] || "0").replace(/,/g, ""));
+                    if (!isNaN(fQuotaQty) && !isNaN(fConsumedQty) && fQuotaQty < fConsumedQty) {
+                        oRowData["_err_" + sQuotaQtyField] = true;
+                        bQuotaConsumedError = true;
+                    }
+                }
             });
 
             oModel.setProperty("/rows", aRows);
@@ -1767,6 +1780,11 @@ sap.ui.define([
 
             if (bDateError) {
                 MessageBox.error(oBundle.getText("msgDateRangeError"));
+                return;
+            }
+
+            if (bQuotaConsumedError) {
+                MessageBox.error("Quota Qty must be greater than or equal to Cnsmd QTy.");
                 return;
             }
 
