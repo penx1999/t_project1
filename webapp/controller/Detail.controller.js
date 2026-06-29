@@ -122,10 +122,18 @@ sap.ui.define([
 
         onEdit: function () {
             var oModel = this.getView().getModel("detailModel");
+            var sQuotaId = oModel.getProperty("/productAllocationObject");
             oModel.setProperty("/messageVisible", false);
             oModel.setProperty("/messageText", "");
             oModel.setProperty("/messageType", "None");
-            oModel.setProperty("/editMode", true);
+            if (sQuotaId) {
+                oModel.setProperty("/busy", true);
+                this._loadDynamicFields(sQuotaId, function () {
+                    oModel.setProperty("/editMode", true);
+                });
+            } else {
+                oModel.setProperty("/editMode", true);
+            }
         },
 
         onDateChange: function () {
@@ -137,7 +145,7 @@ sap.ui.define([
             }
         },
 
-        _loadDynamicFields: function (sProductAllocationObject) {
+        _loadDynamicFields: function (sProductAllocationObject, fnAfterSuccess) {
             var oODataModel = this.getOwnerComponent().getModel();
             var oModel = this.getView().getModel("detailModel");
             var oBundle = this.getView().getModel("i18n").getResourceBundle();
@@ -270,6 +278,9 @@ sap.ui.define([
                     oModel.setProperty("/busy", false);
 
                     that._buildTable(aColumns);
+                    if (typeof fnAfterSuccess === "function") {
+                        fnAfterSuccess();
+                    }
                 },
                 error: function (oError) {
                     oModel.setProperty("/busy", false);
