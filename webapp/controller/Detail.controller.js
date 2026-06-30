@@ -130,7 +130,7 @@ sap.ui.define([
                 oModel.setProperty("/busy", true);
                 this._loadDynamicFields(sQuotaId, function () {
                     oModel.setProperty("/editMode", true);
-                });
+                }, "EDIT");
             } else {
                 oModel.setProperty("/editMode", true);
             }
@@ -145,7 +145,7 @@ sap.ui.define([
             }
         },
 
-        _loadDynamicFields: function (sProductAllocationObject, fnAfterSuccess) {
+        _loadDynamicFields: function (sProductAllocationObject, fnAfterSuccess, sType) {
             var oODataModel = this.getOwnerComponent().getModel();
             var oModel = this.getView().getModel("detailModel");
             var oBundle = this.getView().getModel("i18n").getResourceBundle();
@@ -164,11 +164,15 @@ sap.ui.define([
             if (sFecFin) {
                 aFilters.push(new Filter("fec_fin", FilterOperator.EQ, this._toODataDate(sFecFin)));
             }
+            if (sType) {
+                aFilters.push(new Filter("type", FilterOperator.EQ, sType));
+            }
 
             console.log("[DynamicTable] Ejecutando OData /DynamicFieldSet", {
                 productAllocationObject: sProductAllocationObject,
                 fec_ini: sFecIni || "",
-                fec_fin: sFecFin || ""
+                fec_fin: sFecFin || "",
+                type: sType || ""
             });
             oODataModel.read("/DynamicFieldSet", {
                 filters: aFilters,
