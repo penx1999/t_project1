@@ -127,8 +127,9 @@ sap.ui.define([
             oModel.setProperty("/messageText", "");
             oModel.setProperty("/messageType", "None");
             if (sQuotaId) {
+                var sEditQuotaId = sQuotaId === "PAL_ENHACEMENT" ? "PAL_ENHACEMENT_EDIT" : sQuotaId;
                 oModel.setProperty("/busy", true);
-                this._loadDynamicFields(sQuotaId, function () {
+                this._loadDynamicFields(sEditQuotaId, function () {
                     oModel.setProperty("/editMode", true);
                 });
             } else {
