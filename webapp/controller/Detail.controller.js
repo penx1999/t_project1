@@ -165,14 +165,14 @@ sap.ui.define([
                 aFilters.push(new Filter("fec_fin", FilterOperator.EQ, this._toODataDate(sFecFin)));
             }
             if (sType) {
-                aFilters.push(new Filter("type", FilterOperator.EQ, sType));
+                aFilters.push(new Filter("data_lement", FilterOperator.EQ, sType));
             }
 
             console.log("[DynamicTable] Ejecutando OData /DynamicFieldSet", {
                 productAllocationObject: sProductAllocationObject,
                 fec_ini: sFecIni || "",
                 fec_fin: sFecFin || "",
-                type: sType || ""
+                data_lement: sType || ""
             });
             oODataModel.read("/DynamicFieldSet", {
                 filters: aFilters,
