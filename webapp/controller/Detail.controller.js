@@ -1109,6 +1109,7 @@ sap.ui.define([
             var sQuotaQtyField = null;
             var sConsumedQtyField = null;
             var sRocField = null;
+            var sCommentField = null;
             aColumns.forEach(function (oCol) {
                 var u = (oCol.name || "").toUpperCase();
                 var sLabelUpper = (oCol.label || "").toUpperCase().trim();
@@ -1118,6 +1119,7 @@ sap.ui.define([
                 if (sLabelUpper === "QUOTA QTY") { sQuotaQtyField = oCol.name; }
                 if (sLabelUpper === "CNSMD QTY") { sConsumedQtyField = oCol.name; }
                 if (sLabelUpper === "ROC") { sRocField = oCol.name; }
+                if (sLabelUpper === "COMMENT" || u === "PRODALLOCCHARCVALUECOMBNCMNT") { sCommentField = oCol.name; }
             });
 
             // Robust date parser: accepts Date, number (Excel serial), or string in common formats.
@@ -1278,6 +1280,9 @@ sap.ui.define([
                     }
                     if (sRocField && oCand[sRocField] !== undefined) {
                         oTarget[sRocField] = oCand[sRocField];
+                    }
+                    if (sCommentField && oCand[sCommentField] !== undefined) {
+                        oTarget[sCommentField] = oCand[sCommentField];
                     }
                     iUpdatedCount++;
                 } else {
