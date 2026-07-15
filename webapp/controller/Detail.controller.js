@@ -1301,8 +1301,26 @@ sap.ui.define([
                     aRemainingCandidates.push(oCand);
                 }
             });
+            console.log("[UploadExcel] Duplicate match summary:", {
+                excelRows: aCandidateRows.length,
+                existingRows: aWorkingRows.length,
+                updatedDuplicates: aUpdatedDuplicateLogs.length,
+                newRows: aRemainingCandidates.length,
+                keyFields: aKeyFields,
+                startField: sStartField || "",
+                endField: sEndField || ""
+            });
             if (aUpdatedDuplicateLogs.length > 0) {
                 console.log("[UploadExcel] Duplicate lines updated:", aUpdatedDuplicateLogs);
+            } else {
+                console.log("[UploadExcel] No duplicate lines matched. Sample keys:", {
+                    excel: aCandidateRows.slice(0, 5).map(function (oRow) {
+                        return { excelLine: oRow._excelLine, matchKey: fnMatchKey(oRow) };
+                    }),
+                    existing: aWorkingRows.slice(0, 5).map(function (oRow, iIdx) {
+                        return { tableRow: iIdx + 1, matchKey: fnMatchKey(oRow) };
+                    })
+                });
             }
 
             // Date overlap validation across existing + remaining new candidates
