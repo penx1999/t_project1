@@ -1361,6 +1361,7 @@ sap.ui.define([
         },
 
         _getOverlapKeyFields: function (aColumns) {
+            var that = this;
             var iCsIdx = -1;
             aColumns.forEach(function (oCol, iIdx) {
                 if (oCol.name.toUpperCase().indexOf("STATUS") !== -1) { iCsIdx = iIdx; }
@@ -1373,7 +1374,8 @@ sap.ui.define([
                 return aNonKey.indexOf(u) === -1 &&
                        u.indexOf("STATUS") === -1 &&
                        u.indexOf("AVBL")   === -1 &&
-                       u.indexOf("CNSMD")  === -1;
+                       u.indexOf("CNSMD")  === -1 &&
+                       !that._isProdDescColumn(c);
             }).map(function (c) { return c.name; });
         },
 
@@ -1396,6 +1398,7 @@ sap.ui.define([
             };
 
             // Determine key fields (same rule used in Save validation)
+            var that = this;
             var iCsIdx = -1;
             aColumns.forEach(function (oCol, iIdx) {
                 if (oCol.name.toUpperCase().indexOf("STATUS") !== -1) { iCsIdx = iIdx; }
@@ -1411,7 +1414,8 @@ sap.ui.define([
                 return aNonKey.indexOf(u) === -1 &&
                        u.indexOf("STATUS") === -1 &&
                        u.indexOf("AVBL")   === -1 &&
-                       u.indexOf("CNSMD")  === -1;
+                       u.indexOf("CNSMD")  === -1 &&
+                       !that._isProdDescColumn(c);
             }).map(function (c) { return c.name; });
 
             var oGroups = {};
@@ -1861,7 +1865,8 @@ sap.ui.define([
                 return aNonKey.indexOf(u) === -1 &&
                        u.indexOf("STATUS") === -1 &&
                        u.indexOf("AVBL")   === -1 &&
-                       u.indexOf("CNSMD")  === -1;
+                       u.indexOf("CNSMD")  === -1 &&
+                       !oController._isProdDescColumn(c);
             }).map(function (c) { return c.name; });
 
             var oGroups = {};
