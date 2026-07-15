@@ -1174,8 +1174,9 @@ sap.ui.define([
             // Build candidate new rows (not yet pushed)
             var bInvalidDate = false;
             var oController = this;
-            var aCandidateRows = aDataRows.map(function (aXlsxRow) {
+            var aCandidateRows = aDataRows.map(function (aXlsxRow, iDataIdx) {
                 var oNewRow = {};
+                oNewRow._excelLine = iDataIdx + 18;
                 aColumns.forEach(function (oCol) {
                     oNewRow[oCol.name] = "";
                     oNewRow[oCol.name + "_old"] = "";
@@ -1269,26 +1270,40 @@ sap.ui.define([
             });
 
             var aRemainingCandidates = [];
+            var aUpdatedDuplicateLogs = [];
             var iUpdatedCount = 0;
             aCandidateRows.forEach(function (oCand) {
                 var k = fnMatchKey(oCand);
                 var iIdx = oExistingByKey[k];
                 if (iIdx !== undefined) {
                     var oTarget = aWorkingRows[iIdx];
+                    var aUpdatedFields = [];
                     if (sQuotaQtyField && oCand[sQuotaQtyField] !== undefined) {
                         oTarget[sQuotaQtyField] = oCand[sQuotaQtyField];
+                        aUpdatedFields.push("Quota Qty");
                     }
                     if (sRocField && oCand[sRocField] !== undefined) {
                         oTarget[sRocField] = oCand[sRocField];
+                        aUpdatedFields.push("RoC");
                     }
                     if (sCommentField && oCand[sCommentField] !== undefined) {
                         oTarget[sCommentField] = oCand[sCommentField];
+                        aUpdatedFields.push("Comment");
                     }
+                    aUpdatedDuplicateLogs.push({
+                        excelLine: oCand._excelLine,
+                        tableRow: iIdx + 1,
+                        updatedFields: aUpdatedFields,
+                        matchKey: k
+                    });
                     iUpdatedCount++;
                 } else {
                     aRemainingCandidates.push(oCand);
                 }
             });
+            if (aUpdatedDuplicateLogs.length > 0) {
+                console.log("[UploadExcel] Duplicate lines updated:", aUpdatedDuplicateLogs);
+            }
 
             // Date overlap validation across existing + remaining new candidates
             var aAllRows = aWorkingRows.concat(aRemainingCandidates);
