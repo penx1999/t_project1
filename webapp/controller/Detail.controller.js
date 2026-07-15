@@ -1106,11 +1106,18 @@ sap.ui.define([
 
             // Identify date fields up front
             var oDateFieldSet = {};
+            var sQuotaQtyField = null;
+            var sConsumedQtyField = null;
+            var sRocField = null;
             aColumns.forEach(function (oCol) {
                 var u = (oCol.name || "").toUpperCase();
+                var sLabelUpper = (oCol.label || "").toUpperCase().trim();
                 if (u === "PRODALLOCPERDSTARTUTCDATE" || u === "PRODALLOCPERIODENDUTCDATE") {
                     oDateFieldSet[oCol.name] = true;
                 }
+                if (sLabelUpper === "QUOTA QTY") { sQuotaQtyField = oCol.name; }
+                if (sLabelUpper === "CNSMD QTY") { sConsumedQtyField = oCol.name; }
+                if (sLabelUpper === "ROC") { sRocField = oCol.name; }
             });
 
             // Robust date parser: accepts Date, number (Excel serial), or string in common formats.
@@ -1252,8 +1259,9 @@ sap.ui.define([
             // Try to merge each candidate into an existing row with identical match key.
             // If matched: copy non-key (and non-date) field values from candidate into existing,
             // and remove the candidate from the new-rows list.
+            var aWorkingRows = JSON.parse(JSON.stringify(aExistingRows));
             var oExistingByKey = {};
-            aExistingRows.forEach(function (oRow, iIdx) {
+            aWorkingRows.forEach(function (oRow, iIdx) {
                 var k = fnMatchKey(oRow);
                 if (!oExistingByKey[k]) { oExistingByKey[k] = iIdx; }
             });
@@ -1264,19 +1272,13 @@ sap.ui.define([
                 var k = fnMatchKey(oCand);
                 var iIdx = oExistingByKey[k];
                 if (iIdx !== undefined) {
-                    var oTarget = aExistingRows[iIdx];
-                    aColumns.forEach(function (oCol) {
-                        var sName = oCol.name;
-                        var sUp = sName.toUpperCase();
-                        if (aKeyFields.indexOf(sName) !== -1) { return; }
-                        if (sUp === "PRODALLOCPERDSTARTUTCDATE" || sUp === "PRODALLOCPERIODENDUTCDATE") { return; }
-                        if (sUp === "PRODUCTALLOCATIONOBJECTUUID") { return; }
-                        var sLbl = (oCol.label || "").toLowerCase().trim();
-                        if (sLbl === "avbl qty" || sLbl === "cnsmd qty") { return; }
-                        if (oCand[sName] !== undefined) {
-                            oTarget[sName] = oCand[sName];
-                        }
-                    });
+                    var oTarget = aWorkingRows[iIdx];
+                    if (sQuotaQtyField && oCand[sQuotaQtyField] !== undefined) {
+                        oTarget[sQuotaQtyField] = oCand[sQuotaQtyField];
+                    }
+                    if (sRocField && oCand[sRocField] !== undefined) {
+                        oTarget[sRocField] = oCand[sRocField];
+                    }
                     iUpdatedCount++;
                 } else {
                     aRemainingCandidates.push(oCand);
@@ -1284,14 +1286,26 @@ sap.ui.define([
             });
 
             // Date overlap validation across existing + remaining new candidates
-            var aAllRows = aExistingRows.concat(aRemainingCandidates);
+            var aAllRows = aWorkingRows.concat(aRemainingCandidates);
             if (this._hasDateOverlap(aAllRows, aColumns)) {
                 MessageBox.error("ERROR! Dates in file!", { actions: ["OK"] });
                 return;
             }
 
+            if (sQuotaQtyField && sConsumedQtyField) {
+                var bQuotaConsumedError = aAllRows.some(function (oRow) {
+                    var fQuotaQty = parseFloat(String(oRow[sQuotaQtyField] || "0").replace(/,/g, ""));
+                    var fConsumedQty = parseFloat(String(oRow[sConsumedQtyField] || "0").replace(/,/g, ""));
+                    return !isNaN(fQuotaQty) && !isNaN(fConsumedQty) && fQuotaQty < fConsumedQty;
+                });
+                if (bQuotaConsumedError) {
+                    MessageBox.error("Quota Qty must be greater than or equal to Cnsmd QTy.");
+                    return;
+                }
+            }
+
             // Validation passed: commit rows
-            var aRows = aExistingRows;
+            var aRows = aWorkingRows;
             aRemainingCandidates.forEach(function (oNewRow) {
                 aRows.push(oNewRow);
                 this._oOriginalData.push(JSON.parse(JSON.stringify(oNewRow)));
