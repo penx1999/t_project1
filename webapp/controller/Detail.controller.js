@@ -1354,9 +1354,8 @@ sap.ui.define([
             oModel.setProperty("/rowCount", iNewRowCount);
             oModel.setProperty("/hasChanges", true);
 
-            var sMsg = aRemainingCandidates.length + " row(s) loaded";
-            if (iUpdatedCount > 0) { sMsg += ", " + iUpdatedCount + " row(s) updated"; }
-            sMsg += " from file.";
+            var sMsg = aRemainingCandidates.length + " new row(s) loaded and " +
+                iUpdatedCount + " duplicate row(s) updated from file.";
             MessageToast.show(sMsg);
         },
 
