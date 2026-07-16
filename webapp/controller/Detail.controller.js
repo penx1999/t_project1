@@ -1283,8 +1283,13 @@ sap.ui.define([
                         aUpdatedFields.push("Quota Qty");
                     }
                     if (sRocField && oCand[sRocField] !== undefined) {
-                        oTarget[sRocField] = oCand[sRocField];
-                        aUpdatedFields.push("RoC");
+                        var fTargetConsumedQty = sConsumedQtyField ?
+                            parseFloat(String(oTarget[sConsumedQtyField] || "0").replace(/,/g, "")) : 0;
+                        var bRocEditable = !(fTargetConsumedQty > 0);
+                        if (bRocEditable) {
+                            oTarget[sRocField] = oCand[sRocField];
+                            aUpdatedFields.push("RoC");
+                        }
                     }
                     if (sCommentField && oCand[sCommentField] !== undefined) {
                         oTarget[sCommentField] = oCand[sCommentField];
