@@ -1079,7 +1079,7 @@ sap.ui.define([
                 return;
             }
 
-            // Validate Allocation Object in file matches screen
+            // Validate Characteristics Object in file matches screen
             var oAllocCol = aColumns.filter(function (oCol) {
                 return (oCol.name || "").toUpperCase() === "PRODUCTALLOCATIONOBJECT";
             })[0];
@@ -1094,7 +1094,7 @@ sap.ui.define([
                 }
             }
             if (!bAllocOk) {
-                MessageBox.error("ERROR! Allocation Object in file does not correspond", { actions: ["OK"] });
+                MessageBox.error("ERROR! Characteristics Object in file does not correspond", { actions: ["OK"] });
                 return;
             }
 

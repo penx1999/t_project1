@@ -19,7 +19,7 @@
                     <Collection>
                         <Record Type="UI.DataField">
                             <PropertyValue Property="Value" Path="ProductAllocationObject"/>
-                            <PropertyValue Property="Label" String="Objeto Asignación"/>
+                            <PropertyValue Property="Label" String="Objeto de Características"/>
                         </Record>
                         <Record Type="UI.DataField">
                             <PropertyValue Property="Value" Path="ProductAllocationSequence"/>
