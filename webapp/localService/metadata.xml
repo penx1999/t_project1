@@ -11,7 +11,7 @@
                 <Key>
                     <PropertyRef Name="Productallocationobject"/>
                 </Key>
-                <Property Name="Productallocationobject" Type="Edm.String" Nullable="false" MaxLength="40" sap:label="Objeto de Características" sap:filterable="true"/>
+                <Property Name="Productallocationobject" Type="Edm.String" Nullable="false" MaxLength="40" sap:label="Objeto Asignación Producto" sap:filterable="true"/>
             </EntityType>
 
             <EntityContainer Name="ZSD_PAL_APP_GW_SRV_Entities" m:IsDefaultEntityContainer="true">
