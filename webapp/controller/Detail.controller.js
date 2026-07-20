@@ -56,6 +56,7 @@ sap.ui.define([
 
             var oModel = new JSONModel({
                 productAllocationObject: "",
+                allocationObjectFilter: "",
                 tableTitle: "",
                 columns: [],
                 rows: [],
@@ -139,19 +140,22 @@ sap.ui.define([
         onDateChange: function () {
             var oModel = this.getView().getModel("detailModel");
             var sQuotaId = oModel.getProperty("/productAllocationObject");
+            var sFilterValue = oModel.getProperty("/allocationObjectFilter") || "";
             if (sQuotaId) {
                 oModel.setProperty("/busy", true);
-                this._loadDynamicFields(sQuotaId);
+                this._loadDynamicFields(sQuotaId, null, sFilterValue);
             }
         },
 
         onAllocationObjectChange: function () {
             var oModel = this.getView().getModel("detailModel");
-            var sQuotaId = (oModel.getProperty("/productAllocationObject") || "").trim();
-            oModel.setProperty("/productAllocationObject", sQuotaId);
+            var sFilterValue = (oModel.getProperty("/allocationObjectFilter") || "").trim();
+            oModel.setProperty("/allocationObjectFilter", sFilterValue);
+
+            var sQuotaId = oModel.getProperty("/productAllocationObject");
             if (sQuotaId) {
                 oModel.setProperty("/busy", true);
-                this._loadDynamicFields(sQuotaId);
+                this._loadDynamicFields(sQuotaId, null, sFilterValue);
             }
         },
 

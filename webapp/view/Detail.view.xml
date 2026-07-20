@@ -91,7 +91,7 @@
                         <Label text="{i18n>allocationObjectLabel}" class="sapUiSmallMarginBeginEnd" showColon="true"/>
                         <Input
                             id="idAllocationObjectFilter"
-                            value="{detailModel>/productAllocationObject}"
+                            value="{detailModel>/allocationObjectFilter}"
                             change=".onAllocationObjectChange"
                             width="220px"/>
                     </HBox>
