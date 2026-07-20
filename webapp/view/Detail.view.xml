@@ -88,6 +88,12 @@
                             change=".onDateChange"
                             enabled="true"
                             width="140px"/>
+                        <Label text="{i18n>allocationObjectLabel}" class="sapUiSmallMarginBeginEnd" showColon="true"/>
+                        <Input
+                            id="idAllocationObjectFilter"
+                            value="{detailModel>/productAllocationObject}"
+                            change=".onAllocationObjectChange"
+                            width="220px"/>
                     </HBox>
                 </content>
             </Panel>

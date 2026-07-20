@@ -145,6 +145,16 @@ sap.ui.define([
             }
         },
 
+        onAllocationObjectChange: function () {
+            var oModel = this.getView().getModel("detailModel");
+            var sQuotaId = (oModel.getProperty("/productAllocationObject") || "").trim();
+            oModel.setProperty("/productAllocationObject", sQuotaId);
+            if (sQuotaId) {
+                oModel.setProperty("/busy", true);
+                this._loadDynamicFields(sQuotaId);
+            }
+        },
+
         _loadDynamicFields: function (sProductAllocationObject, fnAfterSuccess, sType) {
             var oODataModel = this.getOwnerComponent().getModel();
             var oModel = this.getView().getModel("detailModel");
