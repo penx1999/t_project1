@@ -345,7 +345,8 @@ sap.ui.define([
                 var bNonEditableText = false;
                 
                 var sLabelUpper = (oCol.label || "").toUpperCase().trim();
-                var bNeverEditable = (sLabelUpper === "AVBL QTY" || sLabelUpper === "CNSMD QTY");
+                var bNeverEditable = (sLabelUpper === "AVBL QTY" || sLabelUpper === "CNSMD QTY" ||
+                                      sFieldUpper === "PRODUCTALLOCATIONOBJECT");
 
                 var bNonEditableInput = (sFieldUpper === "PRODALLOCATIONACTIVATIONSTATUS" ||
                                          sFieldUpper === "PRODALLOCCHARCCONSTRAINTSTATUS");
@@ -643,7 +644,8 @@ sap.ui.define([
             aColumns.forEach(function (oCol) {
                 var sLabel = (oCol.label || "").toLowerCase().trim();
                 oNewRow[oCol.name + "_old"] = "";
-                if (sLabel === "avbl qty" || sLabel === "cnsmd qty") {
+                if (sLabel === "avbl qty" || sLabel === "cnsmd qty" ||
+                    (oCol.name || "").toUpperCase() === "PRODUCTALLOCATIONOBJECT") {
                     oNewRow[oCol.name] = "";
                 }
             });
