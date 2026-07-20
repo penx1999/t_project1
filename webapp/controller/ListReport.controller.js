@@ -57,7 +57,7 @@ sap.ui.define([
             var oODataModel = this.getOwnerComponent().getModel();
             var aFilters = [];
 
-            aFilters.push(new Filter("PRODUCTALLOCATIONOBJECT", FilterOperator.EQ, sProdAlloc || "*"));
+            aFilters.push(new Filter("DESCRIPTION", FilterOperator.EQ, sProdAlloc || "*"));
 
             var sDescription = (oModel.getProperty("/filterDescription") || "").trim();
             aFilters.push(new Filter("DESCRIPTION", FilterOperator.EQ, sDescription || "*"));
