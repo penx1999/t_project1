@@ -338,8 +338,7 @@ sap.ui.define([
                 var sFieldName = oCol.name;
                 var sFieldUpper = sFieldName.toUpperCase();
 
-                if (sFieldUpper === "PRODUCTALLOCATIONOBJECTUUID" ||
-                    sFieldUpper === "PRODUCTALLOCATIONOBJECT") {
+                if (sFieldUpper === "PRODUCTALLOCATIONOBJECTUUID") {
                     return;
                 }
 
