@@ -1917,8 +1917,6 @@ sap.ui.define([
             var that = this;
             var aPayloadItems = this._buildPayloadArray(aChangedRows, sFecIni);
 
-            console.log("POST Payload Array:", JSON.stringify(aPayloadItems, null, 2));
-
             this._executePost(aPayloadItems)
                 .then(function (oSapMsg) {
                     if (oSapMsg && oSapMsg.text) {
@@ -2124,11 +2122,6 @@ sap.ui.define([
         _executePost: function (aPayload) {
             var oODataModel = this.getOwnerComponent().getModel();
 
-            console.log("=== POST REQUEST ===");
-            console.log("POST Path: /DynamicFieldSet");
-            console.log("POST Payload:", JSON.stringify(aPayload, null, 2));
-            console.log("===================");
-
             var oData = {
                 name: "",
                 tablename: "PAL",
@@ -2142,12 +2135,9 @@ sap.ui.define([
                 });
             });
 
-            console.log("Flattened DataSetAsoc:", JSON.stringify(oData, null, 2));
-
             return new Promise(function (resolve, reject) {
                 oODataModel.create("/DynamicFieldSet", oData, {
                     success: function (oData, oResponse) {
-                        console.log("POST Success");
                         var oSapMsg = null;
                         try {
                             var sHeader = oResponse && oResponse.headers && oResponse.headers["sap-message"];
@@ -2159,7 +2149,6 @@ sap.ui.define([
                         resolve(oSapMsg);
                     },
                     error: function (oError) {
-                        console.log("POST Error:", oError);
                         reject(oError);
                     }
                 });
