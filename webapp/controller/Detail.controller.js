@@ -2149,6 +2149,8 @@ sap.ui.define([
                 });
             });
 
+            console.log("[Save] POST /DynamicFieldSet payload:", JSON.stringify(oData, null, 2));
+
             return new Promise(function (resolve, reject) {
                 oODataModel.create("/DynamicFieldSet", oData, {
                     success: function (oData, oResponse) {
