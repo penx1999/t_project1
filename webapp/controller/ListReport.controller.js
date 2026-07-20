@@ -136,7 +136,7 @@ sap.ui.define([
         },
 
         _navigateToDetail: function (oItem) {
-            var sId = encodeURIComponent(oItem.DESCRIPTION);
+            var sId = encodeURIComponent(oItem.PRODUCTALLOCATIONOBJECT);
 
             if (!this.getOwnerComponent().getModel("detailModel")) {
                 this.getOwnerComponent().setModel(new JSONModel(oItem), "detailModel");
