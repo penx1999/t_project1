@@ -591,8 +591,8 @@ sap.ui.define([
                 oNewRow[oCol.name + "_old"] = "";
             });
 
-            oNewRow["PRODUCTALLOCATIONOBJECT"] = sProductAllocationObject;
-            oNewRow["PRODUCTALLOCATIONOBJECT_old"] = sProductAllocationObject;
+            oNewRow["PRODUCTALLOCATIONOBJECT"] = "";
+            oNewRow["PRODUCTALLOCATIONOBJECT_old"] = "";
             oNewRow["VAR_CHAR"] = sProductAllocationObject;
             oNewRow["VAR_CHAR_old"] = sProductAllocationObject;
             var sKeyChar = oModel.getProperty("/l_key_char") || "";
