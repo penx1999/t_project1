@@ -57,6 +57,7 @@ sap.ui.define([
             var oModel = new JSONModel({
                 productAllocationObject: "",
                 allocationObjectFilter: "",
+                l_key_char: "",
                 tableTitle: "",
                 columns: [],
                 rows: [],
@@ -112,6 +113,11 @@ sap.ui.define([
             }
             var oModel = this.getView().getModel("detailModel");
             oOwner._oDetailModel = oModel;
+
+            var oCompDetailModel = oOwner.getModel("detailModel");
+            var sKeyChar = oCompDetailModel ? (oCompDetailModel.getProperty("/PRODUCTALLOCATIONOBJECT") || "") : "";
+            oModel.setProperty("/l_key_char", sKeyChar);
+
             oModel.setProperty("/productAllocationObject", sQuotaId);
             oModel.setProperty("/busy", true);
             oModel.setProperty("/messageVisible", false);
@@ -2016,6 +2022,7 @@ sap.ui.define([
             var oModel = this.getView().getModel("detailModel");
             var aColumns = oModel.getProperty("/columns") || [];
             var oFieldsMap = {};
+            var sKeyChar = oModel.getProperty("/l_key_char") || "";
 
             aColumns.forEach(function (oCol) {
                 var sFieldName = oCol.name;
@@ -2098,7 +2105,8 @@ sap.ui.define([
                         PRODALLOCPERIODENDUTCDATETIME: oCellMeta.PRODALLOCPERIODENDUTCDATETIME || oRowData.PRODALLOCPERIODENDUTCDATETIME || "",
                         productallocationsequence: oCellMeta.productallocationsequence || oRowData.productallocationsequence || "",
                         fec_ini: that._toODataDate(sFecIni) || "",
-                        ind_ope: oQRows[iRowIndex] ? "Q" : (oCellMeta.ind_ope || "")
+                        ind_ope: oQRows[iRowIndex] ? "Q" : (oCellMeta.ind_ope || ""),
+                        KEY_CHAR: sKeyChar
                     };
 
                     oFieldsMap[sFieldName].DataSetAsoc.push(oDataItem);
@@ -2133,7 +2141,8 @@ sap.ui.define([
                         PRODALLOCPERIODENDUTCDATETIME: oCellMeta.PRODALLOCPERIODENDUTCDATETIME || oRowData.PRODALLOCPERIODENDUTCDATETIME || "",
                         productallocationsequence: oCellMeta.productallocationsequence || oRowData.productallocationsequence || "",
                         fec_ini: that._toODataDate(sFecIni) || "",
-                        ind_ope: oCellMeta.ind_ope || ""
+                        ind_ope: oCellMeta.ind_ope || "",
+                        KEY_CHAR: sKeyChar
                     };
 
                     if (oFieldsMap[sFieldName]) {
