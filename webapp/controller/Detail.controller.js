@@ -874,11 +874,6 @@ sap.ui.define([
                 ["03",                 "No Availability"],
                 ["04",                 "Not Relevant"],
                 ["05",                 "As in Sequence Constraint"],
-                [],
-                ["Delete CVC",         "Delete CVC - Description"],
-                ["",                   "No Deletion"],
-                ["1",                  "Standard Deletion"],
-                ["2",                  "Deletion with Consumptions"],
                 []
             ];
 
@@ -997,11 +992,6 @@ sap.ui.define([
                 ["03",                 "No Availability"],
                 ["04",                 "Not Relevant"],
                 ["05",                 "As in Sequence Constraint"],
-                [],
-                ["Delete CVC",         "Delete CVC - Description"],
-                ["",                   "No Deletion"],
-                ["1",                  "Standard Deletion"],
-                ["2",                  "Deletion with Consumptions"],
                 []
             ];
 
