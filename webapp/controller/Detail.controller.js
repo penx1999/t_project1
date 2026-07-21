@@ -1477,9 +1477,16 @@ sap.ui.define([
             var sLower = sRaw.toLowerCase();
             var bEn = this._getSapLang() === "en";
 
+            // Excel may drop leading zeros from numeric-looking cells ("01" -> 1),
+            // so compare keys numerically as well as literally.
+            var bRawIsNumeric = /^\d+$/.test(sRaw);
+            var iRawNum = bRawIsNumeric ? parseInt(sRaw, 10) : NaN;
+
             for (var i = 0; i < aMap.length; i++) {
                 var oEntry = aMap[i];
-                if (sRaw === oEntry.key ||
+                var bKeyMatch = sRaw === oEntry.key ||
+                    (bRawIsNumeric && iRawNum === parseInt(oEntry.key, 10));
+                if (bKeyMatch ||
                     sLower === oEntry.en.toLowerCase() ||
                     sLower === oEntry.es.toLowerCase() ||
                     (oEntry.alts && oEntry.alts.indexOf(sLower) !== -1)) {
