@@ -2117,8 +2117,7 @@ sap.ui.define([
                         PRODALLOCPERIODENDUTCDATETIME: oCellMeta.PRODALLOCPERIODENDUTCDATETIME || oRowData.PRODALLOCPERIODENDUTCDATETIME || "",
                         productallocationsequence: oCellMeta.productallocationsequence || oRowData.productallocationsequence || "",
                         fec_ini: that._toODataDate(sFecIni) || "",
-                        ind_ope: oQRows[iRowIndex] ? "Q" : (oCellMeta.ind_ope || ""),
-                        KEY_CHAR: oRowData.KEY_CHAR || ""
+                        ind_ope: oQRows[iRowIndex] ? "Q" : (oCellMeta.ind_ope || "")
                     };
 
                     oFieldsMap[sFieldName].DataSetAsoc.push(oDataItem);
@@ -2153,8 +2152,7 @@ sap.ui.define([
                         PRODALLOCPERIODENDUTCDATETIME: oCellMeta.PRODALLOCPERIODENDUTCDATETIME || oRowData.PRODALLOCPERIODENDUTCDATETIME || "",
                         productallocationsequence: oCellMeta.productallocationsequence || oRowData.productallocationsequence || "",
                         fec_ini: that._toODataDate(sFecIni) || "",
-                        ind_ope: oCellMeta.ind_ope || "",
-                        KEY_CHAR: oRowData.KEY_CHAR || ""
+                        ind_ope: oCellMeta.ind_ope || ""
                     };
 
                     if (oFieldsMap[sFieldName]) {
