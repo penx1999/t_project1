@@ -128,6 +128,7 @@ sap.ui.define([
                 }
             }
             oModel.setProperty("/l_key_char", sKeyChar);
+            console.log("[Detail] l_key_char capturado de pantalla 1:", sKeyChar, "| datos completos:", oCompDetailModel ? oCompDetailModel.getData() : null);
 
             oModel.setProperty("/productAllocationObject", sQuotaId);
             oModel.setProperty("/busy", true);
