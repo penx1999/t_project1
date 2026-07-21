@@ -296,9 +296,16 @@ sap.ui.define([
                     });
                     if (iVarCharIdx === -1) { iVarCharIdx = aColumns.length - 1; }
                     aColumns.splice(iVarCharIdx + 1, 0, oVarCharCol);
+
+                    var sKeyCharValue = oModel.getProperty("/l_key_char") || "";
+                    var oKeyCharCol = { name: "KEY_CHAR", label: "Key_Char" };
+                    aColumns.splice(iVarCharIdx + 2, 0, oKeyCharCol);
+
                     aRows.forEach(function (oRow) {
                         oRow.VAR_CHAR = sProductAllocationObject || "";
                         oRow.VAR_CHAR_old = sProductAllocationObject || "";
+                        oRow.KEY_CHAR = sKeyCharValue;
+                        oRow.KEY_CHAR_old = sKeyCharValue;
                     });
 
                     that._oOriginalData = JSON.parse(JSON.stringify(aRows));
@@ -339,7 +346,9 @@ sap.ui.define([
             var that = this;
             var aVisibleColumns = aColumns.filter(function (oCol) {
                 var sName = (oCol.name || "").toUpperCase();
-                return !(sName.indexOf("PROD") === 0 && sName.lastIndexOf("DESC") === sName.length - 4);
+                if (sName.indexOf("PROD") === 0 && sName.lastIndexOf("DESC") === sName.length - 4) { return false; }
+                if (sName === "PRODUCTALLOCATIONOBJECTUUID" || sName === "VAR_CHAR" || sName === "KEY_CHAR") { return false; }
+                return true;
             });
 
             oTable.destroyColumns();
@@ -372,11 +381,7 @@ sap.ui.define([
                 var sFieldName = oCol.name;
                 var sFieldUpper = sFieldName.toUpperCase();
 
-                if (sFieldUpper === "PRODUCTALLOCATIONOBJECTUUID") {
-                    return;
-                }
-
-                var bNonEditableText = (sFieldUpper === "VAR_CHAR");
+                var bNonEditableText = false;
                 
                 var sLabelUpper = (oCol.label || "").toUpperCase().trim();
                 var bNeverEditable = (sLabelUpper === "AVBL QTY" || sLabelUpper === "CNSMD QTY" ||
@@ -590,6 +595,9 @@ sap.ui.define([
             oNewRow["PRODUCTALLOCATIONOBJECT_old"] = sProductAllocationObject;
             oNewRow["VAR_CHAR"] = sProductAllocationObject;
             oNewRow["VAR_CHAR_old"] = sProductAllocationObject;
+            var sKeyChar = oModel.getProperty("/l_key_char") || "";
+            oNewRow["KEY_CHAR"] = sKeyChar;
+            oNewRow["KEY_CHAR_old"] = sKeyChar;
             var bEn = this._getSapLang() === "en";
             var sDefStatus     = "Active";
             var sDefConstraint = bEn ? "As in Sequence Constraint" : "Como en restricci\u00f3n de secuencia";
@@ -913,7 +921,7 @@ sap.ui.define([
                 var sLbl  = (oCol.label || "").toLowerCase().trim();
                 var bProdDesc = this._isProdDescColumn(oCol);
 
-                if (sName === "PRODUCTALLOCATIONOBJECTUUID") { return aAcc; }
+                if (sName === "PRODUCTALLOCATIONOBJECTUUID" || sName === "VAR_CHAR" || sName === "KEY_CHAR") { return aAcc; }
                 if (aExcludedLabels.indexOf(sLbl) !== -1) { return aAcc; }
                 if (bProdDesc && !bWithDesc) { return aAcc; }
 
@@ -1104,7 +1112,7 @@ sap.ui.define([
             var aExpectedLabels = aColumns.filter(function (oCol) {
                 var sName = (oCol.name  || "").toUpperCase();
                 var sLbl  = (oCol.label || "").toLowerCase().trim();
-                if (sName === "PRODUCTALLOCATIONOBJECTUUID") { return false; }
+                if (sName === "PRODUCTALLOCATIONOBJECTUUID" || sName === "VAR_CHAR" || sName === "KEY_CHAR") { return false; }
                 if (sLbl === "avbl qty" || sLbl === "cnsmd qty") { return false; }
                 if (this._isProdDescColumn(oCol)) { return false; }
                 return !!sLbl;
@@ -1222,6 +1230,10 @@ sap.ui.define([
                 });
                 oNewRow["PRODUCTALLOCATIONOBJECT"] = sProductAllocationObject;
                 oNewRow["PRODUCTALLOCATIONOBJECT_old"] = sProductAllocationObject;
+                oNewRow["VAR_CHAR"] = sProductAllocationObject;
+                oNewRow["VAR_CHAR_old"] = sProductAllocationObject;
+                oNewRow["KEY_CHAR"] = oController.getView().getModel("detailModel").getProperty("/l_key_char") || "";
+                oNewRow["KEY_CHAR_old"] = oNewRow["KEY_CHAR"];
                 oNewRow["PRODALLOCATIONACTIVATIONSTATUS"] = sDefStatus;
                 oNewRow["PRODALLOCATIONACTIVATIONSTATUS_old"] = sDefStatus;
                 oNewRow["PRODALLOCCHARCCONSTRAINTSTATUS"] = sDefConstraint;
@@ -1809,7 +1821,8 @@ sap.ui.define([
                 "PRODALLOCCHARCCONSTRAINTSTATUS",
                 "PRODUCTALLOCATIONOBJECT",
                 "PRODUCTALLOCATIONOBJECTUUID",
-                "VAR_CHAR"
+                "VAR_CHAR",
+                "KEY_CHAR"
             ];
 
             aRows.forEach(function (oRow) {
@@ -2022,7 +2035,6 @@ sap.ui.define([
             var oModel = this.getView().getModel("detailModel");
             var aColumns = oModel.getProperty("/columns") || [];
             var oFieldsMap = {};
-            var sKeyChar = oModel.getProperty("/l_key_char") || "";
 
             aColumns.forEach(function (oCol) {
                 var sFieldName = oCol.name;
@@ -2106,7 +2118,7 @@ sap.ui.define([
                         productallocationsequence: oCellMeta.productallocationsequence || oRowData.productallocationsequence || "",
                         fec_ini: that._toODataDate(sFecIni) || "",
                         ind_ope: oQRows[iRowIndex] ? "Q" : (oCellMeta.ind_ope || ""),
-                        KEY_CHAR: sKeyChar
+                        KEY_CHAR: oRowData.KEY_CHAR || ""
                     };
 
                     oFieldsMap[sFieldName].DataSetAsoc.push(oDataItem);
@@ -2142,7 +2154,7 @@ sap.ui.define([
                         productallocationsequence: oCellMeta.productallocationsequence || oRowData.productallocationsequence || "",
                         fec_ini: that._toODataDate(sFecIni) || "",
                         ind_ope: oCellMeta.ind_ope || "",
-                        KEY_CHAR: sKeyChar
+                        KEY_CHAR: oRowData.KEY_CHAR || ""
                     };
 
                     if (oFieldsMap[sFieldName]) {
