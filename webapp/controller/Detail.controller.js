@@ -621,8 +621,6 @@ sap.ui.define([
             oNewRow["ZZRFCUT_old"] = "08";
             oNewRow["_isNew"] = true;
 
-            console.log("[NEW] Nueva línea creada:", oNewRow);
-
             aRows.push(oNewRow);
             oModel.setProperty("/rows", aRows);
 
@@ -2202,8 +2200,6 @@ sap.ui.define([
                     oData.DataSetAsoc.push(oItem);
                 });
             });
-
-            console.log("[Save] POST /DynamicFieldSet payload:", JSON.stringify(oData, null, 2));
 
             return new Promise(function (resolve, reject) {
                 oODataModel.create("/DynamicFieldSet", oData, {
