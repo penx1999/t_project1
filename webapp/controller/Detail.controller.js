@@ -281,6 +281,20 @@ sap.ui.define([
                         });
                     });
 
+                    var oVarCharCol = { name: "VAR_CHAR", label: "Var_CHAR" };
+                    var iVarCharIdx = -1;
+                    aColumns.forEach(function (oCol, iIdx) {
+                        if (iVarCharIdx === -1 && oCol.name.toUpperCase() === "PRODUCTALLOCATIONOBJECT") {
+                            iVarCharIdx = iIdx;
+                        }
+                    });
+                    if (iVarCharIdx === -1) { iVarCharIdx = aColumns.length - 1; }
+                    aColumns.splice(iVarCharIdx + 1, 0, oVarCharCol);
+                    aRows.forEach(function (oRow) {
+                        oRow.VAR_CHAR = sProductAllocationObject || "";
+                        oRow.VAR_CHAR_old = sProductAllocationObject || "";
+                    });
+
                     that._oOriginalData = JSON.parse(JSON.stringify(aRows));
                     that._hasDeletedRows = false;
                     that._aDeletedRows = [];
@@ -356,7 +370,7 @@ sap.ui.define([
                     return;
                 }
 
-                var bNonEditableText = false;
+                var bNonEditableText = (sFieldUpper === "VAR_CHAR");
                 
                 var sLabelUpper = (oCol.label || "").toUpperCase().trim();
                 var bNeverEditable = (sLabelUpper === "AVBL QTY" || sLabelUpper === "CNSMD QTY" ||
@@ -568,6 +582,8 @@ sap.ui.define([
 
             oNewRow["PRODUCTALLOCATIONOBJECT"] = sProductAllocationObject;
             oNewRow["PRODUCTALLOCATIONOBJECT_old"] = sProductAllocationObject;
+            oNewRow["VAR_CHAR"] = sProductAllocationObject;
+            oNewRow["VAR_CHAR_old"] = sProductAllocationObject;
             var bEn = this._getSapLang() === "en";
             var sDefStatus     = "Active";
             var sDefConstraint = bEn ? "As in Sequence Constraint" : "Como en restricci\u00f3n de secuencia";
@@ -1786,7 +1802,8 @@ sap.ui.define([
                 "PRODALLOCATIONACTIVATIONSTATUS",
                 "PRODALLOCCHARCCONSTRAINTSTATUS",
                 "PRODUCTALLOCATIONOBJECT",
-                "PRODUCTALLOCATIONOBJECTUUID"
+                "PRODUCTALLOCATIONOBJECTUUID",
+                "VAR_CHAR"
             ];
 
             aRows.forEach(function (oRow) {
@@ -1997,7 +2014,9 @@ sap.ui.define([
         _buildPayloadArray: function (aChangedRows, sFecIni) {
             var that = this;
             var oModel = this.getView().getModel("detailModel");
-            var aColumns = oModel.getProperty("/columns") || [];
+            var aColumns = (oModel.getProperty("/columns") || []).filter(function (oCol) {
+                return (oCol.name || "").toUpperCase() !== "VAR_CHAR";
+            });
             var oFieldsMap = {};
 
             aColumns.forEach(function (oCol) {
