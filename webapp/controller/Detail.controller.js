@@ -2102,6 +2102,8 @@ sap.ui.define([
 
                 aColumns.forEach(function (oCol) {
                     var sFieldName = oCol.name;
+                    if (sFieldName.toUpperCase() === "KEY_CHAR") { return; }
+
                     var sCellKey = iRowIndex + "_" + sFieldName;
                     var oCellMeta = that._oCellKeys[sCellKey] || {};
 
@@ -2141,6 +2143,8 @@ sap.ui.define([
 
                 aColumns.forEach(function (oCol) {
                     var sFieldName = oCol.name;
+                    if (sFieldName.toUpperCase() === "KEY_CHAR") { return; }
+
                     var sCellKey = iRowIndex + "_" + sFieldName;
                     var oCellMeta = that._oCellKeys[sCellKey] || {};
 
