@@ -658,8 +658,10 @@ sap.ui.define([
             aColumns.forEach(function (oCol) {
                 var sLabel = (oCol.label || "").toLowerCase().trim();
                 oNewRow[oCol.name + "_old"] = "";
+                var sColUpper = (oCol.name || "").toUpperCase();
                 if (sLabel === "avbl qty" || sLabel === "cnsmd qty" ||
-                    (oCol.name || "").toUpperCase() === "PRODUCTALLOCATIONOBJECT") {
+                    sColUpper === "PRODUCTALLOCATIONOBJECT" ||
+                    sColUpper === "PRODUCTALLOCATIONOBJECTUUID") {
                     oNewRow[oCol.name] = "";
                 }
             });
