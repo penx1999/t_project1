@@ -1128,18 +1128,28 @@ sap.ui.define([
                 return;
             }
 
-            // Validate Allocation Object in file matches screen
+            // Validate Allocation Object in file matches screen.
+            // Note: the "Allocation Object" column (PRODUCTALLOCATIONOBJECT) holds a row-level UUID
+            // from the backend, NOT the screen identifier (that is stored in VAR_CHAR / "/productAllocationObject").
+            // So we validate consistency against the UUID already present in the currently loaded rows,
+            // not against "/productAllocationObject".
             var oAllocCol = aColumns.filter(function (oCol) {
                 return (oCol.name || "").toUpperCase() === "PRODUCTALLOCATIONOBJECT";
             })[0];
             var iAllocIdx = oAllocCol ? oLabelToHeaderIdx[(oAllocCol.label || "").toLowerCase().trim()] : undefined;
+            var aExistingRowsForAllocCheck = oModel.getProperty("/rows") || [];
+            var sExpectedAlloc = null;
+            for (var iEx = 0; iEx < aExistingRowsForAllocCheck.length; iEx++) {
+                var sCandidateAlloc = (aExistingRowsForAllocCheck[iEx].PRODUCTALLOCATIONOBJECT || "").trim();
+                if (sCandidateAlloc) { sExpectedAlloc = sCandidateAlloc; break; }
+            }
             var bAllocOk = true;
             if (iAllocIdx === undefined) {
                 bAllocOk = false;
-            } else {
+            } else if (sExpectedAlloc !== null) {
                 for (var i = 0; i < aDataRows.length; i++) {
                     var sFileAlloc = String(aDataRows[i][iAllocIdx] == null ? "" : aDataRows[i][iAllocIdx]).trim();
-                    if (sFileAlloc !== sProductAllocationObject) { bAllocOk = false; break; }
+                    if (sFileAlloc && sFileAlloc !== sExpectedAlloc) { bAllocOk = false; break; }
                 }
             }
             if (!bAllocOk) {
