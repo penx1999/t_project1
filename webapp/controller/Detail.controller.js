@@ -1128,33 +1128,16 @@ sap.ui.define([
                 return;
             }
 
-            // Validate Allocation Object in file matches screen.
-            // Note: the "Allocation Object" column (PRODUCTALLOCATIONOBJECT) holds a row-level UUID
-            // from the backend, NOT the screen identifier (that is stored in VAR_CHAR / "/productAllocationObject").
-            // So we validate consistency against the UUID already present in the currently loaded rows,
-            // not against "/productAllocationObject".
-            var oAllocCol = aColumns.filter(function (oCol) {
-                return (oCol.name || "").toUpperCase() === "PRODUCTALLOCATIONOBJECT";
-            })[0];
-            var iAllocIdx = oAllocCol ? oLabelToHeaderIdx[(oAllocCol.label || "").toLowerCase().trim()] : undefined;
+            // Determine the reference "Allocation Object" (PRODUCTALLOCATIONOBJECT is a row-level UUID
+            // from the backend, NOT the screen identifier stored in VAR_CHAR / "/productAllocationObject").
+            // Rows in the file whose Allocation Object does not match this reference (or is blank, or the
+            // column itself does not exist on screen yet) are treated as new rows with that column blank
+            // (see per-row handling below), instead of rejecting the whole file.
             var aExistingRowsForAllocCheck = oModel.getProperty("/rows") || [];
             var sExpectedAlloc = null;
             for (var iEx = 0; iEx < aExistingRowsForAllocCheck.length; iEx++) {
                 var sCandidateAlloc = (aExistingRowsForAllocCheck[iEx].PRODUCTALLOCATIONOBJECT || "").trim();
                 if (sCandidateAlloc) { sExpectedAlloc = sCandidateAlloc; break; }
-            }
-            var bAllocOk = true;
-            if (iAllocIdx === undefined) {
-                bAllocOk = false;
-            } else if (sExpectedAlloc !== null) {
-                for (var i = 0; i < aDataRows.length; i++) {
-                    var sFileAlloc = String(aDataRows[i][iAllocIdx] == null ? "" : aDataRows[i][iAllocIdx]).trim();
-                    if (sFileAlloc && sFileAlloc !== sExpectedAlloc) { bAllocOk = false; break; }
-                }
-            }
-            if (!bAllocOk) {
-                MessageBox.error("ERROR! Allocation Object in file does not correspond", { actions: ["OK"] });
-                return;
             }
 
             var bEn = this._getSapLang() === "en";
@@ -1241,8 +1224,8 @@ sap.ui.define([
                     oNewRow[oCol.name] = "";
                     oNewRow[oCol.name + "_old"] = "";
                 });
-                oNewRow["PRODUCTALLOCATIONOBJECT"] = sProductAllocationObject;
-                oNewRow["PRODUCTALLOCATIONOBJECT_old"] = sProductAllocationObject;
+                oNewRow["PRODUCTALLOCATIONOBJECT"] = "";
+                oNewRow["PRODUCTALLOCATIONOBJECT_old"] = "";
                 oNewRow["VAR_CHAR"] = sProductAllocationObject;
                 oNewRow["VAR_CHAR_old"] = sProductAllocationObject;
                 oNewRow["KEY_CHAR"] = oController.getView().getModel("detailModel").getProperty("/l_key_char") || "";
@@ -1274,6 +1257,12 @@ sap.ui.define([
                         if (sNormalized === null) { bInvalidStatus = true; sVal = String(v).trim(); }
                         else { sVal = sNormalized; }
                         oNewRow["_has" + sFieldUpper] = true;
+                    } else if (sFieldUpper === "PRODUCTALLOCATIONOBJECT") {
+                        // Only keep the file's value if it matches the UUID already loaded on screen.
+                        // Otherwise (mismatch, or no reference yet) leave it blank so the row is
+                        // treated as a new row with this column shown empty.
+                        var sFileAllocVal = String(v).trim();
+                        sVal = (sExpectedAlloc !== null && sFileAllocVal === sExpectedAlloc) ? sFileAllocVal : "";
                     } else {
                         sVal = String(v).trim();
                     }
