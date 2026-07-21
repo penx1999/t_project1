@@ -2198,6 +2198,7 @@ sap.ui.define([
             aPayload.forEach(function (oFieldSet) {
                 var aDataItems = oFieldSet.DataSetAsoc || [];
                 aDataItems.forEach(function (oItem) {
+                    if (oItem.name && oItem.name.toUpperCase() === "KEY_CHAR") { return; }
                     oData.DataSetAsoc.push(oItem);
                 });
             });
