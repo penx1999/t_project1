@@ -2102,7 +2102,6 @@ sap.ui.define([
 
                 aColumns.forEach(function (oCol) {
                     var sFieldName = oCol.name;
-                    if (sFieldName.toUpperCase() === "KEY_CHAR") { return; }
 
                     var sCellKey = iRowIndex + "_" + sFieldName;
                     var oCellMeta = that._oCellKeys[sCellKey] || {};
@@ -2143,7 +2142,6 @@ sap.ui.define([
 
                 aColumns.forEach(function (oCol) {
                     var sFieldName = oCol.name;
-                    if (sFieldName.toUpperCase() === "KEY_CHAR") { return; }
 
                     var sCellKey = iRowIndex + "_" + sFieldName;
                     var oCellMeta = that._oCellKeys[sCellKey] || {};
@@ -2198,7 +2196,6 @@ sap.ui.define([
             aPayload.forEach(function (oFieldSet) {
                 var aDataItems = oFieldSet.DataSetAsoc || [];
                 aDataItems.forEach(function (oItem) {
-                    if (oItem.name && oItem.name.toUpperCase() === "KEY_CHAR") { return; }
                     oData.DataSetAsoc.push(oItem);
                 });
             });
