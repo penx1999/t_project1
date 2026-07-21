@@ -115,7 +115,18 @@ sap.ui.define([
             oOwner._oDetailModel = oModel;
 
             var oCompDetailModel = oOwner.getModel("detailModel");
-            var sKeyChar = oCompDetailModel ? (oCompDetailModel.getProperty("/PRODUCTALLOCATIONOBJECT") || "") : "";
+            var sKeyChar = "";
+            if (oCompDetailModel) {
+                var oCompData = oCompDetailModel.getData();
+                if (oCompData) {
+                    for (var sKey in oCompData) {
+                        if (sKey.toUpperCase() === "PRODUCTALLOCATIONOBJECT") {
+                            sKeyChar = oCompData[sKey] || "";
+                            break;
+                        }
+                    }
+                }
+            }
             oModel.setProperty("/l_key_char", sKeyChar);
 
             oModel.setProperty("/productAllocationObject", sQuotaId);
