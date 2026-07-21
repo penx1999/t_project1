@@ -980,7 +980,7 @@ sap.ui.define([
             var aColumns = this._getDownloadColumns(bWithDesc);
             var aRows = oModel.getProperty("/rows") || [];
 
-            // First 16 reference lines (lines 1-15 with content, line 16 blank)
+            // First 11 reference lines (lines 1-10 with content, line 11 blank)
             var aAoA = [
                 ["Activation Status",  "Activation Status - Description"],
                 ["01",                 "Inactive"],
@@ -1082,13 +1082,13 @@ sap.ui.define([
         },
 
         _processUploadedRows: function (aAoA) {
-            // Skip first 16 reference lines, header is row 17 (index 16), data starts row 18 (index 17)
-            if (!aAoA || aAoA.length < 17) {
+            // Skip first 11 reference lines, header is row 12 (index 11), data starts row 13 (index 12)
+            if (!aAoA || aAoA.length < 12) {
                 MessageBox.error("Invalid file structure. Expected the same layout as the downloaded template.");
                 return;
             }
-            var aHeader = aAoA[16] || [];
-            var aDataRows = aAoA.slice(17).filter(function (aRow) {
+            var aHeader = aAoA[11] || [];
+            var aDataRows = aAoA.slice(12).filter(function (aRow) {
                 return aRow && aRow.some(function (v) { return v !== "" && v !== null && v !== undefined; });
             });
 
@@ -1226,7 +1226,7 @@ sap.ui.define([
             var oController = this;
             var aCandidateRows = aDataRows.map(function (aXlsxRow, iDataIdx) {
                 var oNewRow = {};
-                oNewRow._excelLine = iDataIdx + 18;
+                oNewRow._excelLine = iDataIdx + 13;
                 aColumns.forEach(function (oCol) {
                     oNewRow[oCol.name] = "";
                     oNewRow[oCol.name + "_old"] = "";
