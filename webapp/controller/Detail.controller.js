@@ -1222,6 +1222,7 @@ sap.ui.define([
 
             // Build candidate new rows (not yet pushed)
             var bInvalidDate = false;
+            var bInvalidStatus = false;
             var oController = this;
             var aCandidateRows = aDataRows.map(function (aXlsxRow, iDataIdx) {
                 var oNewRow = {};
@@ -1251,12 +1252,18 @@ sap.ui.define([
                     var iIdx = oLabelToHeaderIdx[sLbl];
                     if (iIdx === undefined) { return; }
                     var v = aXlsxRow[iIdx];
-                    if (v === undefined || v === null) { return; }
+                    if (v === undefined || v === null || v === "") { return; }
                     var sVal;
+                    var sFieldUpper = (oCol.name || "").toUpperCase();
                     if (oDateFieldSet[oCol.name]) {
                         var sParsed = fnParseDateCell(v);
                         if (sParsed === null) { bInvalidDate = true; sVal = ""; }
                         else { sVal = sParsed; }
+                    } else if (sFieldUpper === "PRODALLOCATIONACTIVATIONSTATUS" || sFieldUpper === "PRODALLOCCHARCCONSTRAINTSTATUS") {
+                        var sNormalized = oController._normalizeStatusFromExcel(sFieldUpper, v);
+                        if (sNormalized === null) { bInvalidStatus = true; sVal = String(v).trim(); }
+                        else { sVal = sNormalized; }
+                        oNewRow["_has" + sFieldUpper] = true;
                     } else {
                         sVal = String(v).trim();
                     }
@@ -1268,6 +1275,11 @@ sap.ui.define([
 
             if (bInvalidDate) {
                 MessageBox.error("ERROR! Dates in file!", { actions: ["OK"] });
+                return;
+            }
+
+            if (bInvalidStatus) {
+                MessageBox.error("ERROR! Status / Constraint Status values in file are invalid. Use one of the keys or descriptions listed in the reference lines 1-10.", { actions: ["OK"] });
                 return;
             }
 
@@ -1348,6 +1360,14 @@ sap.ui.define([
                         oTarget[sCommentField] = oCand[sCommentField];
                         aUpdatedFields.push("Comment");
                     }
+                    if (oCand["_hasPRODALLOCATIONACTIVATIONSTATUS"]) {
+                        oTarget["PRODALLOCATIONACTIVATIONSTATUS"] = oCand["PRODALLOCATIONACTIVATIONSTATUS"];
+                        aUpdatedFields.push("Status");
+                    }
+                    if (oCand["_hasPRODALLOCCHARCCONSTRAINTSTATUS"]) {
+                        oTarget["PRODALLOCCHARCCONSTRAINTSTATUS"] = oCand["PRODALLOCCHARCCONSTRAINTSTATUS"];
+                        aUpdatedFields.push("Constraint Status");
+                    }
                     aUpdatedDuplicateLogs.push({
                         excelLine: oCand._excelLine,
                         tableRow: iIdx + 1,
@@ -1415,6 +1435,48 @@ sap.ui.define([
             var sMsg = aRemainingCandidates.length + " new row(s) loaded and " +
                 iUpdatedCount + " duplicate row(s) updated from file.";
             MessageToast.show(sMsg);
+        },
+
+        _getStatusValueMaps: function () {
+            return {
+                PRODALLOCATIONACTIVATIONSTATUS: [
+                    { key: "01", en: "Inactive", es: "Inactivos", alts: ["inactivo", "inactivos", "inactive"] },
+                    { key: "02", en: "Active",   es: "Activos",   alts: ["activo", "activos", "active"] }
+                ],
+                PRODALLOCCHARCCONSTRAINTSTATUS: [
+                    { key: "01", en: "Unrestricted Availability", es: "Disponibilidad no restringida", alts: ["unrestricted availability", "unrestricted availablity"] },
+                    { key: "02", en: "Restricted Availablity",    es: "Disponibilidad restringida",    alts: ["restricted availablity", "restricted availability"] },
+                    { key: "03", en: "No Availability",           es: "Sin disponibilidad",             alts: ["no availability", "no availablity"] },
+                    { key: "04", en: "Not Relevant",              es: "No relevante",                   alts: ["not relevant"] },
+                    { key: "05", en: "As in Sequence Constraint", es: "Como en restricci\u00f3n de secuencia", alts: ["as in sequence constraint", "como en restricci\u00f3n de secuencia"] }
+                ]
+            };
+        },
+
+        // Accepts either the key ("01", "02", ...) or the description (in the language used in the
+        // reference lines/menus) for the Status / Constraint Status columns and returns the canonical
+        // text used internally (matching the current SAP logon language), or null if not recognized.
+        _normalizeStatusFromExcel: function (sFieldName, vRaw) {
+            var oMaps = this._getStatusValueMaps();
+            var aMap = oMaps[sFieldName];
+            if (!aMap) { return String(vRaw == null ? "" : vRaw).trim(); }
+
+            var sRaw = String(vRaw == null ? "" : vRaw).trim();
+            if (!sRaw) { return ""; }
+
+            var sLower = sRaw.toLowerCase();
+            var bEn = this._getSapLang() === "en";
+
+            for (var i = 0; i < aMap.length; i++) {
+                var oEntry = aMap[i];
+                if (sRaw === oEntry.key ||
+                    sLower === oEntry.en.toLowerCase() ||
+                    sLower === oEntry.es.toLowerCase() ||
+                    (oEntry.alts && oEntry.alts.indexOf(sLower) !== -1)) {
+                    return bEn ? oEntry.en : oEntry.es;
+                }
+            }
+            return null;
         },
 
         _getOverlapKeyFields: function (aColumns) {
