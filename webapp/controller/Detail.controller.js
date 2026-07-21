@@ -621,6 +621,8 @@ sap.ui.define([
             oNewRow["ZZRFCUT_old"] = "08";
             oNewRow["_isNew"] = true;
 
+            console.log("[NEW] Nueva línea creada:", oNewRow);
+
             aRows.push(oNewRow);
             oModel.setProperty("/rows", aRows);
 
