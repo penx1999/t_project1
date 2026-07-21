@@ -2014,9 +2014,7 @@ sap.ui.define([
         _buildPayloadArray: function (aChangedRows, sFecIni) {
             var that = this;
             var oModel = this.getView().getModel("detailModel");
-            var aColumns = (oModel.getProperty("/columns") || []).filter(function (oCol) {
-                return (oCol.name || "").toUpperCase() !== "VAR_CHAR";
-            });
+            var aColumns = oModel.getProperty("/columns") || [];
             var oFieldsMap = {};
 
             aColumns.forEach(function (oCol) {
