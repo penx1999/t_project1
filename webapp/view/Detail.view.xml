@@ -72,7 +72,7 @@
                 <content>
                     <VBox class="sapUiSmallMarginBegin sapUiSmallMarginEnd">
                         <HBox alignItems="End" class="sapUiTinyMarginTop sapUiSmallMarginBottom">
-                            <VBox width="310px" class="sapUiSmallMarginEnd" style="border:1px solid #d9d9d9; padding:4px 6px; box-sizing:border-box;">
+                            <VBox width="310px" class="sapUiSmallMarginEnd" style="border:3px solid red; padding:4px 6px; box-sizing:border-box;">
                                 <Label text="{i18n>selectionRange}" width="100%"/>
                                 <HBox alignItems="Center" width="100%" class="sapUiTinyMarginTop">
                                     <DatePicker
@@ -94,7 +94,7 @@
                                         width="135px"/>
                                 </HBox>
                             </VBox>
-                            <VBox width="230px" class="sapUiSmallMarginEnd" style="border:1px solid #d9d9d9; padding:4px 6px; box-sizing:border-box;">
+                            <VBox width="230px" class="sapUiSmallMarginEnd" style="border:3px solid red; padding:4px 6px; box-sizing:border-box;">
                                 <Label text="{i18n>allocationObjectLabel}" width="100%"/>
                                 <Input
                                     id="idAllocationObjectFilter"
@@ -103,7 +103,7 @@
                                     class="sapUiTinyMarginTop"
                                     width="100%"/>
                             </VBox>
-                            <VBox width="160px" class="sapUiSmallMarginEnd" style="border:1px solid #d9d9d9; padding:4px 6px; box-sizing:border-box;">
+                            <VBox width="160px" class="sapUiSmallMarginEnd" style="border:3px solid red; padding:4px 6px; box-sizing:border-box;">
                                 <Label text="{i18n>materialLabel}" width="100%"/>
                                 <Input
                                     id="idMaterialFilter"
@@ -112,7 +112,7 @@
                                     class="sapUiTinyMarginTop"
                                     width="100%"/>
                             </VBox>
-                            <VBox width="160px" style="border:1px solid #d9d9d9; padding:4px 6px; box-sizing:border-box;">
+                            <VBox width="160px" style="border:3px solid red; padding:4px 6px; box-sizing:border-box;">
                                 <Label text="{i18n>plantLabel}" width="100%"/>
                                 <Input
                                     id="idPlantFilter"
