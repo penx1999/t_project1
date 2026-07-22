@@ -57,6 +57,8 @@ sap.ui.define([
             var oModel = new JSONModel({
                 productAllocationObject: "",
                 allocationObjectFilter: "",
+                materialFilter: "",
+                plantFilter: "",
                 l_key_char: "",
                 tableTitle: "",
                 columns: [],
@@ -175,6 +177,50 @@ sap.ui.define([
                 oModel.setProperty("/busy", true);
                 this._loadDynamicFields(sQuotaId, null, sFilterValue);
             }
+        },
+
+        onMaterialFilterChange: function () {
+            var oModel = this.getView().getModel("detailModel");
+            oModel.setProperty("/materialFilter", (oModel.getProperty("/materialFilter") || "").trim());
+            this._applyTableFilters();
+        },
+
+        onPlantFilterChange: function () {
+            var oModel = this.getView().getModel("detailModel");
+            oModel.setProperty("/plantFilter", (oModel.getProperty("/plantFilter") || "").trim());
+            this._applyTableFilters();
+        },
+
+        _applyTableFilters: function () {
+            var oModel = this.getView().getModel("detailModel");
+            var aColumns = oModel.getProperty("/columns") || [];
+            var sMaterialField = null, sPlantField = null;
+            aColumns.forEach(function (oCol) {
+                var sLbl = (oCol.label || "").toLowerCase();
+                if (!sMaterialField && sLbl.indexOf("material") !== -1) { sMaterialField = oCol.name; }
+                if (!sPlantField && (sLbl.indexOf("plant") !== -1 || sLbl.indexOf("centro") !== -1)) { sPlantField = oCol.name; }
+            });
+
+            var sMatVal   = (oModel.getProperty("/materialFilter") || "").trim().toLowerCase();
+            var sPlantVal = (oModel.getProperty("/plantFilter") || "").trim().toLowerCase();
+
+            var aFilters = [];
+            if (sMaterialField && sMatVal) {
+                aFilters.push(new Filter({
+                    path: sMaterialField,
+                    test: function (v) { return String(v == null ? "" : v).toLowerCase().indexOf(sMatVal) !== -1; }
+                }));
+            }
+            if (sPlantField && sPlantVal) {
+                aFilters.push(new Filter({
+                    path: sPlantField,
+                    test: function (v) { return String(v == null ? "" : v).toLowerCase().indexOf(sPlantVal) !== -1; }
+                }));
+            }
+
+            var oTable = this.byId("idDynamicTable");
+            var oBinding = oTable && oTable.getBinding("rows");
+            if (oBinding) { oBinding.filter(aFilters); }
         },
 
         _loadDynamicFields: function (sProductAllocationObject, fnAfterSuccess, sType) {
