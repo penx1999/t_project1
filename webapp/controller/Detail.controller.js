@@ -1493,7 +1493,8 @@ sap.ui.define([
             });
             var aNonKey = ["PRODALLOCPERDSTARTUTCDATE", "PRODALLOCPERIODENDUTCDATE",
                            "PRODUCTALLOCATIONQUANTITY", "ZZRFCUT",
-                           "PRODALLOCCHARCVALUECOMBNCMNT", "PRODUCTALLOCATIONOBJECTUUID"];
+                           "PRODALLOCCHARCVALUECOMBNCMNT", "PRODUCTALLOCATIONOBJECTUUID",
+                           "PRODUCTALLOCATIONOBJECT"];
             return (iCsIdx >= 0 ? aColumns.slice(0, iCsIdx + 1) : aColumns).filter(function (c) {
                 var u = c.name.toUpperCase();
                 return aNonKey.indexOf(u) === -1 &&
@@ -1530,7 +1531,8 @@ sap.ui.define([
             });
             var aNonKey = ["PRODALLOCPERDSTARTUTCDATE", "PRODALLOCPERIODENDUTCDATE",
                            "PRODUCTALLOCATIONQUANTITY", "ZZRFCUT",
-                           "PRODALLOCCHARCVALUECOMBNCMNT", "PRODUCTALLOCATIONOBJECTUUID"];
+                           "PRODALLOCCHARCVALUECOMBNCMNT", "PRODUCTALLOCATIONOBJECTUUID",
+                           "PRODUCTALLOCATIONOBJECT"];
             var aKeyFields = (iCsIdx >= 0
                 ? aColumns.slice(0, iCsIdx + 1)
                 : aColumns
@@ -1983,7 +1985,8 @@ sap.ui.define([
             });
             var aNonKey = ["PRODALLOCPERDSTARTUTCDATE", "PRODALLOCPERIODENDUTCDATE",
                            "PRODUCTALLOCATIONQUANTITY", "ZZRFCUT",
-                           "PRODALLOCCHARCVALUECOMBNCMNT", "PRODUCTALLOCATIONOBJECTUUID"];
+                           "PRODALLOCCHARCVALUECOMBNCMNT", "PRODUCTALLOCATIONOBJECTUUID",
+                           "PRODUCTALLOCATIONOBJECT"];
             var aKeyFields = (iCsIdx >= 0
                 ? aColumns.slice(0, iCsIdx + 1)
                 : aColumns
