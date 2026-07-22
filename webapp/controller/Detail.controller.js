@@ -52,7 +52,7 @@ sap.ui.define([
         onInit: function () {
             var oToday = new Date();
             var oFirstOfMonth = new Date(oToday.getFullYear(), oToday.getMonth(), 1);
-            var oNextYear = new Date(oFirstOfMonth.getFullYear() + 1, oFirstOfMonth.getMonth(), 0);
+            var oNextYear = new Date(oFirstOfMonth.getFullYear(), oFirstOfMonth.getMonth() + 2, 0);
 
             var oModel = new JSONModel({
                 productAllocationObject: "",
