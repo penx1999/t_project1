@@ -3,7 +3,6 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
     xmlns:t="sap.ui.table"
-    xmlns:core="sap.ui.core"
     displayBlock="true">
 
     <Page
@@ -66,12 +65,12 @@
 
             <!-- Selection Range Panel -->
             <Panel
+                headerText=" "
                 expandable="false"
                 expanded="true"
                 width="100%">
                 <content>
                     <VBox class="sapUiSmallMarginBegin sapUiSmallMarginEnd">
-                        <core:HTML content="&lt;hr style='border:none;border-top:1px solid #D9D9D9;margin:0;'/&gt;"/>
                         <HBox alignItems="End" class="sapUiTinyMarginTop">
                             <Label text="{i18n>selectionRange}" width="300px"/>
                             <Label text="{i18n>allocationObjectLabel}" width="220px" class="sapUiSmallMarginBeginEnd"/>
