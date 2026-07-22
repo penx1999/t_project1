@@ -72,9 +72,9 @@
                 <content>
                     <VBox class="sapUiSmallMarginBegin sapUiSmallMarginEnd">
                         <HBox alignItems="End" class="sapUiTinyMarginTop sapUiSmallMarginBottom">
-                            <VBox>
-                                <Label text="{i18n>selectionRange}"/>
-                                <HBox alignItems="Center" class="sapUiTinyMarginTop">
+                            <VBox width="310px" class="sapUiSmallMarginEnd" style="border:1px solid #d9d9d9; padding:4px 6px; box-sizing:border-box;">
+                                <Label text="{i18n>selectionRange}" width="100%"/>
+                                <HBox alignItems="Center" width="100%" class="sapUiTinyMarginTop">
                                     <DatePicker
                                         id="idDateFrom"
                                         value="{detailModel>/fec_ini}"
@@ -82,8 +82,8 @@
                                         valueFormat="dd/MM/yyyy"
                                         change=".onDateChange"
                                         enabled="true"
-                                        width="140px"/>
-                                    <Text text=" – " class="sapUiSmallMarginBeginEnd"/>
+                                        width="135px"/>
+                                    <Text text=" – " class="sapUiTinyMarginBeginEnd"/>
                                     <DatePicker
                                         id="idDateTo"
                                         value="{detailModel>/fec_fin}"
@@ -91,35 +91,35 @@
                                         valueFormat="dd/MM/yyyy"
                                         change=".onDateChange"
                                         enabled="true"
-                                        width="140px"/>
+                                        width="135px"/>
                                 </HBox>
                             </VBox>
-                            <VBox class="sapUiSmallMarginBeginEnd">
-                                <Label text="{i18n>allocationObjectLabel}"/>
+                            <VBox width="230px" class="sapUiSmallMarginEnd" style="border:1px solid #d9d9d9; padding:4px 6px; box-sizing:border-box;">
+                                <Label text="{i18n>allocationObjectLabel}" width="100%"/>
                                 <Input
                                     id="idAllocationObjectFilter"
                                     value="{detailModel>/allocationObjectFilter}"
                                     change=".onAllocationObjectChange"
                                     class="sapUiTinyMarginTop"
-                                    width="220px"/>
+                                    width="100%"/>
                             </VBox>
-                            <VBox class="sapUiSmallMarginEnd">
-                                <Label text="{i18n>materialLabel}"/>
+                            <VBox width="160px" class="sapUiSmallMarginEnd" style="border:1px solid #d9d9d9; padding:4px 6px; box-sizing:border-box;">
+                                <Label text="{i18n>materialLabel}" width="100%"/>
                                 <Input
                                     id="idMaterialFilter"
                                     value="{detailModel>/materialFilter}"
                                     change=".onMaterialFilterChange"
                                     class="sapUiTinyMarginTop"
-                                    width="150px"/>
+                                    width="100%"/>
                             </VBox>
-                            <VBox>
-                                <Label text="{i18n>plantLabel}"/>
+                            <VBox width="160px" style="border:1px solid #d9d9d9; padding:4px 6px; box-sizing:border-box;">
+                                <Label text="{i18n>plantLabel}" width="100%"/>
                                 <Input
                                     id="idPlantFilter"
                                     value="{detailModel>/plantFilter}"
                                     change=".onPlantFilterChange"
                                     class="sapUiTinyMarginTop"
-                                    width="150px"/>
+                                    width="100%"/>
                             </VBox>
                         </HBox>
                     </VBox>
