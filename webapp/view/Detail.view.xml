@@ -71,47 +71,56 @@
                 width="100%">
                 <content>
                     <VBox class="sapUiSmallMarginBegin sapUiSmallMarginEnd">
-                        <HBox alignItems="End" class="sapUiTinyMarginTop">
-                            <Label text="{i18n>selectionRange}" width="300px"/>
-                            <Label text="{i18n>allocationObjectLabel}" width="220px" class="sapUiSmallMarginBeginEnd"/>
-                            <Label text="{i18n>materialLabel}" width="150px" class="sapUiSmallMarginEnd"/>
-                            <Label text="{i18n>plantLabel}" width="150px"/>
-                        </HBox>
-                        <HBox alignItems="Center" class="sapUiTinyMarginTop sapUiSmallMarginBottom">
-                            <DatePicker
-                                id="idDateFrom"
-                                value="{detailModel>/fec_ini}"
-                                displayFormat="dd/MM/yyyy"
-                                valueFormat="dd/MM/yyyy"
-                                change=".onDateChange"
-                                enabled="true"
-                                width="140px"/>
-                            <Text text=" – " class="sapUiSmallMarginBeginEnd"/>
-                            <DatePicker
-                                id="idDateTo"
-                                value="{detailModel>/fec_fin}"
-                                displayFormat="dd/MM/yyyy"
-                                valueFormat="dd/MM/yyyy"
-                                change=".onDateChange"
-                                enabled="true"
-                                width="140px"/>
-                            <Input
-                                id="idAllocationObjectFilter"
-                                value="{detailModel>/allocationObjectFilter}"
-                                change=".onAllocationObjectChange"
-                                class="sapUiSmallMarginBeginEnd"
-                                width="220px"/>
-                            <Input
-                                id="idMaterialFilter"
-                                value="{detailModel>/materialFilter}"
-                                change=".onMaterialFilterChange"
-                                class="sapUiSmallMarginEnd"
-                                width="150px"/>
-                            <Input
-                                id="idPlantFilter"
-                                value="{detailModel>/plantFilter}"
-                                change=".onPlantFilterChange"
-                                width="150px"/>
+                        <HBox alignItems="End" class="sapUiTinyMarginTop sapUiSmallMarginBottom">
+                            <VBox>
+                                <Label text="{i18n>selectionRange}"/>
+                                <HBox alignItems="Center" class="sapUiTinyMarginTop">
+                                    <DatePicker
+                                        id="idDateFrom"
+                                        value="{detailModel>/fec_ini}"
+                                        displayFormat="dd/MM/yyyy"
+                                        valueFormat="dd/MM/yyyy"
+                                        change=".onDateChange"
+                                        enabled="true"
+                                        width="140px"/>
+                                    <Text text=" – " class="sapUiSmallMarginBeginEnd"/>
+                                    <DatePicker
+                                        id="idDateTo"
+                                        value="{detailModel>/fec_fin}"
+                                        displayFormat="dd/MM/yyyy"
+                                        valueFormat="dd/MM/yyyy"
+                                        change=".onDateChange"
+                                        enabled="true"
+                                        width="140px"/>
+                                </HBox>
+                            </VBox>
+                            <VBox class="sapUiSmallMarginBeginEnd">
+                                <Label text="{i18n>allocationObjectLabel}"/>
+                                <Input
+                                    id="idAllocationObjectFilter"
+                                    value="{detailModel>/allocationObjectFilter}"
+                                    change=".onAllocationObjectChange"
+                                    class="sapUiTinyMarginTop"
+                                    width="220px"/>
+                            </VBox>
+                            <VBox class="sapUiSmallMarginEnd">
+                                <Label text="{i18n>materialLabel}"/>
+                                <Input
+                                    id="idMaterialFilter"
+                                    value="{detailModel>/materialFilter}"
+                                    change=".onMaterialFilterChange"
+                                    class="sapUiTinyMarginTop"
+                                    width="150px"/>
+                            </VBox>
+                            <VBox>
+                                <Label text="{i18n>plantLabel}"/>
+                                <Input
+                                    id="idPlantFilter"
+                                    value="{detailModel>/plantFilter}"
+                                    change=".onPlantFilterChange"
+                                    class="sapUiTinyMarginTop"
+                                    width="150px"/>
+                            </VBox>
                         </HBox>
                     </VBox>
                 </content>
