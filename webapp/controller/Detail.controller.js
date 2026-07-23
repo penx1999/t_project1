@@ -2293,6 +2293,8 @@ sap.ui.define([
         },
 
         _executePost: function (aPayload) {
+            console.log("[DynamicTable] _executePost llamado con " + (aPayload ? aPayload.length : 0) + " FieldSet(s)");
+
             var oODataModel = this.getOwnerComponent().getModel();
 
             var oData = {
@@ -2308,7 +2310,8 @@ sap.ui.define([
                 });
             });
 
-            console.log("[DynamicTable] Ejecutando POST /DynamicFieldSet", oData);
+            console.log("[DynamicTable] Ejecutando POST /DynamicFieldSet");
+            console.log("[DynamicTable] Payload:\n" + JSON.stringify(oData, null, 2));
 
             return new Promise(function (resolve, reject) {
                 oODataModel.create("/DynamicFieldSet", oData, {
