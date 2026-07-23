@@ -663,8 +663,8 @@ sap.ui.define([
             oNewRow["PRODALLOCATIONACTIVATIONSTATUS_old"] = sDefStatus;
             oNewRow["PRODALLOCCHARCCONSTRAINTSTATUS"] = sDefConstraint;
             oNewRow["PRODALLOCCHARCCONSTRAINTSTATUS_old"] = sDefConstraint;
-            oNewRow["ZZRFCUT"] = "08";
-            oNewRow["ZZRFCUT_old"] = "08";
+            oNewRow["ZZRFCUT"] = "";
+            oNewRow["ZZRFCUT_old"] = "";
             oNewRow["_isNew"] = true;
 
             aRows.push(oNewRow);
