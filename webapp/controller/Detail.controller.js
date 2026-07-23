@@ -249,11 +249,13 @@ sap.ui.define([
 
             var sMatFilter = (oModel.getProperty("/materialFilter") || "").trim();
             var sPlantFilter = (oModel.getProperty("/plantFilter") || "").trim();
+
+            var oUrlParams = { "$expand": "DataSetAsoc" };
             if (sMatFilter) {
-                aFilters.push(new Filter("MATNR", FilterOperator.EQ, sMatFilter));
+                oUrlParams["MATNR"] = sMatFilter;
             }
             if (sPlantFilter) {
-                aFilters.push(new Filter("WERKS", FilterOperator.EQ, sPlantFilter));
+                oUrlParams["WERKS"] = sPlantFilter;
             }
 
             console.log("[DynamicTable] Ejecutando OData /DynamicFieldSet", {
@@ -266,7 +268,7 @@ sap.ui.define([
             });
             oODataModel.read("/DynamicFieldSet", {
                 filters: aFilters,
-                urlParameters: { "$expand": "DataSetAsoc" },
+                urlParameters: oUrlParams,
                 success: function (oData) {
                     var aFields = oData.results || [];
                     aFields.sort(function (a, b) {
