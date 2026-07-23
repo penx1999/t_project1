@@ -97,6 +97,29 @@ sap.ui.define([
             return aParts[2] + aParts[1] + aParts[0];
         },
 
+        _normalizeDateValue: function (sValue, oRowData, sFieldName) {
+            var sStr = String(sValue || "").replace(/[^\d]/g, "");
+            if (/^\d{8}$/.test(sStr)) {
+                return sStr;
+            }
+            if (sFieldName && oRowData) {
+                var sUpper = sFieldName.toUpperCase();
+                var sDtField = null;
+                if (sUpper === "PRODALLOCPERDSTARTUTCDATE") { sDtField = "PRODALLOCPERDSTARTUTCDATETIME"; }
+                else if (sUpper === "PRODALLOCPERIODENDUTCDATE") { sDtField = "PRODALLOCPERIODENDUTCDATETIME"; }
+                if (sDtField && oRowData[sDtField]) {
+                    var vDt = oRowData[sDtField];
+                    if (vDt instanceof Date) {
+                        return vDt.toISOString().slice(0, 10).replace(/-/g, "");
+                    }
+                    var sDt = String(vDt);
+                    var m = sDt.match(/^(\d{4})[-/]?(\d{2})[-/]?(\d{2})/) || sDt.match(/^(\d{4})(\d{2})(\d{2})/);
+                    if (m) { return m[1] + m[2] + m[3]; }
+                }
+            }
+            return "";
+        },
+
         _onRouteMatched: function (oEvent) {
             var sQuotaId = decodeURIComponent(oEvent.getParameter("arguments").quotaId);
             var oOwner = this.getOwnerComponent();
@@ -2223,6 +2246,12 @@ sap.ui.define([
                         sOldValue    = oStatusEn[sOldValue.toLowerCase()]    || sOldValue;
                     }
 
+                    var sUpperName = sFieldName.toUpperCase();
+                    if (sUpperName === "PRODALLOCPERDSTARTUTCDATE" || sUpperName === "PRODALLOCPERIODENDUTCDATE") {
+                        sCurrentValue = this._normalizeDateValue(sCurrentValue, oRowData, sFieldName);
+                        sOldValue = this._normalizeDateValue(sOldValue, oRowData, sFieldName);
+                    }
+
                     var oDataItem = {
                         key: oCellMeta.key || "",
                         tabname: oCellMeta.tabname || "PAL",
@@ -2258,6 +2287,11 @@ sap.ui.define([
                     if (sFieldName.toUpperCase() === "PRODALLOCATIONACTIVATIONSTATUS") {
                         var oStatusEnDel = { "activos": "Active", "inactivos": "Inactive", "active": "Active", "inactive": "Inactive" };
                         sDelOldValue = oStatusEnDel[sDelOldValue.toLowerCase()] || sDelOldValue;
+                    }
+
+                    var sDelUpperName = sFieldName.toUpperCase();
+                    if (sDelUpperName === "PRODALLOCPERDSTARTUTCDATE" || sDelUpperName === "PRODALLOCPERIODENDUTCDATE") {
+                        sDelOldValue = this._normalizeDateValue(sDelOldValue, oRowData, sFieldName);
                     }
                     var oDataItem = {
                         key: oCellMeta.key || "",
