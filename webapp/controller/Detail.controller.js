@@ -156,12 +156,11 @@ sap.ui.define([
             console.log("[Detail] l_key_char capturado de pantalla 1:", sKeyChar, "| datos completos:", oCompDetailModel ? oCompDetailModel.getData() : null);
 
             oModel.setProperty("/productAllocationObject", sQuotaId);
-            oModel.setProperty("/busy", true);
+            oModel.setProperty("/busy", false);
             oModel.setProperty("/messageVisible", false);
             oModel.setProperty("/messageText", "");
             oModel.setProperty("/messageType", "None");
             oModel.setProperty("/editMode", false);
-            this._loadDynamicFields(sQuotaId);
         },
 
         onEdit: function () {
@@ -181,43 +180,27 @@ sap.ui.define([
         },
 
         onDateChange: function () {
-            var oModel = this.getView().getModel("detailModel");
-            var sQuotaId = oModel.getProperty("/productAllocationObject");
-            var sFilterValue = oModel.getProperty("/allocationObjectFilter") || "";
-            if (sQuotaId) {
-                oModel.setProperty("/busy", true);
-                this._loadDynamicFields(sQuotaId, null, sFilterValue);
-            }
         },
 
         onAllocationObjectChange: function () {
             var oModel = this.getView().getModel("detailModel");
-            var sFilterValue = (oModel.getProperty("/allocationObjectFilter") || "").trim();
-            oModel.setProperty("/allocationObjectFilter", sFilterValue);
-
-            var sQuotaId = oModel.getProperty("/productAllocationObject");
-            if (sQuotaId) {
-                oModel.setProperty("/busy", true);
-                this._loadDynamicFields(sQuotaId, null, sFilterValue);
-            }
+            oModel.setProperty("/allocationObjectFilter", (oModel.getProperty("/allocationObjectFilter") || "").trim());
         },
 
         onMaterialFilterChange: function () {
             var oModel = this.getView().getModel("detailModel");
             oModel.setProperty("/materialFilter", (oModel.getProperty("/materialFilter") || "").trim());
-            var sQuotaId = oModel.getProperty("/productAllocationObject");
-            var sFilterValue = oModel.getProperty("/allocationObjectFilter") || "";
-            if (sQuotaId) {
-                oModel.setProperty("/busy", true);
-                this._loadDynamicFields(sQuotaId, null, sFilterValue);
-            }
         },
 
         onPlantFilterChange: function () {
             var oModel = this.getView().getModel("detailModel");
             oModel.setProperty("/plantFilter", (oModel.getProperty("/plantFilter") || "").trim());
+        },
+
+        onGoFilter: function () {
+            var oModel = this.getView().getModel("detailModel");
             var sQuotaId = oModel.getProperty("/productAllocationObject");
-            var sFilterValue = oModel.getProperty("/allocationObjectFilter") || "";
+            var sFilterValue = (oModel.getProperty("/allocationObjectFilter") || "").trim();
             if (sQuotaId) {
                 oModel.setProperty("/busy", true);
                 this._loadDynamicFields(sQuotaId, null, sFilterValue);

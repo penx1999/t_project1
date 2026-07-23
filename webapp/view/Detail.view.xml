@@ -121,6 +121,13 @@
                                     class="sapUiTinyMarginTop"
                                     width="100%"/>
                             </VBox>
+                            <Button
+                                id="idGoButton"
+                                text="{i18n>searchButton}"
+                                type="Emphasized"
+                                icon="sap-icon://search"
+                                class="sapUiSmallMarginBegin"
+                                press=".onGoFilter"/>
                         </HBox>
                     </VBox>
                 </content>
