@@ -168,6 +168,11 @@ sap.ui.define([
             oModel.setProperty("/hasChanges", false);
             var oTable = this.byId("idDynamicTable");
             if (oTable) { oTable.removeAllColumns(); }
+            var oToday = new Date();
+            var oFirstOfMonth = new Date(oToday.getFullYear(), oToday.getMonth(), 1);
+            var oNextYear = new Date(oFirstOfMonth.getFullYear(), oFirstOfMonth.getMonth() + 2, 0);
+            oModel.setProperty("/fec_ini", this._formatDateValue(oFirstOfMonth));
+            oModel.setProperty("/fec_fin", this._formatDateValue(oNextYear));
         },
 
         onEdit: function () {
