@@ -260,7 +260,9 @@ sap.ui.define([
                 productAllocationObject: sProductAllocationObject,
                 fec_ini: sFecIni || "",
                 fec_fin: sFecFin || "",
-                data_element: sType || ""
+                data_element: sType || "",
+                MATNR: sMatFilter || "",
+                WERKS: sPlantFilter || ""
             });
             oODataModel.read("/DynamicFieldSet", {
                 filters: aFilters,
