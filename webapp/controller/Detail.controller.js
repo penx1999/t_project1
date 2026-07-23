@@ -205,45 +205,23 @@ sap.ui.define([
         onMaterialFilterChange: function () {
             var oModel = this.getView().getModel("detailModel");
             oModel.setProperty("/materialFilter", (oModel.getProperty("/materialFilter") || "").trim());
-            this._applyTableFilters();
+            var sQuotaId = oModel.getProperty("/productAllocationObject");
+            var sFilterValue = oModel.getProperty("/allocationObjectFilter") || "";
+            if (sQuotaId) {
+                oModel.setProperty("/busy", true);
+                this._loadDynamicFields(sQuotaId, null, sFilterValue);
+            }
         },
 
         onPlantFilterChange: function () {
             var oModel = this.getView().getModel("detailModel");
             oModel.setProperty("/plantFilter", (oModel.getProperty("/plantFilter") || "").trim());
-            this._applyTableFilters();
-        },
-
-        _applyTableFilters: function () {
-            var oModel = this.getView().getModel("detailModel");
-            var aColumns = oModel.getProperty("/columns") || [];
-            var sMaterialField = null, sPlantField = null;
-            aColumns.forEach(function (oCol) {
-                var sLbl = (oCol.label || "").toLowerCase();
-                if (!sMaterialField && sLbl.indexOf("material") !== -1) { sMaterialField = oCol.name; }
-                if (!sPlantField && (sLbl.indexOf("plant") !== -1 || sLbl.indexOf("centro") !== -1)) { sPlantField = oCol.name; }
-            });
-
-            var sMatVal   = (oModel.getProperty("/materialFilter") || "").trim().toLowerCase();
-            var sPlantVal = (oModel.getProperty("/plantFilter") || "").trim().toLowerCase();
-
-            var aFilters = [];
-            if (sMaterialField && sMatVal) {
-                aFilters.push(new Filter({
-                    path: sMaterialField,
-                    test: function (v) { return String(v == null ? "" : v).toLowerCase().indexOf(sMatVal) !== -1; }
-                }));
+            var sQuotaId = oModel.getProperty("/productAllocationObject");
+            var sFilterValue = oModel.getProperty("/allocationObjectFilter") || "";
+            if (sQuotaId) {
+                oModel.setProperty("/busy", true);
+                this._loadDynamicFields(sQuotaId, null, sFilterValue);
             }
-            if (sPlantField && sPlantVal) {
-                aFilters.push(new Filter({
-                    path: sPlantField,
-                    test: function (v) { return String(v == null ? "" : v).toLowerCase().indexOf(sPlantVal) !== -1; }
-                }));
-            }
-
-            var oTable = this.byId("idDynamicTable");
-            var oBinding = oTable && oTable.getBinding("rows");
-            if (oBinding) { oBinding.filter(aFilters); }
         },
 
         _loadDynamicFields: function (sProductAllocationObject, fnAfterSuccess, sType) {
@@ -267,6 +245,15 @@ sap.ui.define([
             }
             if (sType) {
                 aFilters.push(new Filter("data_element", FilterOperator.EQ, sType));
+            }
+
+            var sMatFilter = (oModel.getProperty("/materialFilter") || "").trim();
+            var sPlantFilter = (oModel.getProperty("/plantFilter") || "").trim();
+            if (sMatFilter) {
+                aFilters.push(new Filter("MATNR", FilterOperator.Contains, sMatFilter));
+            }
+            if (sPlantFilter) {
+                aFilters.push(new Filter("WERKS", FilterOperator.Contains, sPlantFilter));
             }
 
             console.log("[DynamicTable] Ejecutando OData /DynamicFieldSet", {
