@@ -161,6 +161,13 @@ sap.ui.define([
             oModel.setProperty("/messageText", "");
             oModel.setProperty("/messageType", "None");
             oModel.setProperty("/editMode", false);
+            oModel.setProperty("/columns", []);
+            oModel.setProperty("/rows", []);
+            oModel.setProperty("/rowCount", 5);
+            oModel.setProperty("/tableTitle", "");
+            oModel.setProperty("/hasChanges", false);
+            var oTable = this.byId("idDynamicTable");
+            if (oTable) { oTable.removeAllColumns(); }
         },
 
         onEdit: function () {
