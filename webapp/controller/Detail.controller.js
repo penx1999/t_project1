@@ -2308,6 +2308,8 @@ sap.ui.define([
                 });
             });
 
+            console.log("[DynamicTable] Ejecutando POST /DynamicFieldSet", oData);
+
             return new Promise(function (resolve, reject) {
                 oODataModel.create("/DynamicFieldSet", oData, {
                     success: function (oData, oResponse) {
