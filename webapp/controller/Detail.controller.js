@@ -258,6 +258,21 @@ sap.ui.define([
                 oUrlParams["WERKS"] = sPlantFilter;
             }
 
+            var aFilterStrParts = [
+                "tablename eq '" + String(sProductAllocationObject).replace(/'/g, "''") + "'"
+            ];
+            if (sFecIni) { aFilterStrParts.push("fec_ini eq '" + this._toODataDate(sFecIni) + "'"); }
+            if (sFecFin) { aFilterStrParts.push("fec_fin eq '" + this._toODataDate(sFecFin) + "'"); }
+            if (sType) { aFilterStrParts.push("data_element eq '" + String(sType).replace(/'/g, "''") + "'"); }
+
+            var aQueryParts = ["$expand=DataSetAsoc", "$filter=" + encodeURIComponent(aFilterStrParts.join(" and "))];
+            if (sMatFilter) { aQueryParts.push("MATNR=" + encodeURIComponent(sMatFilter)); }
+            if (sPlantFilter) { aQueryParts.push("WERKS=" + encodeURIComponent(sPlantFilter)); }
+
+            var sServiceUrlBase = (oODataModel.sServiceUrl || "").replace(/\/$/, "");
+            var sFullUri = sServiceUrlBase + "/DynamicFieldSet?" + aQueryParts.join("&");
+            console.log("[DynamicTable] URI /DynamicFieldSet:", sFullUri);
+
             console.log("[DynamicTable] Ejecutando OData /DynamicFieldSet", {
                 productAllocationObject: sProductAllocationObject,
                 fec_ini: sFecIni || "",
