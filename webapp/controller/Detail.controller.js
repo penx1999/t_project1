@@ -250,28 +250,12 @@ sap.ui.define([
             var sMatFilter = (oModel.getProperty("/materialFilter") || "").trim();
             var sPlantFilter = (oModel.getProperty("/plantFilter") || "").trim();
 
-            var oUrlParams = { "$expand": "DataSetAsoc" };
             if (sMatFilter) {
-                oUrlParams["MATNR"] = sMatFilter;
+                aFilters.push(new Filter("MATNR", FilterOperator.EQ, sMatFilter));
             }
             if (sPlantFilter) {
-                oUrlParams["WERKS"] = sPlantFilter;
+                aFilters.push(new Filter("WERKS", FilterOperator.EQ, sPlantFilter));
             }
-
-            var aFilterStrParts = [
-                "tablename eq '" + String(sProductAllocationObject).replace(/'/g, "''") + "'"
-            ];
-            if (sFecIni) { aFilterStrParts.push("fec_ini eq '" + this._toODataDate(sFecIni) + "'"); }
-            if (sFecFin) { aFilterStrParts.push("fec_fin eq '" + this._toODataDate(sFecFin) + "'"); }
-            if (sType) { aFilterStrParts.push("data_element eq '" + String(sType).replace(/'/g, "''") + "'"); }
-
-            var aQueryParts = ["$expand=DataSetAsoc", "$filter=" + encodeURIComponent(aFilterStrParts.join(" and "))];
-            if (sMatFilter) { aQueryParts.push("MATNR=" + encodeURIComponent(sMatFilter)); }
-            if (sPlantFilter) { aQueryParts.push("WERKS=" + encodeURIComponent(sPlantFilter)); }
-
-            var sServiceUrlBase = (oODataModel.sServiceUrl || "").replace(/\/$/, "");
-            var sFullUri = sServiceUrlBase + "/DynamicFieldSet?" + aQueryParts.join("&");
-            console.log("[DynamicTable] URI /DynamicFieldSet:", sFullUri);
 
             console.log("[DynamicTable] Ejecutando OData /DynamicFieldSet", {
                 productAllocationObject: sProductAllocationObject,
@@ -283,7 +267,7 @@ sap.ui.define([
             });
             oODataModel.read("/DynamicFieldSet", {
                 filters: aFilters,
-                urlParameters: oUrlParams,
+                urlParameters: { "$expand": "DataSetAsoc" },
                 success: function (oData) {
                     var aFields = oData.results || [];
                     aFields.sort(function (a, b) {
