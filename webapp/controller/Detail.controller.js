@@ -233,28 +233,32 @@ sap.ui.define([
             var sFecIni = oModel.getProperty("/fec_ini");
             var sFecFin = oModel.getProperty("/fec_fin");
 
-            var aFilters = [
-                new Filter("tablename", FilterOperator.EQ, sProductAllocationObject)
-            ];
-
-            if (sFecIni) {
-                aFilters.push(new Filter("fec_ini", FilterOperator.EQ, this._toODataDate(sFecIni)));
-            }
-            if (sFecFin) {
-                aFilters.push(new Filter("fec_fin", FilterOperator.EQ, this._toODataDate(sFecFin)));
-            }
-            if (sType) {
-                aFilters.push(new Filter("data_element", FilterOperator.EQ, sType));
-            }
-
             var sMatFilter = (oModel.getProperty("/materialFilter") || "").trim();
             var sPlantFilter = (oModel.getProperty("/plantFilter") || "").trim();
+
+            var aFilterParts = [
+                "tablename eq '" + String(sProductAllocationObject).replace(/'/g, "''") + "'"
+            ];
+            if (sFecIni) {
+                aFilterParts.push("fec_ini eq '" + this._toODataDate(sFecIni) + "'");
+            }
+            if (sFecFin) {
+                aFilterParts.push("fec_fin eq '" + this._toODataDate(sFecFin) + "'");
+            }
+            if (sType) {
+                aFilterParts.push("data_element eq '" + String(sType).replace(/'/g, "''") + "'");
+            }
             if (sMatFilter) {
-                aFilters.push(new Filter("MATNR", FilterOperator.EQ, "'" + sMatFilter + "'"));
+                aFilterParts.push("MATNR eq '" + sMatFilter.replace(/'/g, "''") + "'");
             }
             if (sPlantFilter) {
-                aFilters.push(new Filter("WERKS", FilterOperator.EQ, "'" + sPlantFilter + "'"));
+                aFilterParts.push("WERKS eq '" + sPlantFilter.replace(/'/g, "''") + "'");
             }
+
+            var oUrlParams = {
+                "$expand": "DataSetAsoc",
+                "$filter": aFilterParts.join(" and ")
+            };
 
             console.log("[DynamicTable] Ejecutando OData /DynamicFieldSet", {
                 productAllocationObject: sProductAllocationObject,
@@ -265,8 +269,7 @@ sap.ui.define([
                 WERKS: sPlantFilter || ""
             });
             oODataModel.read("/DynamicFieldSet", {
-                filters: aFilters,
-                urlParameters: { "$expand": "DataSetAsoc" },
+                urlParameters: oUrlParams,
                 success: function (oData) {
                     var aFields = oData.results || [];
                     aFields.sort(function (a, b) {
