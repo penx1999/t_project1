@@ -250,10 +250,10 @@ sap.ui.define([
             var sMatFilter = (oModel.getProperty("/materialFilter") || "").trim();
             var sPlantFilter = (oModel.getProperty("/plantFilter") || "").trim();
             if (sMatFilter) {
-                aFilters.push(new Filter("MATNR", FilterOperator.EQ, sMatFilter));
+                aFilters.push(new Filter("MATNR", FilterOperator.EQ, "'" + sMatFilter + "'"));
             }
             if (sPlantFilter) {
-                aFilters.push(new Filter("WERKS", FilterOperator.EQ, sPlantFilter));
+                aFilters.push(new Filter("WERKS", FilterOperator.EQ, "'" + sPlantFilter + "'"));
             }
 
             console.log("[DynamicTable] Ejecutando OData /DynamicFieldSet", {
