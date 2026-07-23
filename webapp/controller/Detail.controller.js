@@ -2311,7 +2311,12 @@ sap.ui.define([
             });
 
             console.log("[DynamicTable] Ejecutando POST /DynamicFieldSet");
-            console.log("[DynamicTable] Payload:\n" + JSON.stringify(oData, null, 2));
+            console.log("[DynamicTable] Payload por campo:", aPayload);
+            console.log("[DynamicTable] Payload final (oData):", oData);
+            if (typeof window !== "undefined") {
+                window._lastZqPayload = oData;
+                console.log("[DynamicTable] Payload accesible en window._lastZqPayload");
+            }
 
             return new Promise(function (resolve, reject) {
                 oODataModel.create("/DynamicFieldSet", oData, {
