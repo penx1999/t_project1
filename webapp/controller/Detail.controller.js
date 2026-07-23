@@ -242,8 +242,8 @@ sap.ui.define([
             if (sFecIni) { aFilterParts.push("fec_ini eq '" + this._toODataDate(sFecIni) + "'"); }
             if (sFecFin) { aFilterParts.push("fec_fin eq '" + this._toODataDate(sFecFin) + "'"); }
             if (sType) { aFilterParts.push("data_element eq '" + String(sType).replace(/'/g, "''") + "'"); }
-            if (sMatFilter) { aFilterParts.push("MATNR eq '" + sMatFilter.replace(/'/g, "''") + "'"); }
             if (sPlantFilter) { aFilterParts.push("WERKS eq '" + sPlantFilter.replace(/'/g, "''") + "'"); }
+            if (sMatFilter) { aFilterParts.push("MATNR eq '" + sMatFilter.replace(/'/g, "''") + "'"); }
 
             console.log("[DynamicTable] Ejecutando OData /DynamicFieldSet", {
                 productAllocationObject: sProductAllocationObject,
