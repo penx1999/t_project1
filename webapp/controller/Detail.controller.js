@@ -1775,7 +1775,9 @@ sap.ui.define([
         _loadValueHelp: function (sSource, sSearch, oVHModel, sDataElement, oDialog, fnApplyValueHelpPage) {
             var oODataModel = this.getOwnerComponent().getModel();
             if (!oODataModel) { return; }
-            var sAlloc = this.getView().getModel("detailModel").getProperty("/productAllocationObject") || "";
+            var oDetailModel = this.getView().getModel("detailModel");
+            var sAlloc = oDetailModel.getProperty("/l_key_char") || oDetailModel.getProperty("/productAllocationObject") || "";
+            if (sAlloc.length > 50) { sAlloc = sAlloc.substring(0, 50); }
             var sServiceUrl = (oODataModel.sServiceUrl || "").replace(/\/$/, "");
             var aFilters = [
                 new Filter("source",           FilterOperator.EQ, sSource),
