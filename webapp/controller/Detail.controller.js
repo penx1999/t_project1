@@ -217,6 +217,9 @@ sap.ui.define([
             var oModel = this.getView().getModel("detailModel");
             var sQuotaId = oModel.getProperty("/productAllocationObject");
             var sFilterValue = (oModel.getProperty("/allocationObjectFilter") || "").trim();
+            oModel.setProperty("/messageVisible", false);
+            oModel.setProperty("/messageText", "");
+            oModel.setProperty("/messageType", "None");
             if (sQuotaId) {
                 oModel.setProperty("/busy", true);
                 this._loadDynamicFields(sQuotaId, null, sFilterValue);
