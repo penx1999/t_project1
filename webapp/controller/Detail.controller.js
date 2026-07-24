@@ -181,6 +181,7 @@ sap.ui.define([
         onEdit: function () {
             var oModel = this.getView().getModel("detailModel");
             var sQuotaId = oModel.getProperty("/productAllocationObject");
+            var sFilterValue = (oModel.getProperty("/allocationObjectFilter") || "").trim();
             oModel.setProperty("/messageVisible", false);
             oModel.setProperty("/messageText", "");
             oModel.setProperty("/messageType", "None");
@@ -188,7 +189,7 @@ sap.ui.define([
                 oModel.setProperty("/busy", true);
                 this._loadDynamicFields(sQuotaId, function () {
                     oModel.setProperty("/editMode", true);
-                }, "EDIT");
+                }, sFilterValue);
             } else {
                 oModel.setProperty("/editMode", true);
             }
