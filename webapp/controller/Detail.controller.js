@@ -1193,6 +1193,7 @@ sap.ui.define([
                     oLabelToHeaderIdx[sHeaderLabel] = i;
                 }
             });
+            var iDeleteCol = oLabelToHeaderIdx["delete"];
 
             // Validate header labels match what is expected (same exclusions as download)
             var aExpectedLabels = aColumns.filter(function (oCol) {
@@ -1322,6 +1323,7 @@ sap.ui.define([
                 oNewRow["ZZRFCUT"] = "08";
                 oNewRow["ZZRFCUT_old"] = "08";
                 oNewRow["_isNew"] = true;
+                oNewRow._deleteFlag = (iDeleteCol !== undefined) ? String(aXlsxRow[iDeleteCol] || "").trim() : "";
 
                 aColumns.forEach(function (oCol) {
                     if (oController._isProdDescColumn(oCol)) { return; }
@@ -1335,12 +1337,16 @@ sap.ui.define([
                     var sFieldUpper = (oCol.name || "").toUpperCase();
                     if (oDateFieldSet[oCol.name]) {
                         var sParsed = fnParseDateCell(v);
-                        if (sParsed === null) { bInvalidDate = true; sVal = ""; }
-                        else { sVal = sParsed; }
+                        if (sParsed === null) {
+                            if (!oNewRow._deleteFlag) { bInvalidDate = true; }
+                            sVal = "";
+                        } else { sVal = sParsed; }
                     } else if (sFieldUpper === "PRODALLOCATIONACTIVATIONSTATUS" || sFieldUpper === "PRODALLOCCHARCCONSTRAINTSTATUS") {
                         var sNormalized = oController._normalizeStatusFromExcel(sFieldUpper, v);
-                        if (sNormalized === null) { bInvalidStatus = true; sVal = String(v).trim(); }
-                        else { sVal = sNormalized; }
+                        if (sNormalized === null) {
+                            if (!oNewRow._deleteFlag) { bInvalidStatus = true; }
+                            sVal = String(v).trim();
+                        } else { sVal = sNormalized; }
                         oNewRow["_has" + sFieldUpper] = true;
                     } else if (sFieldUpper === "PRODUCTALLOCATIONOBJECT") {
                         // Only keep the file's value if it matches the UUID already loaded on screen.
@@ -1367,7 +1373,7 @@ sap.ui.define([
                 return;
             }
 
-            // Per-row date range validation: end date must be after start date
+            // Identify date fields for key/match and range validation
             var sStartField = null, sEndField = null;
             aColumns.forEach(function (oCol) {
                 var u = oCol.name.toUpperCase();
@@ -1382,17 +1388,6 @@ sap.ui.define([
                 }
                 return str;
             };
-            if (sStartField && sEndField) {
-                var bRangeError = aCandidateRows.some(function (oRow) {
-                    var s = fnNormDate(oRow[sStartField]);
-                    var e = fnNormDate(oRow[sEndField]);
-                    return s && e && e <= s;
-                });
-                if (bRangeError) {
-                    MessageBox.error("ERROR! Dates in file!", { actions: ["OK"] });
-                    return;
-                }
-            }
 
             // Compute key fields (same rule as _hasDateOverlap / Save validation)
             var aKeyFields = this._getOverlapKeyFields(aColumns);
@@ -1408,10 +1403,71 @@ sap.ui.define([
                 return aParts.join("|");
             };
 
+            // Separate delete markers from regular candidates
+            var aDeleteCandidates = [];
+            var aNonDeleteCandidates = [];
+            aCandidateRows.forEach(function (oCand) {
+                if (oCand._deleteFlag) { aDeleteCandidates.push(oCand); }
+                else { aNonDeleteCandidates.push(oCand); }
+            });
+
+            // Process Delete column: existing rows go to _aDeletedRows and are removed;
+            // non-existing rows are added to _aDeletedRows as if added then deleted.
+            var aDeletedExistingIndices = [];
+            var oOriginalByKey = {};
+            aExistingRows.forEach(function (oRow, iIdx) {
+                var k = fnMatchKey(oRow);
+                if (!oOriginalByKey[k]) { oOriginalByKey[k] = iIdx; }
+            });
+
+            var oController = this;
+            aDeleteCandidates.forEach(function (oCand) {
+                var k = fnMatchKey(oCand);
+                var iMatchedIdx = oOriginalByKey[k];
+                if (iMatchedIdx !== undefined) {
+                    var oRowCopy = JSON.parse(JSON.stringify(aExistingRows[iMatchedIdx]));
+                    aColumns.forEach(function (oCol) {
+                        var sField = oCol.name;
+                        var sOldKey = sField + "_old";
+                        if (oRowCopy[sOldKey] === undefined || oRowCopy[sOldKey] === null || oRowCopy[sOldKey] === "") {
+                            oRowCopy[sOldKey] = oRowCopy[sField] || "";
+                        }
+                    });
+                    oController._aDeletedRows.push({ rowIndex: iMatchedIdx, rowData: oRowCopy });
+                    aDeletedExistingIndices.push(iMatchedIdx);
+                } else {
+                    oController._aDeletedRows.push({ rowIndex: -1, rowData: JSON.parse(JSON.stringify(oCand)) });
+                }
+            });
+
+            if (aDeleteCandidates.length > 0) {
+                oController._hasDeletedRows = true;
+                // Remove deleted existing rows from original data snapshot to keep indices aligned
+                if (!oController._oOriginalData) { oController._oOriginalData = []; }
+                aDeletedExistingIndices.sort(function (a, b) { return b - a; }).forEach(function (iIdx) {
+                    oController._oOriginalData.splice(iIdx, 1);
+                });
+            }
+
+            // Per-row date range validation: end date must be after start date
+            if (sStartField && sEndField) {
+                var bRangeError = aNonDeleteCandidates.some(function (oRow) {
+                    var s = fnNormDate(oRow[sStartField]);
+                    var e = fnNormDate(oRow[sEndField]);
+                    return s && e && e <= s;
+                });
+                if (bRangeError) {
+                    MessageBox.error("ERROR! Dates in file!", { actions: ["OK"] });
+                    return;
+                }
+            }
+
             // Try to merge each candidate into an existing row with identical match key.
             // If matched: copy non-key (and non-date) field values from candidate into existing,
             // and remove the candidate from the new-rows list.
-            var aWorkingRows = JSON.parse(JSON.stringify(aExistingRows));
+            var aDeletedSet = {};
+            aDeletedExistingIndices.forEach(function (iIdx) { aDeletedSet[iIdx] = true; });
+            var aWorkingRows = JSON.parse(JSON.stringify(aExistingRows.filter(function (oRow, iIdx) { return !aDeletedSet[iIdx]; })));
             var oExistingByKey = {};
             aWorkingRows.forEach(function (oRow, iIdx) {
                 var k = fnMatchKey(oRow);
@@ -1421,7 +1477,7 @@ sap.ui.define([
             var aRemainingCandidates = [];
             var aUpdatedDuplicateLogs = [];
             var iUpdatedCount = 0;
-            aCandidateRows.forEach(function (oCand) {
+            aNonDeleteCandidates.forEach(function (oCand) {
                 var k = fnMatchKey(oCand);
                 var iIdx = oExistingByKey[k];
                 if (iIdx !== undefined) {
@@ -1464,7 +1520,7 @@ sap.ui.define([
                 }
             });
             console.log("[UploadExcel] Duplicate match summary:", {
-                excelRows: aCandidateRows.length,
+                excelRows: aNonDeleteCandidates.length,
                 existingRows: aWorkingRows.length,
                 updatedDuplicates: aUpdatedDuplicateLogs.length,
                 newRows: aRemainingCandidates.length,
@@ -1476,7 +1532,7 @@ sap.ui.define([
                 console.log("[UploadExcel] Duplicate lines updated:", aUpdatedDuplicateLogs);
             } else {
                 console.log("[UploadExcel] No duplicate lines matched. Sample keys:", {
-                    excel: aCandidateRows.slice(0, 5).map(function (oRow) {
+                    excel: aNonDeleteCandidates.slice(0, 5).map(function (oRow) {
                         return { excelLine: oRow._excelLine, matchKey: fnMatchKey(oRow) };
                     }),
                     existing: aWorkingRows.slice(0, 5).map(function (oRow, iIdx) {
@@ -1505,6 +1561,7 @@ sap.ui.define([
             }
 
             // Validation passed: commit rows
+            if (!this._oOriginalData) { this._oOriginalData = []; }
             var aRows = aWorkingRows;
             aRemainingCandidates.forEach(function (oNewRow) {
                 aRows.push(oNewRow);
@@ -1516,7 +1573,8 @@ sap.ui.define([
             oModel.setProperty("/rowCount", iNewRowCount);
             oModel.setProperty("/hasChanges", true);
 
-            var sMsg = aRemainingCandidates.length + " new row(s) loaded and " +
+            var sDeleteMsg = aDeleteCandidates.length > 0 ? (aDeleteCandidates.length + " row(s) marked for deletion, ") : "";
+            var sMsg = sDeleteMsg + aRemainingCandidates.length + " new row(s) loaded and " +
                 iUpdatedCount + " duplicate row(s) updated from file.";
             MessageToast.show(sMsg);
         },
