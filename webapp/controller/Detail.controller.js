@@ -2224,8 +2224,8 @@ sap.ui.define([
 
                     var sUpperName = sFieldName.toUpperCase();
                     if (sUpperName === "PRODALLOCPERDSTARTUTCDATE" || sUpperName === "PRODALLOCPERIODENDUTCDATE") {
-                        sCurrentValue = this._normalizeDateValue(sCurrentValue, oRowData, sFieldName);
-                        sOldValue = this._normalizeDateValue(sOldValue, oRowData, sFieldName);
+                        sCurrentValue = that._normalizeDateValue(sCurrentValue, oRowData, sFieldName);
+                        sOldValue = that._normalizeDateValue(sOldValue, oRowData, sFieldName);
                     }
 
                     var oDataItem = {
