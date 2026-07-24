@@ -2309,7 +2309,7 @@ sap.ui.define([
 
                     var sDelUpperName = sFieldName.toUpperCase();
                     if (sDelUpperName === "PRODALLOCPERDSTARTUTCDATE" || sDelUpperName === "PRODALLOCPERIODENDUTCDATE") {
-                        sDelOldValue = this._normalizeDateValue(sDelOldValue, oRowData, sFieldName);
+                        sDelOldValue = that._normalizeDateValue(sDelOldValue, oRowData, sFieldName);
                     }
                     var oDataItem = {
                         key: oCellMeta.key || "",
