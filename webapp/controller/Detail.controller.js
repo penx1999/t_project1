@@ -937,7 +937,6 @@ sap.ui.define([
                 ["Delete CVC",         "Delete CVC - Description"],
                 ["",                   "No Deletion"],
                 ["1",                  "Standard Deletion"],
-                ["2",                  "Deletion with Consumptions"],
                 []
             ];
 
@@ -1010,6 +1009,9 @@ sap.ui.define([
 
                 return aAcc;
             }.bind(this), []);
+
+            aDownloadCols.push({ name: "Delete", label: "Delete" });
+            return aDownloadCols;
         },
 
         _loadSheetJS: function () {
@@ -1044,7 +1046,7 @@ sap.ui.define([
             var aColumns = this._getDownloadColumns(bWithDesc);
             var aRows = oModel.getProperty("/rows") || [];
 
-            // First 16 reference lines (lines 1-15 with content, line 16 blank)
+            // First 15 reference lines (lines 1-14 with content, line 15 blank)
             var aAoA = [
                 ["Activation Status",  "Activation Status - Description"],
                 ["01",                 "Inactive"],
@@ -1060,7 +1062,6 @@ sap.ui.define([
                 ["Delete CVC",         "Delete CVC - Description"],
                 ["",                   "No Deletion"],
                 ["1",                  "Standard Deletion"],
-                ["2",                  "Deletion with Consumptions"],
                 []
             ];
 
@@ -1151,13 +1152,13 @@ sap.ui.define([
         },
 
         _processUploadedRows: function (aAoA) {
-            // Skip first 16 reference lines, header is row 17 (index 16), data starts row 18 (index 17)
-            if (!aAoA || aAoA.length < 17) {
+            // Skip first 15 reference lines, header is row 16 (index 15), data starts row 17 (index 16)
+            if (!aAoA || aAoA.length < 16) {
                 MessageBox.error("Invalid file structure. Expected the same layout as the downloaded template.");
                 return;
             }
-            var aHeader = aAoA[16] || [];
-            var aDataRows = aAoA.slice(17).filter(function (aRow) {
+            var aHeader = aAoA[15] || [];
+            var aDataRows = aAoA.slice(16).filter(function (aRow) {
                 return aRow && aRow.some(function (v) { return v !== "" && v !== null && v !== undefined; });
             });
 
@@ -1188,6 +1189,7 @@ sap.ui.define([
                 if (this._isProdDescColumn(oCol)) { return false; }
                 return !!sLbl;
             }.bind(this)).map(function (oCol) { return (oCol.label || "").toLowerCase().trim(); });
+            aExpectedLabels.push("delete");
 
             var aFileLabels = Object.keys(oLabelToHeaderIdx);
             var bLabelsOk = aExpectedLabels.length === aFileLabels.length &&
@@ -1288,7 +1290,7 @@ sap.ui.define([
             var oController = this;
             var aCandidateRows = aDataRows.map(function (aXlsxRow, iDataIdx) {
                 var oNewRow = {};
-                oNewRow._excelLine = iDataIdx + 18;
+                oNewRow._excelLine = iDataIdx + 17;
                 aColumns.forEach(function (oCol) {
                     oNewRow[oCol.name] = "";
                     oNewRow[oCol.name + "_old"] = "";
