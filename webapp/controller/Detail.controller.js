@@ -404,6 +404,17 @@ sap.ui.define([
             if (!oTable) { return; }
 
             var that = this;
+
+            var fnUpper = function (oEvent) {
+                var oInput = oEvent.getSource();
+                var sValue = oInput.getValue();
+                var sUpper = sValue.toUpperCase();
+                if (sValue !== sUpper) {
+                    oInput.setValue(sUpper);
+                }
+                that._onFieldChange(oEvent);
+            };
+
             var aVisibleColumns = aColumns.filter(function (oCol) {
                 var sName = (oCol.name || "").toUpperCase();
                 if (sName.indexOf("PROD") === 0 && sName.lastIndexOf("DESC") === sName.length - 4) { return false; }
@@ -523,7 +534,7 @@ sap.ui.define([
                             }
                         } : "{detailModel>/editMode}",
                         change: that._onFieldChange.bind(that),
-                        liveChange: that._onFieldChange.bind(that)
+                        liveChange: fnUpper
                     };
                     if (!bIsComment) {
                         oInputCfg.valueState = "{= ${detailModel>_err_" + sFieldName + "} ? 'Error' : 'None' }";
@@ -543,7 +554,7 @@ sap.ui.define([
                             that._onValueHelpRequest(oEvent, sVHField, sVHLabel);
                         },
                         change: that._onFieldChange.bind(that),
-                        liveChange: that._onFieldChange.bind(that)
+                        liveChange: fnUpper
                     }).addStyleClass("sapUiSizeCompact");
                 }
 
