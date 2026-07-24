@@ -986,7 +986,7 @@ sap.ui.define([
             var oModel = this.getView().getModel("detailModel");
             var aExcludedLabels = ["avbl qty", "cnsmd qty"];
 
-            return (oModel.getProperty("/columns") || []).reduce(function (aAcc, oCol) {
+            var aDownloadCols = (oModel.getProperty("/columns") || []).reduce(function (aAcc, oCol) {
                 var sName = (oCol.name  || "").toUpperCase();
                 var sLbl  = (oCol.label || "").toLowerCase().trim();
                 var bProdDesc = this._isProdDescColumn(oCol);
@@ -1010,7 +1010,21 @@ sap.ui.define([
                 return aAcc;
             }.bind(this), []);
 
-            aDownloadCols.push({ name: "Delete", label: "Delete" });
+            var iStatusIdx = -1;
+            aDownloadCols.forEach(function (oCol, iIdx) {
+                var sLbl = (oCol.label || "").toLowerCase().trim();
+                var sName = (oCol.name || "").toUpperCase();
+                if (iStatusIdx === -1 && (sLbl === "status" || sName === "PRODALLOCATIONACTIVATIONSTATUS")) {
+                    iStatusIdx = iIdx;
+                }
+            });
+
+            if (iStatusIdx >= 0) {
+                aDownloadCols.splice(iStatusIdx, 0, { name: "Delete", label: "Delete" });
+            } else {
+                aDownloadCols.unshift({ name: "Delete", label: "Delete" });
+            }
+
             return aDownloadCols;
         },
 
