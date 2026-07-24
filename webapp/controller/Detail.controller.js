@@ -166,6 +166,9 @@ sap.ui.define([
             oModel.setProperty("/rowCount", 5);
             oModel.setProperty("/tableTitle", "");
             oModel.setProperty("/hasChanges", false);
+            oModel.setProperty("/allocationObjectFilter", "");
+            oModel.setProperty("/materialFilter", "");
+            oModel.setProperty("/plantFilter", "");
             var oTable = this.byId("idDynamicTable");
             if (oTable) { oTable.removeAllColumns(); }
             var oToday = new Date();
