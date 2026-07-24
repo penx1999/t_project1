@@ -534,7 +534,7 @@ sap.ui.define([
                             }
                         } : "{detailModel>/editMode}",
                         change: that._onFieldChange.bind(that),
-                        liveChange: fnUpper
+                        liveChange: bIsComment ? that._onFieldChange.bind(that) : fnUpper
                     };
                     if (!bIsComment) {
                         oInputCfg.valueState = "{= ${detailModel>_err_" + sFieldName + "} ? 'Error' : 'None' }";
@@ -554,7 +554,7 @@ sap.ui.define([
                             that._onValueHelpRequest(oEvent, sVHField, sVHLabel);
                         },
                         change: that._onFieldChange.bind(that),
-                        liveChange: fnUpper
+                        liveChange: bIsComment ? that._onFieldChange.bind(that) : fnUpper
                     }).addStyleClass("sapUiSizeCompact");
                 }
 
