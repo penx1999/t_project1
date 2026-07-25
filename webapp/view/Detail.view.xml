@@ -109,6 +109,7 @@
                                     id="idMaterialFilter"
                                     value="{detailModel>/materialFilter}"
                                     change=".onMaterialFilterChange"
+                                    liveChange=".onMaterialFilterLiveChange"
                                     class="sapUiTinyMarginTop"
                                     width="100%"/>
                             </VBox>
@@ -118,6 +119,7 @@
                                     id="idPlantFilter"
                                     value="{detailModel>/plantFilter}"
                                     change=".onPlantFilterChange"
+                                    liveChange=".onPlantFilterLiveChange"
                                     class="sapUiTinyMarginTop"
                                     width="100%"/>
                             </VBox>

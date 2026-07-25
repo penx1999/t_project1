@@ -203,14 +203,36 @@ sap.ui.define([
             oModel.setProperty("/allocationObjectFilter", (oModel.getProperty("/allocationObjectFilter") || "").trim());
         },
 
+        onMaterialFilterLiveChange: function (oEvent) {
+            var oInput = oEvent.getSource();
+            var sValue = oInput.getValue();
+            var sClean = sValue.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+            if (sClean !== sValue) {
+                oInput.setValue(sClean);
+            }
+        },
+
         onMaterialFilterChange: function () {
             var oModel = this.getView().getModel("detailModel");
-            oModel.setProperty("/materialFilter", (oModel.getProperty("/materialFilter") || "").trim());
+            var sValue = (oModel.getProperty("/materialFilter") || "");
+            var sClean = sValue.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().trim();
+            oModel.setProperty("/materialFilter", sClean);
+        },
+
+        onPlantFilterLiveChange: function (oEvent) {
+            var oInput = oEvent.getSource();
+            var sValue = oInput.getValue();
+            var sClean = sValue.replace(/[^a-zA-Z]/g, "").toUpperCase();
+            if (sClean !== sValue) {
+                oInput.setValue(sClean);
+            }
         },
 
         onPlantFilterChange: function () {
             var oModel = this.getView().getModel("detailModel");
-            oModel.setProperty("/plantFilter", (oModel.getProperty("/plantFilter") || "").trim());
+            var sValue = (oModel.getProperty("/plantFilter") || "");
+            var sClean = sValue.replace(/[^a-zA-Z]/g, "").toUpperCase().trim();
+            oModel.setProperty("/plantFilter", sClean);
         },
 
         onGoFilter: function () {
