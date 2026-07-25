@@ -206,7 +206,7 @@ sap.ui.define([
         onMaterialFilterLiveChange: function (oEvent) {
             var oInput = oEvent.getSource();
             var sValue = oInput.getValue();
-            var sClean = sValue.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+            var sClean = sValue.replace(/[^a-zA-Z0-9*]/g, "").toUpperCase();
             if (sClean !== sValue) {
                 oInput.setValue(sClean);
             }
@@ -215,7 +215,7 @@ sap.ui.define([
         onMaterialFilterChange: function () {
             var oModel = this.getView().getModel("detailModel");
             var sValue = (oModel.getProperty("/materialFilter") || "");
-            var sClean = sValue.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().trim();
+            var sClean = sValue.replace(/[^a-zA-Z0-9*]/g, "").toUpperCase().trim();
             oModel.setProperty("/materialFilter", sClean);
         },
 
