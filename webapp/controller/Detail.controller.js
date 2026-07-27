@@ -1471,6 +1471,11 @@ sap.ui.define([
                 aDeletedExistingIndices.sort(function (a, b) { return b - a; }).forEach(function (iIdx) {
                     oController._oOriginalData.splice(iIdx, 1);
                 });
+                console.log("[UploadExcel] Delete match summary:", {
+                    deleteMarkedRows: aDeleteCandidates.length,
+                    matchedExistingRows: aDeletedExistingIndices.length,
+                    addedThenDeleted: aDeleteCandidates.length - aDeletedExistingIndices.length
+                });
             }
 
             // Per-row date range validation: end date must be after start date
@@ -1679,6 +1684,7 @@ sap.ui.define([
                 oControllerForDelete._loadDynamicFields(sProductAllocationObject, function () {
                     oModel.setProperty("/editMode", true);
                     aExistingRows = oModel.getProperty("/rows") || [];
+                    console.log("[UploadExcel] OData re-ejecutado tras corregir condiciones. Filas recargadas:", aExistingRows.length, "- continuando match de borrado con el mismo criterio.");
                     fnContinueUpload();
                 }, "");
                 return;
