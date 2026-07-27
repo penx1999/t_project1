@@ -81,6 +81,7 @@
                                         displayFormat="dd/MM/yyyy"
                                         valueFormat="dd/MM/yyyy"
                                         change=".onDateChange"
+                                        submit=".onGoFilter"
                                         enabled="true"
                                         width="135px"/>
                                     <Text text=" – " class="sapUiTinyMarginBeginEnd"/>
@@ -90,6 +91,7 @@
                                         displayFormat="dd/MM/yyyy"
                                         valueFormat="dd/MM/yyyy"
                                         change=".onDateChange"
+                                        submit=".onGoFilter"
                                         enabled="true"
                                         width="135px"/>
                                 </HBox>
@@ -101,6 +103,7 @@
                                     value="{detailModel>/allocationObjectFilter}"
                                     change=".onAllocationObjectChange"
                                     liveChange=".onAllocationObjectLiveChange"
+                                    submit=".onGoFilter"
                                     class="sapUiTinyMarginTop"
                                     width="100%"/>
                             </VBox>
@@ -111,6 +114,7 @@
                                     value="{detailModel>/materialFilter}"
                                     change=".onMaterialFilterChange"
                                     liveChange=".onMaterialFilterLiveChange"
+                                    submit=".onGoFilter"
                                     class="sapUiTinyMarginTop"
                                     width="100%"/>
                             </VBox>
@@ -121,6 +125,7 @@
                                     value="{detailModel>/plantFilter}"
                                     change=".onPlantFilterChange"
                                     liveChange=".onPlantFilterLiveChange"
+                                    submit=".onGoFilter"
                                     class="sapUiTinyMarginTop"
                                     width="100%"/>
                             </VBox>
