@@ -234,7 +234,7 @@ sap.ui.define([
         onPlantFilterLiveChange: function (oEvent) {
             var oInput = oEvent.getSource();
             var sValue = oInput.getValue();
-            var sClean = sValue.replace(/[^a-zA-Z*]/g, "").toUpperCase();
+            var sClean = sValue.replace(/[^a-zA-Z0-9*]/g, "").toUpperCase();
             if (sClean !== sValue) {
                 oInput.setValue(sClean);
             }
@@ -243,7 +243,7 @@ sap.ui.define([
         onPlantFilterChange: function () {
             var oModel = this.getView().getModel("detailModel");
             var sValue = (oModel.getProperty("/plantFilter") || "");
-            var sClean = sValue.replace(/[^a-zA-Z*]/g, "").toUpperCase().trim();
+            var sClean = sValue.replace(/[^a-zA-Z0-9*]/g, "").toUpperCase().trim();
             oModel.setProperty("/plantFilter", sClean);
         },
 
