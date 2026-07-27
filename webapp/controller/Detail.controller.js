@@ -198,9 +198,20 @@ sap.ui.define([
         onDateChange: function () {
         },
 
+        onAllocationObjectLiveChange: function (oEvent) {
+            var oInput = oEvent.getSource();
+            var sValue = oInput.getValue();
+            var sClean = sValue.replace(/[^a-zA-Z0-9-]/g, "").toUpperCase();
+            if (sClean !== sValue) {
+                oInput.setValue(sClean);
+            }
+        },
+
         onAllocationObjectChange: function () {
             var oModel = this.getView().getModel("detailModel");
-            oModel.setProperty("/allocationObjectFilter", (oModel.getProperty("/allocationObjectFilter") || "").trim());
+            var sValue = (oModel.getProperty("/allocationObjectFilter") || "");
+            var sClean = sValue.replace(/[^a-zA-Z0-9-]/g, "").toUpperCase().trim();
+            oModel.setProperty("/allocationObjectFilter", sClean);
         },
 
         onMaterialFilterLiveChange: function (oEvent) {
