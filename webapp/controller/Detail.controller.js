@@ -1433,6 +1433,8 @@ sap.ui.define([
                 else { aNonDeleteCandidates.push(oCand); }
             });
 
+            var oControllerForDelete = this;
+            var fnContinueUpload = function () {
             // Process Delete column: existing rows go to _aDeletedRows and are removed;
             // non-existing rows are added to _aDeletedRows as if added then deleted.
             var aDeletedExistingIndices = [];
@@ -1442,7 +1444,7 @@ sap.ui.define([
                 if (!oOriginalByKey[k]) { oOriginalByKey[k] = iIdx; }
             });
 
-            var oController = this;
+            var oController = oControllerForDelete;
             aDeleteCandidates.forEach(function (oCand) {
                 var k = fnMatchKey(oCand);
                 var iMatchedIdx = oOriginalByKey[k];
@@ -1565,7 +1567,7 @@ sap.ui.define([
 
             // Date overlap validation across existing + remaining new candidates
             var aAllRows = aWorkingRows.concat(aRemainingCandidates);
-            if (this._hasDateOverlap(aAllRows, aColumns)) {
+            if (oControllerForDelete._hasDateOverlap(aAllRows, aColumns)) {
                 MessageBox.error("ERROR! Dates in file!", { actions: ["OK"] });
                 return;
             }
@@ -1583,12 +1585,12 @@ sap.ui.define([
             }
 
             // Validation passed: commit rows
-            if (!this._oOriginalData) { this._oOriginalData = []; }
+            if (!oControllerForDelete._oOriginalData) { oControllerForDelete._oOriginalData = []; }
             var aRows = aWorkingRows;
             aRemainingCandidates.forEach(function (oNewRow) {
                 aRows.push(oNewRow);
-                this._oOriginalData.push(JSON.parse(JSON.stringify(oNewRow)));
-            }, this);
+                oControllerForDelete._oOriginalData.push(JSON.parse(JSON.stringify(oNewRow)));
+            });
 
             oModel.setProperty("/rows", aRows);
             var iNewRowCount = Math.min(aRows.length, 15);
@@ -1599,6 +1601,90 @@ sap.ui.define([
             var sMsg = sDeleteMsg + aRemainingCandidates.length + " new row(s) loaded and " +
                 iUpdatedCount + " duplicate row(s) updated from file.";
             MessageToast.show(sMsg);
+            };
+
+            if (aDeleteCandidates.length === 0) {
+                fnContinueUpload();
+                return;
+            }
+
+            // Rows marked for deletion: verify screen filters are blank and the
+            // 'Selection Range' covers the dates of those rows. Fix on screen if not,
+            // log the reason and re-run the OData GET before continuing.
+            var aConditionMsgs = [];
+            var bNeedsReload = false;
+
+            var sAllocFilterVal = (oModel.getProperty("/allocationObjectFilter") || "").trim();
+            var sMatFilterVal = (oModel.getProperty("/materialFilter") || "").trim();
+            var sPlantFilterVal = (oModel.getProperty("/plantFilter") || "").trim();
+
+            if (sAllocFilterVal) {
+                oModel.setProperty("/allocationObjectFilter", "");
+                bNeedsReload = true;
+                aConditionMsgs.push("Filtro 'Allocation Object' no estaba en blanco (" + sAllocFilterVal + "), se limpi\u00f3.");
+            }
+            if (sMatFilterVal) {
+                oModel.setProperty("/materialFilter", "");
+                bNeedsReload = true;
+                aConditionMsgs.push("Filtro 'Material' no estaba en blanco (" + sMatFilterVal + "), se limpi\u00f3.");
+            }
+            if (sPlantFilterVal) {
+                oModel.setProperty("/plantFilter", "");
+                bNeedsReload = true;
+                aConditionMsgs.push("Filtro 'Plant' no estaba en blanco (" + sPlantFilterVal + "), se limpi\u00f3.");
+            }
+
+            var fnDmyToYmd = function (s) {
+                if (!s) { return ""; }
+                var aParts = String(s).split("/");
+                if (aParts.length !== 3) { return ""; }
+                var dd = ("0" + aParts[0]).slice(-2);
+                var mm = ("0" + aParts[1]).slice(-2);
+                var yyyy = aParts[2];
+                return yyyy + mm + dd;
+            };
+            var fnYmdToDmy = function (s) {
+                if (!s || s.length !== 8) { return ""; }
+                return s.substring(6, 8) + "/" + s.substring(4, 6) + "/" + s.substring(0, 4);
+            };
+
+            var sScreenIniYmd = fnDmyToYmd(oModel.getProperty("/fec_ini"));
+            var sScreenFinYmd = fnDmyToYmd(oModel.getProperty("/fec_fin"));
+
+            var sMinExcelDate = null, sMaxExcelDate = null;
+            aDeleteCandidates.forEach(function (oCand) {
+                [sStartField, sEndField].forEach(function (sField) {
+                    if (!sField) { return; }
+                    var sVal = oCand[sField];
+                    if (!sVal) { return; }
+                    if (sMinExcelDate === null || sVal < sMinExcelDate) { sMinExcelDate = sVal; }
+                    if (sMaxExcelDate === null || sVal > sMaxExcelDate) { sMaxExcelDate = sVal; }
+                });
+            });
+
+            if (sMinExcelDate && sScreenIniYmd && sMinExcelDate < sScreenIniYmd) {
+                oModel.setProperty("/fec_ini", fnYmdToDmy(sMinExcelDate));
+                bNeedsReload = true;
+                aConditionMsgs.push("'Selection Range' no cubr\u00eda las fechas del excel, fec_ini ampliada a " + fnYmdToDmy(sMinExcelDate) + ".");
+            }
+            if (sMaxExcelDate && sScreenFinYmd && sMaxExcelDate > sScreenFinYmd) {
+                oModel.setProperty("/fec_fin", fnYmdToDmy(sMaxExcelDate));
+                bNeedsReload = true;
+                aConditionMsgs.push("'Selection Range' no cubr\u00eda las fechas del excel, fec_fin ampliada a " + fnYmdToDmy(sMaxExcelDate) + ".");
+            }
+
+            if (bNeedsReload) {
+                console.log("Condici\u00f3n no cumplida; " + aConditionMsgs.join(" | "));
+                oModel.setProperty("/busy", true);
+                oControllerForDelete._loadDynamicFields(sProductAllocationObject, function () {
+                    oModel.setProperty("/editMode", true);
+                    aExistingRows = oModel.getProperty("/rows") || [];
+                    fnContinueUpload();
+                }, "");
+                return;
+            }
+
+            fnContinueUpload();
         },
 
         _getStatusValueMaps: function () {
