@@ -196,6 +196,7 @@ sap.ui.define([
         },
 
         onDateChange: function () {
+            this.onGoFilter();
         },
 
         onAllocationObjectLiveChange: function (oEvent) {
