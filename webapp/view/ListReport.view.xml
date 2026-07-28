@@ -61,6 +61,16 @@
                                 submit=".onSearch"/>
                         </VBox>
 
+                        <VBox class="sapUiSmallMarginEnd" width="18rem">
+                            <Label text="{i18n>allocationObjectLabel}" labelFor="idAllocationObject"/>
+                            <Input
+                                id="idAllocationObject"
+                                value="{/filterAllocationObject}"
+                                maxLength="40"
+                                liveChange=".onAllocationObjectLiveChange"
+                                submit=".onSearch"/>
+                        </VBox>
+
                     </FlexBox>
                 </VBox>
             </f:DynamicPageHeader>

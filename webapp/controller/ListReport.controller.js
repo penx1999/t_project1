@@ -14,6 +14,7 @@ sap.ui.define([
             var oModel = new JSONModel({
                 filterProdAlloc: "",
                 filterDescription: "",
+                filterAllocationObject: "",
                 QuotaResults: [],
                 detailEnabled: false,
                 selectedItems: []
@@ -49,6 +50,15 @@ sap.ui.define([
             }
         },
 
+        onAllocationObjectLiveChange: function (oEvent) {
+            var oInput = oEvent.getSource();
+            var sValue = oInput.getValue();
+            var sClean = sValue.replace(/[^a-zA-Z0-9-]/g, "").toUpperCase();
+            if (sClean !== sValue) {
+                oInput.setValue(sClean);
+            }
+        },
+
         onSearch: function () {
             var oModel = this.getView().getModel();
             var sProdAlloc = (oModel.getProperty("/filterProdAlloc") || "").trim();
@@ -61,6 +71,9 @@ sap.ui.define([
 
             var sDescription = (oModel.getProperty("/filterDescription") || "").trim();
             aFilters.push(new Filter("DESCRIPTION", FilterOperator.EQ, sDescription || "*"));
+
+            var sAllocationObject = (oModel.getProperty("/filterAllocationObject") || "").trim();
+            aFilters.push(new Filter("DATA_ELEMENT", FilterOperator.EQ, sAllocationObject || "*"));
 
             var that = this;
 
@@ -97,6 +110,7 @@ sap.ui.define([
             var oModel = this.getView().getModel();
             oModel.setProperty("/filterProdAlloc", "");
             oModel.setProperty("/filterDescription", "");
+            oModel.setProperty("/filterAllocationObject", "");
             oModel.setProperty("/QuotaResults", []);
             oModel.setProperty("/detailEnabled", false);
             oModel.setProperty("/selectedItems", []);
