@@ -2014,7 +2014,16 @@ sap.ui.define([
                 },
                 error: function (oErr) {
                     console.log("ValueHelp OData response time ms:", Date.now() - iStartTime);
-                    jQuery.sap.log.error("ValueHelp call failed: " + (oErr && oErr.message ? oErr.message : ""));
+                    var sStatus = (oErr && oErr.statusCode) ? oErr.statusCode : "";
+                    var sDetail = "";
+                    try {
+                        var oResp = JSON.parse(oErr.responseText);
+                        sDetail = oResp.error.message.value || "";
+                    } catch (e) {
+                        sDetail = (oErr && oErr.message) ? oErr.message : "";
+                    }
+                    jQuery.sap.log.error("ValueHelp call failed (" + sStatus + "): " + sDetail);
+                    console.error("[ValueHelp] OData error", sStatus, sDetail, oErr);
                     oVHModel.setProperty("/allItems", []);
                     oVHModel.setProperty("/items", []);
                     oVHModel.setProperty("/displayedCount", 0);
@@ -2024,6 +2033,8 @@ sap.ui.define([
                     oVHModel.setProperty("/moreText", "[ 0 / 0 ]");
                     oVHModel.setProperty("/canMore", false);
                     BusyIndicator.hide();
+                    MessageBox.error("Error " + sStatus + " al obtener los valores de b\u00fasqueda ('" +
+                        (sDataElement || "") + "'). " + sDetail);
                 }
             });
         },
