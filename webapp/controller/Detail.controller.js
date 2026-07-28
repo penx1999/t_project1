@@ -1620,14 +1620,9 @@ sap.ui.define([
             MessageToast.show(sMsg);
             };
 
-            if (aDeleteCandidates.length === 0) {
-                fnContinueUpload();
-                return;
-            }
-
-            // Rows marked for deletion: verify screen filters are blank and the
-            // 'Selection Range' covers the dates of those rows. Fix on screen if not,
-            // log the reason and re-run the OData GET before continuing.
+            // For every row loaded from the excel (not only Delete-marked ones): verify
+            // screen filters are blank and the 'Selection Range' covers the excel dates.
+            // Fix on screen if not, log the reason and re-run the OData GET before continuing.
             var aConditionMsgs = [];
             var bNeedsReload = false;
 
@@ -1669,7 +1664,7 @@ sap.ui.define([
             var sScreenFinYmd = fnDmyToYmd(oModel.getProperty("/fec_fin"));
 
             var sMinExcelDate = null, sMaxExcelDate = null;
-            aDeleteCandidates.forEach(function (oCand) {
+            aCandidateRows.forEach(function (oCand) {
                 [sStartField, sEndField].forEach(function (sField) {
                     if (!sField) { return; }
                     var sVal = oCand[sField];
