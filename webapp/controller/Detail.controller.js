@@ -1995,12 +1995,25 @@ sap.ui.define([
                 "' and data_element eq '" + (sDataElement || "") + "'");
             BusyIndicator.show(0);
             var iStartTime = Date.now();
+            // Guard against out-of-order/stale responses: only the latest request for this
+            // dialog's model is allowed to update the UI (avoids an older, slower request
+            // overwriting newer results with empty/partial data).
+            oVHModel.__iReqSeq = (oVHModel.__iReqSeq || 0) + 1;
+            var iReqSeq = oVHModel.__iReqSeq;
             oODataModel.read("/ValueHelpSet", {
                 filters: aFilters,
                 success: function (oData) {
-                    var aItems = (oData && oData.results) ? oData.results : (oData ? [oData] : []);
                     console.log("ValueHelp OData response time ms:", Date.now() - iStartTime);
+                    if (iReqSeq !== oVHModel.__iReqSeq) {
+                        console.warn("[ValueHelp] Respuesta descartada: llegó una solicitud más nueva antes que esta (posible carrera).");
+                        BusyIndicator.hide();
+                        return;
+                    }
+                    var aItems = (oData && oData.results) ? oData.results : (oData ? [oData] : []);
                     console.log("ValueHelp OData records returned:", aItems.length);
+                    if (aItems.length > 0) {
+                        console.log("[ValueHelp] Estructura del primer registro (keys/valores):", aItems[0]);
+                    }
                     oVHModel.setSizeLimit(Math.max(aItems.length, 100));
                     oVHModel.setProperty("/allItems", aItems);
                     if (fnApplyValueHelpPage) {
@@ -2014,6 +2027,10 @@ sap.ui.define([
                 },
                 error: function (oErr) {
                     console.log("ValueHelp OData response time ms:", Date.now() - iStartTime);
+                    if (iReqSeq !== oVHModel.__iReqSeq) {
+                        BusyIndicator.hide();
+                        return;
+                    }
                     var sStatus = (oErr && oErr.statusCode) ? oErr.statusCode : "";
                     var sDetail = "";
                     try {
