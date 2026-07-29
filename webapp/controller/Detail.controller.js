@@ -282,7 +282,7 @@ sap.ui.define([
 
             var sMatFilter = (oModel.getProperty("/materialFilter") || "").trim();
             var sPlantFilter = (oModel.getProperty("/plantFilter") || "").trim();
-            var sLKeyChar = oModel.getProperty("/l_key_char") || sProductAllocationObject;
+            var sLKeyChar = oModel.getProperty("/l_key_char") || (sProductAllocationObject === "-" ? "" : sProductAllocationObject);
 
             var aFilterParts = [
                 "tablename eq '" + String(sLKeyChar).replace(/'/g, "''") + "'"
