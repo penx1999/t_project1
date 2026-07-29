@@ -183,8 +183,8 @@ sap.ui.define([
                 var sPendingFilter = oOwner._sPendingAllocationObjectFilter;
                 oOwner._sPendingAllocationObjectFilter = null;
                 oModel.setProperty("/allocationObjectFilter", sPendingFilter);
-                oModel.setProperty("/fec_ini", "01/01/1901");
-                oModel.setProperty("/fec_fin", "31/12/2099");
+                oModel.setProperty("/fec_ini", "");
+                oModel.setProperty("/fec_fin", "");
                 this.onGoFilter();
             }
         },
