@@ -71,9 +71,9 @@ sap.ui.define([
                 filterAllocationObject: sAllocationObject
             });
 
-            if (sAllocationObject && sProdAlloc) {
+            if (sAllocationObject) {
                 console.log("[ListReport] Allocation Object con valor: navegando directo a pantalla 2 y ejecutando su Go.");
-                this._navigateToDetail({ PRODUCTALLOCATIONOBJECT: sProdAlloc }, sAllocationObject);
+                this._navigateToDetail({ PRODUCTALLOCATIONOBJECT: sProdAlloc || "-" }, sAllocationObject);
                 return;
             }
 
