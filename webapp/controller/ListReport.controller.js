@@ -65,7 +65,14 @@ sap.ui.define([
             var oBundle = this.getView().getModel("i18n").getResourceBundle();
             var sAllocationObject = (oModel.getProperty("/filterAllocationObject") || "").trim();
 
+            console.log("[ListReport] Botón 'Go' ejecutado.", {
+                filterProdAlloc: sProdAlloc,
+                filterDescription: (oModel.getProperty("/filterDescription") || "").trim(),
+                filterAllocationObject: sAllocationObject
+            });
+
             if (sAllocationObject && sProdAlloc) {
+                console.log("[ListReport] Allocation Object con valor: navegando directo a pantalla 2 y ejecutando su Go.");
                 this._navigateToDetail({ PRODUCTALLOCATIONOBJECT: sProdAlloc }, sAllocationObject);
                 return;
             }
