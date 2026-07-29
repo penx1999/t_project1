@@ -145,7 +145,7 @@ sap.ui.define([
                 var oCompData = oCompDetailModel.getData();
                 if (oCompData) {
                     for (var sKey in oCompData) {
-                        if (sKey.toUpperCase() === "PRODUCTALLOCATIONOBJECT") {
+                        if (sKey.toUpperCase() === "DESCRIPTION") {
                             sKeyChar = oCompData[sKey] || "";
                             break;
                         }
