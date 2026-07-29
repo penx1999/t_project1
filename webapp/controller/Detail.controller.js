@@ -176,6 +176,15 @@ sap.ui.define([
             var oNextYear = new Date(oFirstOfMonth.getFullYear(), oFirstOfMonth.getMonth() + 2, 0);
             oModel.setProperty("/fec_ini", this._formatDateValue(oFirstOfMonth));
             oModel.setProperty("/fec_fin", this._formatDateValue(oNextYear));
+
+            // If screen 1 had a value in 'Allocation Object' when navigating here, carry it
+            // over and trigger Go automatically, as if the user had pressed it here.
+            if (oOwner._sPendingAllocationObjectFilter) {
+                var sPendingFilter = oOwner._sPendingAllocationObjectFilter;
+                oOwner._sPendingAllocationObjectFilter = null;
+                oModel.setProperty("/allocationObjectFilter", sPendingFilter);
+                this.onGoFilter();
+            }
         },
 
         onEdit: function () {

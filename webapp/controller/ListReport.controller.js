@@ -63,6 +63,12 @@ sap.ui.define([
             var oModel = this.getView().getModel();
             var sProdAlloc = (oModel.getProperty("/filterProdAlloc") || "").trim();
             var oBundle = this.getView().getModel("i18n").getResourceBundle();
+            var sAllocationObject = (oModel.getProperty("/filterAllocationObject") || "").trim();
+
+            if (sAllocationObject && sProdAlloc) {
+                this._navigateToDetail({ PRODUCTALLOCATIONOBJECT: sProdAlloc }, sAllocationObject);
+                return;
+            }
 
             var oODataModel = this.getOwnerComponent().getModel();
             var aFilters = [];
@@ -72,7 +78,6 @@ sap.ui.define([
             var sDescription = (oModel.getProperty("/filterDescription") || "").trim();
             aFilters.push(new Filter("DESCRIPTION", FilterOperator.EQ, sDescription || "*"));
 
-            var sAllocationObject = (oModel.getProperty("/filterAllocationObject") || "").trim();
             aFilters.push(new Filter("DATA_ELEMENT", FilterOperator.EQ, sAllocationObject || "*"));
 
             var that = this;
@@ -149,13 +154,17 @@ sap.ui.define([
             }
         },
 
-        _navigateToDetail: function (oItem) {
-            var sId = encodeURIComponent(oItem.DESCRIPTION);
+        _navigateToDetail: function (oItem, sAllocationObjectFilter) {
+            var sId = encodeURIComponent(oItem.PRODUCTALLOCATIONOBJECT || oItem.DESCRIPTION);
 
             if (!this.getOwnerComponent().getModel("detailModel")) {
                 this.getOwnerComponent().setModel(new JSONModel(oItem), "detailModel");
             } else {
                 this.getOwnerComponent().getModel("detailModel").setData(oItem);
+            }
+
+            if (sAllocationObjectFilter) {
+                this.getOwnerComponent()._sPendingAllocationObjectFilter = sAllocationObjectFilter;
             }
 
             this.getOwnerComponent().getRouter().navTo("RouteDetail", {
