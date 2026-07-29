@@ -304,6 +304,7 @@ sap.ui.define([
                 urlParameters: { "$expand": "DataSetAsoc", "$filter": aFilterParts.join(" and ") },
                 success: function (oData) {
                     var aFields = oData.results || [];
+                    console.log("[DynamicTable] Registros devueltos por OData /DynamicFieldSet:", aFields.length);
                     aFields.sort(function (a, b) {
                         return parseInt(a.position) - parseInt(b.position);
                     });
