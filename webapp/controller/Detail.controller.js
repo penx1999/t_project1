@@ -1213,9 +1213,19 @@ sap.ui.define([
         },
 
         _processUploadedRows: function (aAoA) {
+            var oModel = this.getView().getModel("detailModel");
+            var sProductAllocationObject = oModel.getProperty("/productAllocationObject") || "";
+            var oControllerForReload = this;
+            var fnReloadAfterError = function () {
+                console.log("[UploadExcel] Validación fallida, re-lanzando OData /DynamicFieldSet para refrescar pantalla.");
+                oModel.setProperty("/busy", true);
+                oControllerForReload._loadDynamicFields(sProductAllocationObject);
+            };
+
             // Skip first 15 reference lines, header is row 16 (index 15), data starts row 17 (index 16)
             if (!aAoA || aAoA.length < 16) {
                 MessageBox.error("Invalid file structure. Expected the same layout as the downloaded template.");
+                fnReloadAfterError();
                 return;
             }
             var aHeader = aAoA[15] || [];
@@ -1228,9 +1238,7 @@ sap.ui.define([
                 return;
             }
 
-            var oModel = this.getView().getModel("detailModel");
             var aColumns = oModel.getProperty("/columns") || [];
-            var sProductAllocationObject = oModel.getProperty("/productAllocationObject") || "";
 
             // Map header label -> column index in header array
             var oLabelToHeaderIdx = {};
@@ -1258,6 +1266,7 @@ sap.ui.define([
                 aExpectedLabels.every(function (s) { return oLabelToHeaderIdx[s] !== undefined; });
             if (!bLabelsOk) {
                 MessageBox.error("ERROR!: labels in file", { actions: ["OK"] });
+                fnReloadAfterError();
                 return;
             }
 
@@ -1412,11 +1421,13 @@ sap.ui.define([
 
             if (bInvalidDate) {
                 MessageBox.error("ERROR! Dates in file!", { actions: ["OK"] });
+                fnReloadAfterError();
                 return;
             }
 
             if (bInvalidStatus) {
                 MessageBox.error("ERROR! Status / Constraint Status values in file are invalid. Use one of the keys or descriptions listed in the reference lines 1-10.", { actions: ["OK"] });
+                fnReloadAfterError();
                 return;
             }
 
@@ -1512,6 +1523,7 @@ sap.ui.define([
                 });
                 if (bRangeError) {
                     MessageBox.error("ERROR! Dates in file!", { actions: ["OK"] });
+                    fnReloadAfterError();
                     return;
                 }
             }
@@ -1599,6 +1611,7 @@ sap.ui.define([
             var aAllRows = aWorkingRows.concat(aRemainingCandidates);
             if (oControllerForDelete._hasDateOverlap(aAllRows, aColumns)) {
                 MessageBox.error("ERROR! Dates in file!", { actions: ["OK"] });
+                fnReloadAfterError();
                 return;
             }
 
@@ -1610,6 +1623,7 @@ sap.ui.define([
                 });
                 if (bQuotaConsumedError) {
                     MessageBox.error("Quota Qty must be greater than or equal to Cnsmd QTy.");
+                    fnReloadAfterError();
                     return;
                 }
             }
