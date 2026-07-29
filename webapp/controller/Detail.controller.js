@@ -282,9 +282,10 @@ sap.ui.define([
 
             var sMatFilter = (oModel.getProperty("/materialFilter") || "").trim();
             var sPlantFilter = (oModel.getProperty("/plantFilter") || "").trim();
+            var sLKeyChar = oModel.getProperty("/l_key_char") || sProductAllocationObject;
 
             var aFilterParts = [
-                "tablename eq '" + String(sProductAllocationObject).replace(/'/g, "''") + "'"
+                "tablename eq '" + String(sLKeyChar).replace(/'/g, "''") + "'"
             ];
             if (sFecIni) { aFilterParts.push("fec_ini eq '" + this._toODataDate(sFecIni) + "'"); }
             if (sFecFin) { aFilterParts.push("fec_fin eq '" + this._toODataDate(sFecFin) + "'"); }
@@ -293,7 +294,7 @@ sap.ui.define([
             if (sMatFilter) { aFilterParts.push("matnr eq '" + sMatFilter.replace(/'/g, "''") + "'"); }
 
             console.log("[DynamicTable] Ejecutando OData /DynamicFieldSet", {
-                productAllocationObject: sProductAllocationObject,
+                productAllocationObject: sLKeyChar,
                 fec_ini: sFecIni || "",
                 fec_fin: sFecFin || "",
                 data_element: sType || "",
