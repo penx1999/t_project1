@@ -311,6 +311,16 @@ sap.ui.define([
                     }
                     var aFields = oData.results || [];
                     console.log("[DynamicTable] Registros devueltos por OData /DynamicFieldSet:", aFields.length);
+
+                    var oZsdCharsField = null;
+                    aFields = aFields.filter(function (oField) {
+                        if ((oField.name || "").toUpperCase() === "ZSD_CHARS") {
+                            oZsdCharsField = oField;
+                            return false;
+                        }
+                        return true;
+                    });
+
                     aFields.sort(function (a, b) {
                         return parseInt(a.position) - parseInt(b.position);
                     });
@@ -410,6 +420,13 @@ sap.ui.define([
                     aColumns.splice(iVarCharIdx + 1, 0, oVarCharCol);
 
                     var sKeyCharValue = oModel.getProperty("/l_key_char") || "";
+                    if (!sKeyCharValue && oZsdCharsField) {
+                        var aZsdData = (oZsdCharsField.DataSetAsoc && oZsdCharsField.DataSetAsoc.results) ? oZsdCharsField.DataSetAsoc.results : [];
+                        if (aZsdData.length > 0) {
+                            sKeyCharValue = (aZsdData[0].Value || "").toString().trim();
+                            oModel.setProperty("/l_key_char", sKeyCharValue);
+                        }
+                    }
                     var oKeyCharCol = { name: "KEY_CHAR", label: "Key_Char" };
                     aColumns.splice(iVarCharIdx + 2, 0, oKeyCharCol);
 
