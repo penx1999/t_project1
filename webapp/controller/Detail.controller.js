@@ -2539,6 +2539,12 @@ sap.ui.define([
                         sOldValue = that._normalizeDateValue(sOldValue, oRowData, sFieldName);
                     }
 
+                    if (sUpperName === "VAR_CHAR") {
+                        var sBackedUpAlloc = oRowData.PRODUCTALLOCATIONOBJECT || oCellMeta.productallocationobject || oRowData.productallocationobject || "";
+                        if (sCurrentValue === "-" && sBackedUpAlloc) { sCurrentValue = sBackedUpAlloc; }
+                        if (sOldValue === "-" && sBackedUpAlloc) { sOldValue = sBackedUpAlloc; }
+                    }
+
                     var oDataItem = {
                         key: oCellMeta.key || "",
                         tabname: oCellMeta.tabname || "PAL",
@@ -2579,6 +2585,10 @@ sap.ui.define([
                     var sDelUpperName = sFieldName.toUpperCase();
                     if (sDelUpperName === "PRODALLOCPERDSTARTUTCDATE" || sDelUpperName === "PRODALLOCPERIODENDUTCDATE") {
                         sDelOldValue = that._normalizeDateValue(sDelOldValue, oRowData, sFieldName);
+                    }
+                    if (sDelUpperName === "VAR_CHAR" && sDelOldValue === "-") {
+                        var sDelBackedUpAlloc = oRowData.PRODUCTALLOCATIONOBJECT || oCellMeta.productallocationobject || oRowData.productallocationobject || "";
+                        if (sDelBackedUpAlloc) { sDelOldValue = sDelBackedUpAlloc; }
                     }
                     var oDataItem = {
                         key: oCellMeta.key || "",
