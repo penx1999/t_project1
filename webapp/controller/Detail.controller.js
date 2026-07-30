@@ -185,6 +185,7 @@ sap.ui.define([
                 oModel.setProperty("/allocationObjectFilter", sPendingFilter);
                 oModel.setProperty("/fec_ini", "");
                 oModel.setProperty("/fec_fin", "");
+                this._bLogODataResponseFromScreen1 = true;
                 this.onGoFilter();
             }
         },
@@ -304,6 +305,10 @@ sap.ui.define([
             oODataModel.read("/DynamicFieldSet", {
                 urlParameters: { "$expand": "DataSetAsoc", "$filter": aFilterParts.join(" and ") },
                 success: function (oData) {
+                    if (that._bLogODataResponseFromScreen1) {
+                        that._bLogODataResponseFromScreen1 = false;
+                        console.log("[DynamicTable] Respuesta completa de OData /DynamicFieldSet (Allocation Object recibido de pantalla 1):", oData);
+                    }
                     var aFields = oData.results || [];
                     console.log("[DynamicTable] Registros devueltos por OData /DynamicFieldSet:", aFields.length);
                     aFields.sort(function (a, b) {
