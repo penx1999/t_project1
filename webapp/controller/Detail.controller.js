@@ -365,13 +365,9 @@ sap.ui.define([
                         };
                     });
 
-                    that._sBackedUpProductAllocationObject = "";
                     aFields.forEach(function (oField) {
                         var aData = (oField.DataSetAsoc && oField.DataSetAsoc.results) ? oField.DataSetAsoc.results : [];
                         aData.forEach(function (oEntry, iIdx) {
-                            if (!that._sBackedUpProductAllocationObject && oEntry.productallocationobject) {
-                                that._sBackedUpProductAllocationObject = oEntry.productallocationobject;
-                            }
                             if (!aRows[iIdx].CHARCVALUECOMBINATIONUUID) {
                                 aRows[iIdx].CHARCVALUECOMBINATIONUUID = oEntry.CHARCVALUECOMBINATIONUUID;
                             }
@@ -2544,7 +2540,7 @@ sap.ui.define([
                     }
 
                     if (sUpperName === "VAR_CHAR") {
-                        var sBackedUpAlloc = oRowData.PRODUCTALLOCATIONOBJECT || oCellMeta.productallocationobject || oRowData.productallocationobject || that._sBackedUpProductAllocationObject || "";
+                        var sBackedUpAlloc = oRowData.PRODUCTALLOCATIONOBJECT || oCellMeta.productallocationobject || oRowData.productallocationobject || "";
                         if (sCurrentValue === "-" && sBackedUpAlloc) { sCurrentValue = sBackedUpAlloc; }
                         if (sOldValue === "-" && sBackedUpAlloc) { sOldValue = sBackedUpAlloc; }
                     }
@@ -2591,7 +2587,7 @@ sap.ui.define([
                         sDelOldValue = that._normalizeDateValue(sDelOldValue, oRowData, sFieldName);
                     }
                     if (sDelUpperName === "VAR_CHAR" && sDelOldValue === "-") {
-                        var sDelBackedUpAlloc = oRowData.PRODUCTALLOCATIONOBJECT || oCellMeta.productallocationobject || oRowData.productallocationobject || that._sBackedUpProductAllocationObject || "";
+                        var sDelBackedUpAlloc = oRowData.PRODUCTALLOCATIONOBJECT || oCellMeta.productallocationobject || oRowData.productallocationobject || "";
                         if (sDelBackedUpAlloc) { sDelOldValue = sDelBackedUpAlloc; }
                     }
                     var oDataItem = {
