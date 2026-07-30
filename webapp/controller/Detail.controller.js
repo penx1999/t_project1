@@ -313,9 +313,15 @@ sap.ui.define([
                     console.log("[DynamicTable] Registros devueltos por OData /DynamicFieldSet:", aFields.length);
 
                     var oZsdCharsField = null;
+                    var oZsdCharField = null;
                     aFields = aFields.filter(function (oField) {
-                        if ((oField.name || "").toUpperCase() === "ZSD_CHARS") {
+                        var sFieldNameUpper = (oField.name || "").toUpperCase();
+                        if (sFieldNameUpper === "ZSD_CHARS") {
                             oZsdCharsField = oField;
+                            return false;
+                        }
+                        if (sFieldNameUpper === "ZSD_CHAR") {
+                            oZsdCharField = oField;
                             return false;
                         }
                         return true;
@@ -424,6 +430,13 @@ sap.ui.define([
                         var aZsdData = (oZsdCharsField.DataSetAsoc && oZsdCharsField.DataSetAsoc.results) ? oZsdCharsField.DataSetAsoc.results : [];
                         if (aZsdData.length > 0) {
                             sKeyCharValue = (aZsdData[0].Value || "").toString().trim();
+                            oModel.setProperty("/l_key_char", sKeyCharValue);
+                        }
+                    }
+                    if (oZsdCharField) {
+                        var aZsdCharData = (oZsdCharField.DataSetAsoc && oZsdCharField.DataSetAsoc.results) ? oZsdCharField.DataSetAsoc.results : [];
+                        if (aZsdCharData.length > 0) {
+                            sKeyCharValue = (aZsdCharData[0].Value || "").toString().trim();
                             oModel.setProperty("/l_key_char", sKeyCharValue);
                         }
                     }
