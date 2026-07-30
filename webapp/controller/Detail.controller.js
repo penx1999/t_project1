@@ -426,6 +426,16 @@ sap.ui.define([
                     aColumns.splice(iVarCharIdx + 1, 0, oVarCharCol);
 
                     var sKeyCharValue = oModel.getProperty("/l_key_char") || "";
+                    var bKeyCharWasEmpty = !sKeyCharValue;
+
+                    var sFirstZsdCharValue = "";
+                    if (oZsdCharField) {
+                        var aZsdCharData = (oZsdCharField.DataSetAsoc && oZsdCharField.DataSetAsoc.results) ? oZsdCharField.DataSetAsoc.results : [];
+                        if (aZsdCharData.length > 0) {
+                            sFirstZsdCharValue = (aZsdCharData[0].Value || "").toString().trim();
+                        }
+                    }
+
                     if (!sKeyCharValue && oZsdCharsField) {
                         var aZsdData = (oZsdCharsField.DataSetAsoc && oZsdCharsField.DataSetAsoc.results) ? oZsdCharsField.DataSetAsoc.results : [];
                         if (aZsdData.length > 0) {
@@ -433,12 +443,13 @@ sap.ui.define([
                             oModel.setProperty("/l_key_char", sKeyCharValue);
                         }
                     }
-                    if (!sKeyCharValue && oZsdCharField) {
-                        var aZsdCharData = (oZsdCharField.DataSetAsoc && oZsdCharField.DataSetAsoc.results) ? oZsdCharField.DataSetAsoc.results : [];
-                        if (aZsdCharData.length > 0) {
-                            sKeyCharValue = (aZsdCharData[0].Value || "").toString().trim();
-                            oModel.setProperty("/l_key_char", sKeyCharValue);
-                        }
+                    if (!sKeyCharValue && sFirstZsdCharValue) {
+                        sKeyCharValue = sFirstZsdCharValue;
+                        oModel.setProperty("/l_key_char", sKeyCharValue);
+                    }
+                    if (bKeyCharWasEmpty && sFirstZsdCharValue) {
+                        oModel.setProperty("/productAllocationObject", sFirstZsdCharValue);
+                        sProductAllocationObject = sFirstZsdCharValue;
                     }
                     var oKeyCharCol = { name: "KEY_CHAR", label: "Key_Char" };
                     aColumns.splice(iVarCharIdx + 2, 0, oKeyCharCol);
@@ -463,6 +474,8 @@ sap.ui.define([
                     oModel.setProperty("/hasChanges", false);
                     oModel.setProperty("/editMode", false);
                     oModel.setProperty("/busy", false);
+
+                    console.log("[DynamicTable] Tras GET - productAllocationObject:", oModel.getProperty("/productAllocationObject"), "| l_key_char:", oModel.getProperty("/l_key_char"));
 
                     that._buildTable(aColumns);
                     if (typeof fnAfterSuccess === "function") {
