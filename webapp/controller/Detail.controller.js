@@ -433,7 +433,7 @@ sap.ui.define([
                             oModel.setProperty("/l_key_char", sKeyCharValue);
                         }
                     }
-                    if (oZsdCharField) {
+                    if (!sKeyCharValue && oZsdCharField) {
                         var aZsdCharData = (oZsdCharField.DataSetAsoc && oZsdCharField.DataSetAsoc.results) ? oZsdCharField.DataSetAsoc.results : [];
                         if (aZsdCharData.length > 0) {
                             sKeyCharValue = (aZsdCharData[0].Value || "").toString().trim();
