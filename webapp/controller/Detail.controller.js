@@ -304,10 +304,10 @@ sap.ui.define([
             });
             oODataModel.read("/DynamicFieldSet", {
                 urlParameters: { "$expand": "DataSetAsoc", "$filter": aFilterParts.join(" and ") },
-                success: function (oData) {
+                success: function (oData, oResponse) {
                     if (that._bLogODataResponseFromScreen1) {
                         that._bLogODataResponseFromScreen1 = false;
-                        console.log("[DynamicTable] Respuesta completa de OData /DynamicFieldSet (Allocation Object recibido de pantalla 1):", oData);
+                        console.log("[DynamicTable] Response de OData /DynamicFieldSet (Allocation Object recibido de pantalla 1):", oResponse);
                     }
                     var aFields = oData.results || [];
                     console.log("[DynamicTable] Registros devueltos por OData /DynamicFieldSet:", aFields.length);
