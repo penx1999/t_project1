@@ -2350,20 +2350,24 @@ sap.ui.define([
             }
 
             // --- Date overlap validation across all rows with same key fields ---
-            // Key fields = only Material Number (MATNR) and Plant (WERKS) among the columns
+            // Key fields = only Material Number and Plant among the columns
             // to the left of the last STATUS column (Constraint Status)
+            // Matched by label (not technical name) since the technical field
+            // name returned by OData does not necessarily equal "MATNR"/"WERKS".
             var iCsIdx = -1;
             aColumns.forEach(function (oCol, iIdx) {
                 if (oCol.name.toUpperCase().indexOf("STATUS") !== -1) { iCsIdx = iIdx; }
             });
-            var aKeyFieldNames = ["MATNR", "WERKS"];
             var aKeyFields = (iCsIdx >= 0
                 ? aColumns.slice(0, iCsIdx + 1)
                 : aColumns
             ).filter(function (c) {
-                var u = c.name.toUpperCase();
-                return aKeyFieldNames.indexOf(u) !== -1;
+                var lbl = (c.label || "").toLowerCase();
+                return lbl.indexOf("material") !== -1 ||
+                    lbl.indexOf("plant") !== -1 ||
+                    lbl.indexOf("centro") !== -1;
             }).map(function (c) { return c.name; });
+            console.log("[DateConflict] Columnas usadas como key fields:", aKeyFields);
 
             var oGroups = {};
             aRows.forEach(function (oRow, iIdx) {
