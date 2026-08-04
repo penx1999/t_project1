@@ -816,6 +816,9 @@ sap.ui.define([
                     this._aDeletedRows.push({ rowIndex: iIndex, rowData: oRowCopy });
                 }
                 aRows.splice(iIndex, 1);
+                if (this._oOriginalData && this._oOriginalData.length > iIndex) {
+                    this._oOriginalData.splice(iIndex, 1);
+                }
             }
 
             oModel.setProperty("/rows", aRows);
@@ -2470,10 +2473,15 @@ sap.ui.define([
                 return a.rowIndex - b.rowIndex;
             });
 
+            var that = this;
             aDeletedRows.forEach(function (oDeletedEntry) {
                 var iIndex = Math.min(oDeletedEntry.rowIndex, aRows.length);
                 var oRowCopy = JSON.parse(JSON.stringify(oDeletedEntry.rowData));
                 aRows.splice(iIndex, 0, oRowCopy);
+                if (that._oOriginalData) {
+                    var oOrigCopy = JSON.parse(JSON.stringify(oDeletedEntry.rowData));
+                    that._oOriginalData.splice(Math.min(iIndex, that._oOriginalData.length), 0, oOrigCopy);
+                }
             });
 
             this._aDeletedRows = [];
