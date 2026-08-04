@@ -2350,30 +2350,17 @@ sap.ui.define([
             }
 
             // --- Date overlap validation across all rows with same key fields ---
-            // Key fields = the characteristic columns that make up the table's
-            // key combination (e.g. "Material Number/Plant (Own or External)/Storage Location").
-            // That combination is exactly l_key_char, the "/" - joined list of the
-            // characteristic column labels. We split it and match each part to its
-            // column by label so tables with 2, 3 or more key characteristics work.
-            var sKeyCharTitle = oModel.getProperty("/l_key_char") || "";
-            var aKeyCharParts = sKeyCharTitle.split("/").map(function (s) {
-                return s.trim().toLowerCase();
-            }).filter(function (s) { return s; });
-
+            // Key fields for the overlap (non-identical dates) case = only
+            // Material Number and Plant, regardless of other characteristics
+            // (e.g. Storage Location) the table may have. Matched by label since
+            // the technical field name does not necessarily equal "MATNR"/"WERKS".
             var aKeyFields = aColumns.filter(function (c) {
-                var lbl = (c.label || "").trim().toLowerCase().replace(/\s*\*$/, "");
-                return aKeyCharParts.indexOf(lbl) !== -1;
+                var lbl = (c.label || "").toLowerCase();
+                return lbl.indexOf("material") !== -1 ||
+                    lbl.indexOf("plant") !== -1 ||
+                    lbl.indexOf("centro") !== -1;
             }).map(function (c) { return c.name; });
-
-            if (aKeyFields.length === 0) {
-                aKeyFields = aColumns.filter(function (c) {
-                    var lbl = (c.label || "").toLowerCase();
-                    return lbl.indexOf("material") !== -1 ||
-                        lbl.indexOf("plant") !== -1 ||
-                        lbl.indexOf("centro") !== -1;
-                }).map(function (c) { return c.name; });
-            }
-            console.log("[DateConflict] l_key_char:", sKeyCharTitle, "| Columnas usadas como key fields:", aKeyFields);
+            console.log("[DateConflict] Columnas usadas como key fields (Material/Plant):", aKeyFields);
 
             // Dynamic fields to the left of "Status", excluding "Allocation Object".
             // Used only when the two compared rows have IDENTICAL dates: in that case
