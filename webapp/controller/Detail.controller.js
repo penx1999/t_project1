@@ -2400,9 +2400,20 @@ sap.ui.define([
             var sFecIni = oModel.getProperty("/fec_ini");
 
             var aSentRowsInfo = aChangedRows.map(function (oRow) {
-                return { rowIndex: oRow.rowIndex, reason: oRow.rowData._isNew ? "nueva" : "modificada" };
+                var sReason = oRow.rowData._isNew ? "nueva" : "modificada";
+                var aChangedCols = [];
+                if (!oRow.rowData._isNew) {
+                    aChangedCols = aColumns.filter(function (c) {
+                        var sCurr = String(oRow.rowData[c.name] || "").trim();
+                        var sOldRaw = oRow.rowData[c.name + "_old"];
+                        if (sOldRaw == null) { return false; }
+                        var sOld = String(sOldRaw).trim();
+                        return sCurr !== sOld;
+                    }).map(function (c) { return c.label || c.name; });
+                }
+                return { rowIndex: oRow.rowIndex, reason: sReason, columns: aChangedCols };
             }).concat(this._aDeletedRows.map(function (oDel) {
-                return { rowIndex: oDel.rowIndex, reason: "eliminada" };
+                return { rowIndex: oDel.rowIndex, reason: "eliminada", columns: [] };
             }));
             console.log("[onSave] Líneas enviadas al OData y razón:", aSentRowsInfo);
 
