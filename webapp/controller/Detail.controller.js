@@ -2347,25 +2347,19 @@ sap.ui.define([
             }
 
             // --- Date overlap validation across all rows with same key fields ---
-            // Key fields = all columns up to and including the last STATUS column (Constraint Status)
+            // Key fields = only Material Number (MATNR) and Plant (WERKS) among the columns
+            // to the left of the last STATUS column (Constraint Status)
             var iCsIdx = -1;
             aColumns.forEach(function (oCol, iIdx) {
                 if (oCol.name.toUpperCase().indexOf("STATUS") !== -1) { iCsIdx = iIdx; }
             });
-            var aNonKey = ["PRODALLOCPERDSTARTUTCDATE", "PRODALLOCPERIODENDUTCDATE",
-                           "PRODUCTALLOCATIONQUANTITY", "ZZRFCUT",
-                           "PRODALLOCCHARCVALUECOMBNCMNT", "PRODUCTALLOCATIONOBJECTUUID",
-                           "PRODUCTALLOCATIONOBJECT"];
+            var aKeyFieldNames = ["MATNR", "WERKS"];
             var aKeyFields = (iCsIdx >= 0
                 ? aColumns.slice(0, iCsIdx + 1)
                 : aColumns
             ).filter(function (c) {
                 var u = c.name.toUpperCase();
-                return aNonKey.indexOf(u) === -1 &&
-                       u.indexOf("STATUS") === -1 &&
-                       u.indexOf("AVBL")   === -1 &&
-                       u.indexOf("CNSMD")  === -1 &&
-                       !oController._isProdDescColumn(c);
+                return aKeyFieldNames.indexOf(u) !== -1;
             }).map(function (c) { return c.name; });
 
             var oGroups = {};
@@ -2404,6 +2398,13 @@ sap.ui.define([
             }
 
             var sFecIni = oModel.getProperty("/fec_ini");
+
+            var aSentRowsInfo = aChangedRows.map(function (oRow) {
+                return { rowIndex: oRow.rowIndex, reason: oRow.rowData._isNew ? "nueva" : "modificada" };
+            }).concat(this._aDeletedRows.map(function (oDel) {
+                return { rowIndex: oDel.rowIndex, reason: "eliminada" };
+            }));
+            console.log("[onSave] Líneas enviadas al OData y razón:", aSentRowsInfo);
 
             oModel.setProperty("/busy", true);
             MessageToast.show(oBundle.getText("msgSaving"));
