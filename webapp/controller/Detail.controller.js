@@ -2350,24 +2350,30 @@ sap.ui.define([
             }
 
             // --- Date overlap validation across all rows with same key fields ---
-            // Key fields = only Material Number and Plant among the columns
-            // to the left of the last STATUS column (Constraint Status)
-            // Matched by label (not technical name) since the technical field
-            // name returned by OData does not necessarily equal "MATNR"/"WERKS".
-            var iCsIdx = -1;
-            aColumns.forEach(function (oCol, iIdx) {
-                if (oCol.name.toUpperCase().indexOf("STATUS") !== -1) { iCsIdx = iIdx; }
-            });
-            var aKeyFields = (iCsIdx >= 0
-                ? aColumns.slice(0, iCsIdx + 1)
-                : aColumns
-            ).filter(function (c) {
-                var lbl = (c.label || "").toLowerCase();
-                return lbl.indexOf("material") !== -1 ||
-                    lbl.indexOf("plant") !== -1 ||
-                    lbl.indexOf("centro") !== -1;
+            // Key fields = the characteristic columns that make up the table's
+            // key combination (e.g. "Material Number/Plant (Own or External)/Storage Location").
+            // That combination is exactly l_key_char, the "/" - joined list of the
+            // characteristic column labels. We split it and match each part to its
+            // column by label so tables with 2, 3 or more key characteristics work.
+            var sKeyCharTitle = oModel.getProperty("/l_key_char") || "";
+            var aKeyCharParts = sKeyCharTitle.split("/").map(function (s) {
+                return s.trim().toLowerCase();
+            }).filter(function (s) { return s; });
+
+            var aKeyFields = aColumns.filter(function (c) {
+                var lbl = (c.label || "").trim().toLowerCase().replace(/\s*\*$/, "");
+                return aKeyCharParts.indexOf(lbl) !== -1;
             }).map(function (c) { return c.name; });
-            console.log("[DateConflict] Columnas usadas como key fields:", aKeyFields);
+
+            if (aKeyFields.length === 0) {
+                aKeyFields = aColumns.filter(function (c) {
+                    var lbl = (c.label || "").toLowerCase();
+                    return lbl.indexOf("material") !== -1 ||
+                        lbl.indexOf("plant") !== -1 ||
+                        lbl.indexOf("centro") !== -1;
+                }).map(function (c) { return c.name; });
+            }
+            console.log("[DateConflict] l_key_char:", sKeyCharTitle, "| Columnas usadas como key fields:", aKeyFields);
 
             var oGroups = {};
             aRows.forEach(function (oRow, iIdx) {
