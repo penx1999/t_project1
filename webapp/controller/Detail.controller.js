@@ -2375,6 +2375,22 @@ sap.ui.define([
             }
             console.log("[DateConflict] l_key_char:", sKeyCharTitle, "| Columnas usadas como key fields:", aKeyFields);
 
+            // Dynamic fields to the left of "Status", excluding "Allocation Object".
+            // Used only when the two compared rows have IDENTICAL dates: in that case
+            // a conflict is only raised if ALL these fields match exactly (trimmed).
+            var iCsIdxLeft = -1;
+            aColumns.forEach(function (oCol, iIdx) {
+                if (oCol.name.toUpperCase().indexOf("STATUS") !== -1 && iCsIdxLeft === -1) { iCsIdxLeft = iIdx; }
+            });
+            var aLeftFields = (iCsIdxLeft >= 0 ? aColumns.slice(0, iCsIdxLeft) : aColumns.slice())
+                .filter(function (c) {
+                    var u = c.name.toUpperCase();
+                    var lbl = (c.label || "").toLowerCase();
+                    return u.indexOf("PRODUCTALLOCATIONOBJECT") === -1 &&
+                        lbl.indexOf("allocation object") === -1;
+                }).map(function (c) { return c.name; });
+            console.log("[DateConflict] Campos a la izquierda de Status (sin Allocation Object):", aLeftFields);
+
             var oGroups = {};
             aRows.forEach(function (oRow, iIdx) {
                 var sGroupKey = aKeyFields.map(function (f) { return oRow[f] || ""; }).join("|");
@@ -2393,12 +2409,25 @@ sap.ui.define([
                         var asEnd   = sEndField   ? fnNormDate(rA[sEndField])   : "";
                         var bsStart = sStartField ? fnNormDate(rB[sStartField]) : "";
                         var bsEnd   = sEndField   ? fnNormDate(rB[sEndField])   : "";
-                        if (asStart && asEnd && bsStart && bsEnd) {
-                            if (asStart <= bsEnd && bsStart <= asEnd) {
-                                aRows[aGrp[ii].idx]._overlapError = true;
-                                aRows[aGrp[jj].idx]._overlapError = true;
-                                bOverlapError = true;
-                            }
+                        if (!asStart || !asEnd || !bsStart || !bsEnd) { continue; }
+
+                        var bDatesIdentical = (asStart === bsStart && asEnd === bsEnd);
+                        var bConflict = false;
+
+                        if (bDatesIdentical) {
+                            bConflict = aLeftFields.every(function (f) {
+                                var vA = String(rA[f] || "").trim();
+                                var vB = String(rB[f] || "").trim();
+                                return vA === vB;
+                            });
+                        } else if (asStart <= bsEnd && bsStart <= asEnd) {
+                            bConflict = true;
+                        }
+
+                        if (bConflict) {
+                            aRows[aGrp[ii].idx]._overlapError = true;
+                            aRows[aGrp[jj].idx]._overlapError = true;
+                            bOverlapError = true;
                         }
                     }
                 }
