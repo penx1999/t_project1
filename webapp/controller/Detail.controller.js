@@ -2399,17 +2399,16 @@ sap.ui.define([
 
             var sFecIni = oModel.getProperty("/fec_ini");
 
+            var oColLabels = {};
+            aColumns.forEach(function (c) { oColLabels[c.name] = c.label || c.name; });
+
             var aSentRowsInfo = aChangedRows.map(function (oRow) {
                 var sReason = oRow.rowData._isNew ? "nueva" : "modificada";
                 var aChangedCols = [];
-                if (!oRow.rowData._isNew) {
-                    aChangedCols = aColumns.filter(function (c) {
-                        var sCurr = String(oRow.rowData[c.name] || "").trim();
-                        var sOldRaw = oRow.rowData[c.name + "_old"];
-                        if (sOldRaw == null) { return false; }
-                        var sOld = String(sOldRaw).trim();
-                        return sCurr !== sOld;
-                    }).map(function (c) { return c.label || c.name; });
+                if (!oRow.rowData._isNew && oRow.changedFields) {
+                    aChangedCols = oRow.changedFields.map(function (cf) {
+                        return oColLabels[cf.name] || cf.name;
+                    });
                 }
                 return { rowIndex: oRow.rowIndex, reason: sReason, columns: aChangedCols };
             }).concat(this._aDeletedRows.map(function (oDel) {
