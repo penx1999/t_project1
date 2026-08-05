@@ -2061,9 +2061,9 @@ sap.ui.define([
             if (!oODataModel) { return; }
             var oDetailModel = this.getView().getModel("detailModel");
             var sAlloc = oDetailModel.getProperty("/productAllocationObject") || oDetailModel.getProperty("/l_key_char") || "";
-            if (sAlloc.length > 50) {
-                console.warn("[ValueHelp] allocationObject supera maxLength=50, se truncar\u00e1:", sAlloc);
-                sAlloc = sAlloc.substring(0, 50);
+            if (sAlloc.length > 300) {
+                console.warn("[ValueHelp] allocationObject supera maxLength=300, se truncar\u00e1:", sAlloc);
+                sAlloc = sAlloc.substring(0, 300);
             }
             var sServiceUrl = (oODataModel.sServiceUrl || "").replace(/\/$/, "");
             var aFilters = [
