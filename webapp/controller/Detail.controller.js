@@ -2061,7 +2061,6 @@ sap.ui.define([
             if (!oODataModel) { return; }
             var oDetailModel = this.getView().getModel("detailModel");
             var sAlloc = oDetailModel.getProperty("/l_key_char") || oDetailModel.getProperty("/productAllocationObject") || "";
-            if (sAlloc.length > 50) { sAlloc = sAlloc.substring(0, 50); }
             var sServiceUrl = (oODataModel.sServiceUrl || "").replace(/\/$/, "");
             var aFilters = [
                 new Filter("source",           FilterOperator.EQ, sSource),
