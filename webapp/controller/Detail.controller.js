@@ -364,6 +364,8 @@ sap.ui.define([
                             data_element: oField.data_element || ""
                         };
                     });
+                    console.log("[DynamicTable] data_element por campo (nivel DynamicField, antes de DataSetAsoc):",
+                        aFields.map(function (f) { return { name: f.name, data_element: f.data_element || "" }; }));
 
                     aFields.forEach(function (oField) {
                         var aData = (oField.DataSetAsoc && oField.DataSetAsoc.results) ? oField.DataSetAsoc.results : [];
@@ -1939,6 +1941,11 @@ sap.ui.define([
                     sDataElement = oFieldMeta.data_element;
                 }
             }
+            console.log("[ValueHelp] Resolucion de data_element para campo '" + sFieldName + "':", {
+                sDataElement: sDataElement,
+                oFieldMetadataEntry: (this._oFieldMetadata || {})[sFieldName],
+                oCellKeysEntry: oCtx ? (this._oCellKeys || {})[((oCtx.getPath().match(/\/rows\/(\d+)/) || [])[1]) + "_" + sFieldName] : null
+            });
 
             var oVHModel = new JSONModel({
                 allItems: [],
