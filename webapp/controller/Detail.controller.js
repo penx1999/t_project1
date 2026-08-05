@@ -364,9 +364,6 @@ sap.ui.define([
                             data_element: oField.data_element || ""
                         };
                     });
-                    console.log("[DynamicTable] data_element por campo (nivel DynamicField, antes de DataSetAsoc):",
-                        aFields.map(function (f) { return { name: f.name, data_element: f.data_element || "" }; }));
-
                     aFields.forEach(function (oField) {
                         var aData = (oField.DataSetAsoc && oField.DataSetAsoc.results) ? oField.DataSetAsoc.results : [];
                         aData.forEach(function (oEntry, iIdx) {

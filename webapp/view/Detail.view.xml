@@ -81,7 +81,6 @@
                                         displayFormat="dd/MM/yyyy"
                                         valueFormat="dd/MM/yyyy"
                                         change=".onDateChange"
-                                        submit=".onGoFilter"
                                         enabled="true"
                                         width="135px"/>
                                     <Text text=" – " class="sapUiTinyMarginBeginEnd"/>
@@ -91,7 +90,6 @@
                                         displayFormat="dd/MM/yyyy"
                                         valueFormat="dd/MM/yyyy"
                                         change=".onDateChange"
-                                        submit=".onGoFilter"
                                         enabled="true"
                                         width="135px"/>
                                 </HBox>
