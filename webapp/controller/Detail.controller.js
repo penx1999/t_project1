@@ -1040,9 +1040,11 @@ sap.ui.define([
             var aHeader = aColumns.map(function (oCol) { return oCol.label || oCol.name; });
             aAoA.push(aHeader);
 
+            var that = this;
             aRows.forEach(function (oRow) {
                 var aRow = aColumns.map(function (oCol) {
                     var v = oRow[oCol.name];
+                    v = that._statusDescriptionToKey(oCol.name, v);
                     return (v === undefined || v === null) ? "" : v;
                 });
                 aAoA.push(aRow);
@@ -1181,9 +1183,11 @@ sap.ui.define([
             aAoA.push(aHeader);
 
             // Data rows
+            var that = this;
             aRows.forEach(function (oRow) {
                 var aRow = aColumns.map(function (oCol) {
                     var v = oRow[oCol.name];
+                    v = that._statusDescriptionToKey(oCol.name, v);
                     return (v === undefined || v === null) ? "" : v;
                 });
                 aAoA.push(aRow);
@@ -1791,6 +1795,28 @@ sap.ui.define([
                     { key: "05", en: "As in Sequence Constraint", es: "Como en restricci\u00f3n de secuencia", alts: ["as in sequence constraint", "como en restricci\u00f3n de secuencia"] }
                 ]
             };
+        },
+
+        // Accepts the description (English or Spanish) currently stored for the Status /
+        // Constraint Status columns and returns its technical key ("01", "02", ...). If the
+        // value is not recognized (or the field is not a status field) it is returned unchanged.
+        _statusDescriptionToKey: function (sFieldName, vValue) {
+            var oMaps = this._getStatusValueMaps();
+            var aMap = oMaps[sFieldName];
+            var sValue = String(vValue == null ? "" : vValue).trim();
+            if (!aMap || !sValue) { return sValue; }
+
+            var sLower = sValue.toLowerCase();
+            for (var i = 0; i < aMap.length; i++) {
+                var oEntry = aMap[i];
+                if (sValue === oEntry.key ||
+                    sLower === oEntry.en.toLowerCase() ||
+                    sLower === oEntry.es.toLowerCase() ||
+                    (oEntry.alts && oEntry.alts.indexOf(sLower) !== -1)) {
+                    return oEntry.key;
+                }
+            }
+            return sValue;
         },
 
         // Accepts either the key ("01", "02", ...) or the description (in the language used in the
