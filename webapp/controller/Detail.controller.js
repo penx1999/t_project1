@@ -1043,8 +1043,13 @@ sap.ui.define([
             var that = this;
             aRows.forEach(function (oRow) {
                 var aRow = aColumns.map(function (oCol) {
-                    var v = oRow[oCol.name];
-                    v = that._statusDescriptionToKey(oCol.name, v);
+                    var v;
+                    if (oCol.isStatusDesc) {
+                        v = that._normalizeStatusFromExcel(oCol.sourceField, oRow[oCol.sourceField]);
+                        if (v === null || v === undefined) { v = oRow[oCol.sourceField]; }
+                    } else {
+                        v = that._statusDescriptionToKey(oCol.name, oRow[oCol.name]);
+                    }
                     return (v === undefined || v === null) ? "" : v;
                 });
                 aAoA.push(aRow);
@@ -1124,6 +1129,26 @@ sap.ui.define([
                 aDownloadCols.unshift({ name: "Delete", label: "Delete" });
             }
 
+            // Insert a description column right after "Status" and right after
+            // "Constraint Status", showing the description of the key to their left.
+            // These extra columns are ignored when the file is uploaded back (see
+            // _processUploadedRows: only the first column matching a given header
+            // label is mapped).
+            ["PRODALLOCATIONACTIVATIONSTATUS", "PRODALLOCCHARCCONSTRAINTSTATUS"].forEach(function (sSourceField) {
+                var iIdx = -1;
+                aDownloadCols.forEach(function (oCol, i) {
+                    if (iIdx === -1 && (oCol.name || "").toUpperCase() === sSourceField) { iIdx = i; }
+                });
+                if (iIdx >= 0) {
+                    aDownloadCols.splice(iIdx + 1, 0, {
+                        name: aDownloadCols[iIdx].name,
+                        label: aDownloadCols[iIdx].label,
+                        isStatusDesc: true,
+                        sourceField: sSourceField
+                    });
+                }
+            });
+
             return aDownloadCols;
         },
 
@@ -1186,8 +1211,13 @@ sap.ui.define([
             var that = this;
             aRows.forEach(function (oRow) {
                 var aRow = aColumns.map(function (oCol) {
-                    var v = oRow[oCol.name];
-                    v = that._statusDescriptionToKey(oCol.name, v);
+                    var v;
+                    if (oCol.isStatusDesc) {
+                        v = that._normalizeStatusFromExcel(oCol.sourceField, oRow[oCol.sourceField]);
+                        if (v === null || v === undefined) { v = oRow[oCol.sourceField]; }
+                    } else {
+                        v = that._statusDescriptionToKey(oCol.name, oRow[oCol.name]);
+                    }
                     return (v === undefined || v === null) ? "" : v;
                 });
                 aAoA.push(aRow);
@@ -1294,12 +1324,17 @@ sap.ui.define([
 
             var aColumns = oModel.getProperty("/columns") || [];
 
-            // Map header label -> column index in header array
+            // Map header label -> column index in header array. If a label appears more than
+            // once (e.g. the "Status"/"Constraint Status" description columns added on
+            // download, which repeat the same header as the technical key column to their
+            // left), only the first occurrence is kept; later duplicates are ignored.
             var oLabelToHeaderIdx = {};
             aHeader.forEach(function (sLbl, i) {
                 var sHeaderLabel = String(sLbl == null ? "" : sLbl).toLowerCase().trim();
                 if (sHeaderLabel && sHeaderLabel.lastIndexOf(" - description") !== sHeaderLabel.length - 14) {
-                    oLabelToHeaderIdx[sHeaderLabel] = i;
+                    if (oLabelToHeaderIdx[sHeaderLabel] === undefined) {
+                        oLabelToHeaderIdx[sHeaderLabel] = i;
+                    }
                 }
             });
             var iDeleteCol = oLabelToHeaderIdx["delete"];
