@@ -263,6 +263,27 @@ sap.ui.define([
             var oModel = this.getView().getModel("detailModel");
             var sQuotaId = oModel.getProperty("/productAllocationObject");
             var sFilterValue = (oModel.getProperty("/allocationObjectFilter") || "").trim();
+
+            if (oModel.getProperty("/hasChanges")) {
+                var oBundle = this.getView().getModel("i18n").getResourceBundle();
+                var that = this;
+                MessageBox.confirm(oBundle.getText("cancelConfirmMsg"), {
+                    actions: [oBundle.getText("confirmYes"), oBundle.getText("confirmNo")],
+                    emphasizedAction: oBundle.getText("confirmNo"),
+                    onClose: function (sAction) {
+                        if (sAction === oBundle.getText("confirmYes")) {
+                            oModel.setProperty("/hasChanges", false);
+                            that._executeGoFilter(sQuotaId, sFilterValue);
+                        }
+                    }
+                });
+                return;
+            }
+            this._executeGoFilter(sQuotaId, sFilterValue);
+        },
+
+        _executeGoFilter: function (sQuotaId, sFilterValue) {
+            var oModel = this.getView().getModel("detailModel");
             oModel.setProperty("/messageVisible", false);
             oModel.setProperty("/messageText", "");
             oModel.setProperty("/messageType", "None");
