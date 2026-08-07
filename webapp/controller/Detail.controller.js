@@ -265,17 +265,10 @@ sap.ui.define([
             var sFilterValue = (oModel.getProperty("/allocationObjectFilter") || "").trim();
 
             if (oModel.getProperty("/hasChanges")) {
-                var oBundle = this.getView().getModel("i18n").getResourceBundle();
                 var that = this;
-                MessageBox.confirm(oBundle.getText("cancelConfirmMsg"), {
-                    actions: [oBundle.getText("confirmYes"), oBundle.getText("confirmNo")],
-                    emphasizedAction: oBundle.getText("confirmNo"),
-                    onClose: function (sAction) {
-                        if (sAction === oBundle.getText("confirmYes")) {
-                            oModel.setProperty("/hasChanges", false);
-                            that._executeGoFilter(sQuotaId, sFilterValue);
-                        }
-                    }
+                this._showUnsavedPopup(function () {
+                    oModel.setProperty("/hasChanges", false);
+                    that._executeGoFilter(sQuotaId, sFilterValue);
                 });
                 return;
             }
@@ -2317,17 +2310,10 @@ sap.ui.define([
         },
 
         onCancel: function () {
-            var oBundle = this.getView().getModel("i18n").getResourceBundle();
             var that = this;
-            MessageBox.confirm(oBundle.getText("cancelConfirmMsg"), {
-                actions: [oBundle.getText("confirmYes"), oBundle.getText("confirmNo")],
-                emphasizedAction: oBundle.getText("confirmNo"),
-                onClose: function (sAction) {
-                    if (sAction === oBundle.getText("confirmYes")) {
-                        that.getView().getModel("detailModel").setProperty("/hasChanges", false);
-                        that._doNavBack();
-                    }
-                }
+            this._showUnsavedPopup(function () {
+                that.getView().getModel("detailModel").setProperty("/hasChanges", false);
+                that._doNavBack();
             });
         },
 
