@@ -565,9 +565,7 @@ sap.ui.define([
                 if (!oRocCol && (oCol.label || "").toUpperCase().trim() === "ROC") { oRocCol = oCol; }
             });
             if (oRocCol) {
-                var sRocDataElement = "";
-                var oRocFieldMeta = (that._oFieldMetadata || {})[oRocCol.name];
-                if (oRocFieldMeta && oRocFieldMeta.data_element) { sRocDataElement = oRocFieldMeta.data_element; }
+                var sRocDataElement = "ZRFCUT_FIORI";
 
                 var oRocOptionsModel = that.getView().getModel("rocOptions");
                 if (!oRocOptionsModel) {
