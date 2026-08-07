@@ -9,6 +9,8 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/m/Text",
     "sap/m/Input",
+    "sap/m/Select",
+    "sap/ui/core/Item",
     "sap/m/Label",
     "sap/m/DatePicker",
     "sap/m/Dialog",
@@ -23,7 +25,7 @@ sap.ui.define([
     "sap/ui/table/RowSettings",
     "sap/ui/core/format/DateFormat",
     "sap/ui/core/BusyIndicator"
-], function (Controller, History, JSONModel, Filter, FilterOperator, CustomData, MessageBox, MessageToast, Text, Input, Label, DatePicker, Dialog, SearchField, VBox, HBox, Button, MTable, MColumn, ColumnListItem, UIColumn, RowSettings, DateFormat, BusyIndicator) {
+], function (Controller, History, JSONModel, Filter, FilterOperator, CustomData, MessageBox, MessageToast, Text, Input, Select, CoreItem, Label, DatePicker, Dialog, SearchField, VBox, HBox, Button, MTable, MColumn, ColumnListItem, UIColumn, RowSettings, DateFormat, BusyIndicator) {
     "use strict";
 
     var EDITABLE_FIELDS = [
@@ -556,6 +558,29 @@ sap.ui.define([
                 }
             });
 
+            // Preload the "RoC" drop-down options from the same OData source (/ValueHelpSet)
+            // used for the other F4 fields, into a dedicated named model shared by every row.
+            var oRocCol = null;
+            aVisibleColumns.forEach(function (oCol) {
+                if (!oRocCol && (oCol.label || "").toUpperCase().trim() === "ROC") { oRocCol = oCol; }
+            });
+            if (oRocCol) {
+                var sRocDataElement = "";
+                var oRocFieldMeta = (that._oFieldMetadata || {})[oRocCol.name];
+                if (oRocFieldMeta && oRocFieldMeta.data_element) { sRocDataElement = oRocFieldMeta.data_element; }
+
+                var oRocOptionsModel = that.getView().getModel("rocOptions");
+                if (!oRocOptionsModel) {
+                    oRocOptionsModel = new JSONModel({ allItems: [], items: [] });
+                    that.getView().setModel(oRocOptionsModel, "rocOptions");
+                }
+                var fnApplyRocOptions = function () {
+                    var aAll = oRocOptionsModel.getProperty("/allItems") || [];
+                    oRocOptionsModel.setProperty("/items", [{ Clave: "", Desc: "" }].concat(aAll));
+                };
+                that._loadValueHelp("*", "", oRocOptionsModel, sRocDataElement, null, fnApplyRocOptions);
+            }
+
             aVisibleColumns.forEach(function (oCol) {
                 var sFieldName = oCol.name;
                 var sFieldUpper = sFieldName.toUpperCase();
@@ -569,9 +594,11 @@ sap.ui.define([
                 var bNonEditableInput = (sFieldUpper === "PRODALLOCATIONACTIVATIONSTATUS" ||
                                          sFieldUpper === "PRODALLOCCHARCCONSTRAINTSTATUS");
                 
-                var bEditableField = (sFieldUpper === "ZZRFCUT" ||
+                var bRocField = (sLabelUpper === "ROC");
+
+                var bEditableField = (!bRocField && sFieldUpper === "ZZRFCUT") ||
                                       sFieldUpper === "PRODALLOCCHARCVALUECOMBNCMNT" ||
-                                      sFieldUpper === "PRODUCTALLOCATIONQUANTITY");
+                                      sFieldUpper === "PRODUCTALLOCATIONQUANTITY";
 
                 var bDateField = (sFieldUpper === "PRODALLOCPERDSTARTUTCDATE" ||
                                   sFieldUpper === "PRODALLOCPERIODENDUTCDATE");
@@ -627,11 +654,14 @@ sap.ui.define([
                         value: "{detailModel>" + sFieldName + "}",
                         editable: false
                     }).addStyleClass("sapUiSizeCompact");
-                } else if (bEditableField) {
-                    var bLockWhenConsumed = sConsumedQtyField && sLabelUpper === "ROC";
-                    var oInputCfg = {
-                        value: "{detailModel>" + sFieldName + "}",
-                        editable: bLockWhenConsumed ? {
+                } else if (bRocField) {
+                    var bLockRocWhenConsumed = !!sConsumedQtyField;
+                    oTemplate = new Select({
+                        selectedKey: "{detailModel>" + sFieldName + "}",
+                        forceSelection: false,
+                        autoAdjustWidth: false,
+                        valueState: "{= ${detailModel>_err_" + sFieldName + "} ? 'Error' : 'None' }",
+                        enabled: bLockRocWhenConsumed ? {
                             parts: [
                                 { path: "detailModel>/editMode" },
                                 { path: "detailModel>" + sConsumedQtyField }
@@ -641,6 +671,19 @@ sap.ui.define([
                                 return bEditMode === true && !(fConsumedQty > 0);
                             }
                         } : "{detailModel>/editMode}",
+                        change: that._onFieldChange.bind(that),
+                        items: {
+                            path: "rocOptions>/items",
+                            template: new CoreItem({
+                                key: "{rocOptions>Clave}",
+                                text: "{= ${rocOptions>Clave} ? ${rocOptions>Clave} + ' - ' + ${rocOptions>Desc} : '' }"
+                            })
+                        }
+                    }).addStyleClass("sapUiSizeCompact");
+                } else if (bEditableField) {
+                    var oInputCfg = {
+                        value: "{detailModel>" + sFieldName + "}",
+                        editable: "{detailModel>/editMode}",
                         change: that._onFieldChange.bind(that),
                         liveChange: bIsComment ? that._onFieldChange.bind(that) : fnUpper
                     };
