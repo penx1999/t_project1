@@ -672,6 +672,7 @@ sap.ui.define([
                         change: that._onFieldChange.bind(that),
                         items: {
                             path: "rocOptions>/items",
+                            templateShareable: false,
                             template: new CoreItem({
                                 key: "{rocOptions>Clave}",
                                 text: "{= ${rocOptions>Clave} ? ${rocOptions>Clave} + ' - ' + ${rocOptions>Desc} : '' }"
