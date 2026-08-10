@@ -657,6 +657,7 @@ sap.ui.define([
                         selectedKey: "{detailModel>" + sFieldName + "}",
                         forceSelection: false,
                         autoAdjustWidth: false,
+                        width: "100%",
                         valueState: "{= ${detailModel>_err_" + sFieldName + "} ? 'Error' : 'None' }",
                         enabled: bLockRocWhenConsumed ? {
                             parts: [
@@ -712,7 +713,7 @@ sap.ui.define([
                     label: new Label({ text: oCol.label + (bIsRequired ? " *" : ""), wrapping: false }),
                     template: oTemplate,
                     resizable: true,
-                    autoResizable: true
+                    autoResizable: bRocField ? false : true
                 }));
             });
 
