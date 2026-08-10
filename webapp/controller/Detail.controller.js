@@ -652,13 +652,13 @@ sap.ui.define([
                         editable: false
                     }).addStyleClass("sapUiSizeCompact");
                 } else if (bRocField) {
-                    console.log("[ZQUOT][RoC-width-fix][c19d400] rendering RoC as Select with zqRocSelect class");
+                    console.log("[ZQUOT][RoC-width-fix][b35948d-v2] rendering RoC as Select with width 6.5rem");
                     var bLockRocWhenConsumed = !!sConsumedQtyField;
                     oTemplate = new Select({
                         selectedKey: "{detailModel>" + sFieldName + "}",
                         forceSelection: false,
                         autoAdjustWidth: false,
-                        width: "100%",
+                        width: "6.5rem",
                         valueState: "{= ${detailModel>_err_" + sFieldName + "} ? 'Error' : 'None' }",
                         enabled: bLockRocWhenConsumed ? {
                             parts: [
