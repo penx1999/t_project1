@@ -678,7 +678,7 @@ sap.ui.define([
                                 text: "{= ${rocOptions>Clave} ? ${rocOptions>Clave} + ' - ' + ${rocOptions>Desc} : '' }"
                             })
                         }
-                    }).addStyleClass("sapUiSizeCompact");
+                    }).addStyleClass("sapUiSizeCompact").addStyleClass("zqRocSelect");
                 } else if (bEditableField) {
                     var oInputCfg = {
                         value: "{detailModel>" + sFieldName + "}",

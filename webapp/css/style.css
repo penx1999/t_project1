@@ -5,3 +5,15 @@
     padding: 4px 6px;
     box-sizing: border-box;
 }
+
+/* La columna "RoC" de la tabla dinamica debe verse tan delgada como las
+   columnas vecinas (Input). Sin esto, sap.m.Select puede desbordar el
+   ancho de su celda en la sap.ui.table y verse mas ancho que el resto. */
+.zqRocSelect,
+.zqRocSelect.sapMSelect {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    overflow: hidden;
+}
