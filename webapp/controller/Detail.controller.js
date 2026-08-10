@@ -68,6 +68,7 @@ sap.ui.define([
                 rowCount: 5,
                 busy: false,
                 hasChanges: false,
+                cancelForceEnabled: false,
                 editMode: false,
                 fec_ini: this._formatDateValue(oFirstOfMonth),
                 fec_fin: this._formatDateValue(oNextYear),
@@ -168,6 +169,7 @@ sap.ui.define([
             oModel.setProperty("/rowCount", 5);
             oModel.setProperty("/tableTitle", "");
             oModel.setProperty("/hasChanges", false);
+            oModel.setProperty("/cancelForceEnabled", false);
             oModel.setProperty("/allocationObjectFilter", "");
             oModel.setProperty("/materialFilter", "");
             oModel.setProperty("/plantFilter", "");
@@ -2601,6 +2603,7 @@ sap.ui.define([
                     }
                     that._hasDeletedRows = false;
                     that._aDeletedRows = [];
+                    oModel.setProperty("/cancelForceEnabled", true);
                     var sObj = oModel.getProperty("/productAllocationObject");
                     oModel.setProperty("/busy", true);
                     that._loadDynamicFields(sObj);

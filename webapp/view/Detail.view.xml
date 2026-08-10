@@ -31,7 +31,7 @@
                         text="{i18n>cancelButton}"
                         type="Default"
                         icon="sap-icon://decline"
-                        enabled="{detailModel>/hasChanges}"
+                        enabled="{= ${detailModel>/hasChanges} || ${detailModel>/cancelForceEnabled} }"
                         press=".onCancel"/>
                     <Button
                         id="idSaveButton"
