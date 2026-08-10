@@ -201,6 +201,7 @@ sap.ui.define([
             oModel.setProperty("/messageVisible", false);
             oModel.setProperty("/messageText", "");
             oModel.setProperty("/messageType", "None");
+            oModel.setProperty("/cancelForceEnabled", true);
             if (sQuotaId) {
                 oModel.setProperty("/busy", true);
                 this._loadDynamicFields(sQuotaId, function () {
