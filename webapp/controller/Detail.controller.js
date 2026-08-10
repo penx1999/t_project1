@@ -652,7 +652,6 @@ sap.ui.define([
                         editable: false
                     }).addStyleClass("sapUiSizeCompact");
                 } else if (bRocField) {
-                    console.log("[ZQUOT][RoC-width-fix][b35948d-v2] rendering RoC as Select with width 6.5rem");
                     var bLockRocWhenConsumed = !!sConsumedQtyField;
                     oTemplate = new Select({
                         selectedKey: "{detailModel>" + sFieldName + "}",
@@ -679,7 +678,7 @@ sap.ui.define([
                                 text: "{= ${rocOptions>Clave} ? ${rocOptions>Clave} + ' - ' + ${rocOptions>Desc} : '' }"
                             })
                         }
-                    }).addStyleClass("sapUiSizeCompact").addStyleClass("zqRocSelect");
+                    }).addStyleClass("sapUiSizeCompact");
                 } else if (bEditableField) {
                     var oInputCfg = {
                         value: "{detailModel>" + sFieldName + "}",
