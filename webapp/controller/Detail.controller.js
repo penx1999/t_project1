@@ -536,16 +536,12 @@ sap.ui.define([
 
             var sColWidth = "150px";
 
-            var iStatusIdx = -1;
-            aVisibleColumns.forEach(function (oCol, iIdx) {
-                if (iStatusIdx === -1 && oCol.name.toUpperCase().indexOf("STATUS") !== -1) {
-                    iStatusIdx = iIdx;
-                }
-            });
+            // El scroll horizontal debe cubrir toda la tabla: la única columna fija
+            // es el checkbox de selección (columna nativa de sap.ui.table), por lo
+            // que no fijamos ninguna columna de datos.
+            var iFixedCount = 0;
 
-            var iFixedCount = (iStatusIdx > 0) ? iStatusIdx : 0;
-
-            jQuery.sap.log.info("Detail._buildTable: columns=" + JSON.stringify(aVisibleColumns.map(function(c){ return c.name; })) + " | iStatusIdx=" + iStatusIdx + " | iFixedCount=" + iFixedCount);
+            jQuery.sap.log.info("Detail._buildTable: columns=" + JSON.stringify(aVisibleColumns.map(function(c){ return c.name; })) + " | iFixedCount=" + iFixedCount);
 
             var oDateFormat = DateFormat.getDateInstance({
                 style: "medium"
