@@ -1015,6 +1015,20 @@ sap.ui.define([
             oModel.setProperty("/hasChanges", true);
         },
 
+        onShowConsumption: function () {
+            var oTable = this.byId("idDynamicTable");
+            var aSelectedIndices = oTable.getSelectedIndices();
+            var oBundle = this.getView().getModel("i18n").getResourceBundle();
+
+            if (aSelectedIndices.length === 0) {
+                MessageToast.show(oBundle.getText("msgSelectRows"));
+                return;
+            }
+
+            // TODO: implementar la lógica real de "Show Consumption".
+            MessageToast.show("Show Consumption: " + aSelectedIndices.length + " fila(s) seleccionada(s)");
+        },
+
         onDownload: function () {
             var that = this;
             if (!this._oDownloadDialog) {
