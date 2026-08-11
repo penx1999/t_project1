@@ -28,3 +28,10 @@
     max-width: 100% !important;
     box-sizing: border-box !important;
 }
+
+/* La descripcion (additionalText) de la lista desplegable del ComboBox de
+   RoC se muestra alineada a la derecha por defecto; se alinea a la
+   izquierda para mejorar la lectura. */
+.sapMSLIInfo {
+    text-align: left !important;
+}
