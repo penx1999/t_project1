@@ -5,3 +5,16 @@
     padding: 4px 6px;
     box-sizing: border-box;
 }
+
+/* Altura uniforme para todos los controles (Input, Select) dentro de las
+   filas de la tabla dinamica del Detail, para que midan lo mismo en
+   sentido vertical sin importar el tipo de campo. */
+#idDynamicTable .sapUiSizeCompact.sapMInputBase,
+#idDynamicTable .sapUiSizeCompact.sapMSelect {
+    height: 2rem !important;
+}
+#idDynamicTable .sapUiSizeCompact.sapMInputBase .sapMInputBaseInner,
+#idDynamicTable .sapUiSizeCompact.sapMSelect .sapMSelect {
+    height: 2rem !important;
+    line-height: 2rem !important;
+}
