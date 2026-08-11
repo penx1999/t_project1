@@ -656,6 +656,7 @@ sap.ui.define([
                     oTemplate = new ComboBox({
                         selectedKey: "{detailModel>" + sFieldName + "}",
                         width: "100%",
+                        showSecondaryValues: true,
                         valueState: "{= ${detailModel>_err_" + sFieldName + "} ? 'Error' : 'None' }",
                         enabled: bLockRocWhenConsumed ? {
                             parts: [
