@@ -1025,8 +1025,30 @@ sap.ui.define([
                 return;
             }
 
-            // TODO: implementar la lógica real de "Show Consumption".
-            MessageToast.show("Show Consumption: " + aSelectedIndices.length + " fila(s) seleccionada(s)");
+            var oModel = this.getView().getModel("detailModel");
+            var sAllocationObject = oModel.getProperty("/productAllocationObject");
+
+            if (!sAllocationObject) {
+                MessageToast.show(oBundle.getText("msgSelectRows"));
+                return;
+            }
+
+            if (!sap.ushell || !sap.ushell.Container) {
+                MessageBox.error("La navegación a 'Show Consumption' solo está disponible dentro del Fiori Launchpad.");
+                return;
+            }
+
+            sap.ushell.Container.getServiceAsync("CrossApplicationNavigation").then(function (oCrossAppNav) {
+                oCrossAppNav.toExternal({
+                    target: {
+                        semanticObject: "OutboundDelivery",
+                        action: "change"
+                    },
+                    params: {
+                        productallocationobject: sAllocationObject
+                    }
+                });
+            });
         },
 
         onDownload: function () {
