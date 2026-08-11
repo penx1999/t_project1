@@ -656,7 +656,10 @@ sap.ui.define([
                     oTemplate = new ComboBox({
                         selectedKey: "{detailModel>" + sFieldName + "}",
                         value: {
-                            path: "detailModel>" + sFieldName,
+                            parts: [
+                                { path: "detailModel>" + sFieldName },
+                                { path: "rocOptions>/items" }
+                            ],
                             formatter: function (v) { return v == null ? "" : String(v); }
                         },
                         width: "100%",
