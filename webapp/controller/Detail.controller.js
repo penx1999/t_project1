@@ -659,7 +659,6 @@ sap.ui.define([
                             path: "detailModel>" + sFieldName,
                             formatter: function (v) { return v == null ? "" : String(v); }
                         },
-                        editable: false,
                         width: "100%",
                         valueState: "{= ${detailModel>_err_" + sFieldName + "} ? 'Error' : 'None' }",
                         enabled: bLockRocWhenConsumed ? {
@@ -672,7 +671,18 @@ sap.ui.define([
                                 return bEditMode === true && !(fConsumedQty > 0);
                             }
                         } : "{detailModel>/editMode}",
-                        change: that._onFieldChange.bind(that),
+                        selectionChange: function (oEvent) {
+                            var oCombo = oEvent.getSource();
+                            var oSelectedItem = oEvent.getParameter("selectedItem");
+                            oCombo.setValue(oSelectedItem ? oSelectedItem.getKey() : "");
+                            that._onFieldChange(oEvent);
+                        },
+                        change: function (oEvent) {
+                            var oCombo = oEvent.getSource();
+                            var sKey = oCombo.getSelectedKey();
+                            oCombo.setValue(sKey || "");
+                            that._onFieldChange(oEvent);
+                        },
                         items: {
                             path: "rocOptions>/items",
                             templateShareable: false,
