@@ -6,24 +6,24 @@
     box-sizing: border-box;
 }
 
-/* Altura uniforme para todos los controles (Input, Select) dentro de las
+/* Altura uniforme para todos los controles (Input, ComboBox) dentro de las
    filas de la tabla dinamica del Detail, para que midan lo mismo en
    sentido vertical sin importar el tipo de campo. */
 #idDynamicTable .sapUiSizeCompact.sapMInputBase,
-#idDynamicTable .sapUiSizeCompact.sapMSelect {
+#idDynamicTable .sapUiSizeCompact.sapMComboBox {
     height: 2rem !important;
 }
 #idDynamicTable .sapUiSizeCompact.sapMInputBase .sapMInputBaseInner,
-#idDynamicTable .sapUiSizeCompact.sapMSelect .sapMSelect {
+#idDynamicTable .sapUiSizeCompact.sapMComboBox .sapMInputBaseInner {
     height: 2rem !important;
     line-height: 2rem !important;
 }
 
-/* El ancho del campo RoC (sap.m.Select) debe ser exactamente igual al de
+/* El ancho del campo RoC (sap.m.ComboBox) debe ser exactamente igual al de
    los campos vecinos (sap.m.Input), que por defecto ocupan el 100% del
    ancho de su columna en la tabla dinamica. */
 #idDynamicTable .sapUiSizeCompact.sapMInputBase,
-#idDynamicTable .sapUiSizeCompact.sapMSelect {
+#idDynamicTable .sapUiSizeCompact.sapMComboBox {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;

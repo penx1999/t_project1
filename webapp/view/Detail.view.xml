@@ -196,7 +196,7 @@
                                     press=".onOpenChangeConstraintStatusMenu"/>
                                 <Button
                                     id="idShowConsumptionButton"
-                                    visible="true"
+                                    visible="false"
                                     text="{i18n>showConsumptionButton}"
                                     type="Transparent"
                                     enabled="true"

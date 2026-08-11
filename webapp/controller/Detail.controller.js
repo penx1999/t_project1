@@ -9,7 +9,7 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/m/Text",
     "sap/m/Input",
-    "sap/m/Select",
+    "sap/m/ComboBox",
     "sap/ui/core/Item",
     "sap/m/Label",
     "sap/m/DatePicker",
@@ -25,7 +25,7 @@ sap.ui.define([
     "sap/ui/table/RowSettings",
     "sap/ui/core/format/DateFormat",
     "sap/ui/core/BusyIndicator"
-], function (Controller, History, JSONModel, Filter, FilterOperator, CustomData, MessageBox, MessageToast, Text, Input, Select, CoreItem, Label, DatePicker, Dialog, SearchField, VBox, HBox, Button, MTable, MColumn, ColumnListItem, UIColumn, RowSettings, DateFormat, BusyIndicator) {
+], function (Controller, History, JSONModel, Filter, FilterOperator, CustomData, MessageBox, MessageToast, Text, Input, ComboBox, CoreItem, Label, DatePicker, Dialog, SearchField, VBox, HBox, Button, MTable, MColumn, ColumnListItem, UIColumn, RowSettings, DateFormat, BusyIndicator) {
     "use strict";
 
     var EDITABLE_FIELDS = [
@@ -653,12 +653,14 @@ sap.ui.define([
                     }).addStyleClass("sapUiSizeCompact");
                 } else if (bRocField) {
                     var bLockRocWhenConsumed = !!sConsumedQtyField;
-                    oTemplate = new Select({
+                    oTemplate = new ComboBox({
                         selectedKey: "{detailModel>" + sFieldName + "}",
-                        forceSelection: false,
-                        autoAdjustWidth: false,
+                        value: {
+                            path: "detailModel>" + sFieldName,
+                            formatter: function (v) { return v == null ? "" : String(v); }
+                        },
+                        editable: false,
                         width: "100%",
-                        height: "2rem",
                         valueState: "{= ${detailModel>_err_" + sFieldName + "} ? 'Error' : 'None' }",
                         enabled: bLockRocWhenConsumed ? {
                             parts: [
