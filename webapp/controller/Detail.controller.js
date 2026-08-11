@@ -10,7 +10,7 @@ sap.ui.define([
     "sap/m/Text",
     "sap/m/Input",
     "sap/m/ComboBox",
-    "sap/ui/core/Item",
+    "sap/ui/core/ListItem",
     "sap/m/Label",
     "sap/m/DatePicker",
     "sap/m/Dialog",
@@ -25,7 +25,7 @@ sap.ui.define([
     "sap/ui/table/RowSettings",
     "sap/ui/core/format/DateFormat",
     "sap/ui/core/BusyIndicator"
-], function (Controller, History, JSONModel, Filter, FilterOperator, CustomData, MessageBox, MessageToast, Text, Input, ComboBox, CoreItem, Label, DatePicker, Dialog, SearchField, VBox, HBox, Button, MTable, MColumn, ColumnListItem, UIColumn, RowSettings, DateFormat, BusyIndicator) {
+], function (Controller, History, JSONModel, Filter, FilterOperator, CustomData, MessageBox, MessageToast, Text, Input, ComboBox, CoreListItem, Label, DatePicker, Dialog, SearchField, VBox, HBox, Button, MTable, MColumn, ColumnListItem, UIColumn, RowSettings, DateFormat, BusyIndicator) {
     "use strict";
 
     var EDITABLE_FIELDS = [
@@ -655,13 +655,6 @@ sap.ui.define([
                     var bLockRocWhenConsumed = !!sConsumedQtyField;
                     oTemplate = new ComboBox({
                         selectedKey: "{detailModel>" + sFieldName + "}",
-                        value: {
-                            parts: [
-                                { path: "detailModel>" + sFieldName },
-                                { path: "rocOptions>/items" }
-                            ],
-                            formatter: function (v) { return v == null ? "" : String(v); }
-                        },
                         width: "100%",
                         valueState: "{= ${detailModel>_err_" + sFieldName + "} ? 'Error' : 'None' }",
                         enabled: bLockRocWhenConsumed ? {
@@ -674,24 +667,14 @@ sap.ui.define([
                                 return bEditMode === true && !(fConsumedQty > 0);
                             }
                         } : "{detailModel>/editMode}",
-                        selectionChange: function (oEvent) {
-                            var oCombo = oEvent.getSource();
-                            var oSelectedItem = oEvent.getParameter("selectedItem");
-                            oCombo.setValue(oSelectedItem ? oSelectedItem.getKey() : "");
-                            that._onFieldChange(oEvent);
-                        },
-                        change: function (oEvent) {
-                            var oCombo = oEvent.getSource();
-                            var sKey = oCombo.getSelectedKey();
-                            oCombo.setValue(sKey || "");
-                            that._onFieldChange(oEvent);
-                        },
+                        change: that._onFieldChange.bind(that),
                         items: {
                             path: "rocOptions>/items",
                             templateShareable: false,
-                            template: new CoreItem({
+                            template: new CoreListItem({
                                 key: "{rocOptions>Clave}",
-                                text: "{= ${rocOptions>Clave} ? ${rocOptions>Clave} + ' - ' + ${rocOptions>Desc} : '' }"
+                                text: "{rocOptions>Clave}",
+                                additionalText: "{rocOptions>Desc}"
                             })
                         }
                     }).addStyleClass("sapUiSizeCompact");
