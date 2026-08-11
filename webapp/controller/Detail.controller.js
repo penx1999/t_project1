@@ -657,7 +657,7 @@ sap.ui.define([
                         selectedKey: "{detailModel>" + sFieldName + "}",
                         forceSelection: false,
                         autoAdjustWidth: false,
-                        width: "6.5rem",
+                        width: "100%",
                         valueState: "{= ${detailModel>_err_" + sFieldName + "} ? 'Error' : 'None' }",
                         enabled: bLockRocWhenConsumed ? {
                             parts: [

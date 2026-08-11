@@ -18,3 +18,13 @@
     height: 2rem !important;
     line-height: 2rem !important;
 }
+
+/* El ancho del campo RoC (sap.m.Select) debe ser exactamente igual al de
+   los campos vecinos (sap.m.Input), que por defecto ocupan el 100% del
+   ancho de su columna en la tabla dinamica. */
+#idDynamicTable .sapUiSizeCompact.sapMInputBase,
+#idDynamicTable .sapUiSizeCompact.sapMSelect {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
