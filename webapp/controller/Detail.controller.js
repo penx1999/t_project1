@@ -1026,7 +1026,8 @@ sap.ui.define([
             }
 
             var oModel = this.getView().getModel("detailModel");
-            var sAllocationObject = oModel.getProperty("/productAllocationObject");
+            var oSelectedRow = oModel.getProperty("/rows/" + aSelectedIndices[0]) || {};
+            var sAllocationObject = oSelectedRow.PRODUCTALLOCATIONOBJECT || oSelectedRow.productallocationobject || "";
 
             if (!sAllocationObject) {
                 MessageToast.show(oBundle.getText("msgSelectRows"));
