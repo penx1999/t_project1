@@ -30,8 +30,16 @@
 }
 
 /* La descripcion (additionalText) de la lista desplegable del ComboBox de
-   RoC se muestra alineada a la derecha por defecto; se alinea a la
-   izquierda para mejorar la lectura. */
+   RoC (sap.m.StandardListItem con showSecondaryValues) se posiciona por
+   diseno de Fiori pegada al borde derecho del popup (info text). Se
+   fuerza a que quede inmediatamente despues de la clave, alineada a la
+   izquierda, en vez de flotar al extremo derecho. */
 .sapMSLIInfo {
     text-align: left !important;
+    flex: auto !important;
+    margin-inline-start: 0.5rem !important;
+}
+.sapMSLI .sapMSLITitleOnly,
+.sapMSLI .sapMSLITitle {
+    flex: none !important;
 }
