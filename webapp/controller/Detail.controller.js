@@ -1080,10 +1080,14 @@ sap.ui.define([
                     cellKeys: that._oCellKeys,
                     originalData: that._oOriginalData,
                     hasDeletedRows: that._hasDeletedRows,
-                    deletedRows: that._aDeletedRows
+                    deletedRows: that._aDeletedRows,
+                    listModel: oComponent._oListModel ? oComponent._oListModel.getData() : null
                 });
                 oAppState.save().done(function () {
                     var sKey = oAppState.getKey();
+                    try {
+                        window.sessionStorage.setItem("zquot_pendingListAppStateKey", sKey);
+                    } catch (eStorage) { /* ignore */ }
                     var oHashChanger = sap.ui.core.routing.HashChanger.getInstance();
                     var sHash = oHashChanger.getHash();
                     sHash += (sHash.indexOf("?") > -1 ? "&" : "?") + "sap-iapp-state=" + sKey;

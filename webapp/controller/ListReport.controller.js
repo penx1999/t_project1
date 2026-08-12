@@ -21,6 +21,27 @@ sap.ui.define([
             });
             this.getView().setModel(oModel);
 
+            var oOwnerComp = this.getOwnerComponent();
+            oOwnerComp._oListModel = oModel;
+
+            var sPendingKey = null;
+            try {
+                sPendingKey = window.sessionStorage.getItem("zquot_pendingListAppStateKey");
+            } catch (e) { /* ignore */ }
+            if (sPendingKey && sap.ushell && sap.ushell.Container) {
+                sap.ushell.Container.getServiceAsync("CrossApplicationNavigation").then(function (oCrossAppNav) {
+                    oCrossAppNav.getAppState(oOwnerComp, sPendingKey).done(function (oAppState) {
+                        var oSaved = oAppState.getData();
+                        if (oSaved && oSaved.listModel) {
+                            oModel.setData(oSaved.listModel);
+                        }
+                        try {
+                            window.sessionStorage.removeItem("zquot_pendingListAppStateKey");
+                        } catch (e2) { /* ignore */ }
+                    });
+                });
+            }
+
             this.getOwnerComponent().getRouter()
                 .getRoute("RouteListReport")
                 .attachPatternMatched(this._onRouteMatched, this);
