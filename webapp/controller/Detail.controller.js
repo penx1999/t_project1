@@ -1040,7 +1040,7 @@ sap.ui.define([
             }
 
             sap.ushell.Container.getServiceAsync("CrossApplicationNavigation").then(function (oCrossAppNav) {
-                oCrossAppNav.toExternal({
+                var sHash = oCrossAppNav.hrefForExternal({
                     target: {
                         semanticObject: "OutboundDelivery",
                         action: "change"
@@ -1049,6 +1049,7 @@ sap.ui.define([
                         productallocationobject: sAllocationObject
                     }
                 });
+                window.open(sHash, "_blank");
             });
         },
 
