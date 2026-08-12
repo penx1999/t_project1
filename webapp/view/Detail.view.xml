@@ -31,6 +31,7 @@
                         text="{i18n>cancelButton}"
                         type="Default"
                         icon="sap-icon://decline"
+                        visible="{detailModel>/editMode}"
                         enabled="{= ${detailModel>/hasChanges} || ${detailModel>/cancelForceEnabled} }"
                         press=".onCancel"/>
                     <Button
@@ -39,6 +40,7 @@
                         type="Emphasized"
                         icon="sap-icon://save"
                         press=".onSave"
+                        visible="{detailModel>/editMode}"
                         enabled="{detailModel>/hasChanges}"/>
                 </contentRight>
             </Bar>
