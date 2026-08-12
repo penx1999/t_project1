@@ -108,7 +108,7 @@
         },
         {
           "name": "RouteDetail",
-          "pattern": "detail/{quotaId}",
+          "pattern": "detail/{quotaId}:?query:",
           "target": "TargetDetail"
         }
       ],
