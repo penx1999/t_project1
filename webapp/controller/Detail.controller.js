@@ -126,9 +126,31 @@ sap.ui.define([
         _onRouteMatched: function (oEvent) {
             var sQuotaId = decodeURIComponent(oEvent.getParameter("arguments").quotaId);
             var oOwner = this.getOwnerComponent();
+            var that = this;
+
+            var sCurrentHash = sap.ui.core.routing.HashChanger.getInstance().getHash();
+            var aAppStateMatch = /sap-iapp-state=([^&]+)/.exec(sCurrentHash || "");
+            if (aAppStateMatch && sap.ushell && sap.ushell.Container) {
+                var sAppStateKey = aAppStateMatch[1];
+                sap.ushell.Container.getServiceAsync("CrossApplicationNavigation").then(function (oCrossAppNav) {
+                    oCrossAppNav.getAppState(oOwner, sAppStateKey).done(function (oAppState) {
+                        var oSaved = oAppState.getData();
+                        if (oSaved && oSaved.detailModel) {
+                            var oModel = that.getView().getModel("detailModel");
+                            oModel.setData(oSaved.detailModel);
+                            that._oCellKeys = oSaved.cellKeys || {};
+                            that._oOriginalData = oSaved.originalData || [];
+                            that._hasDeletedRows = oSaved.hasDeletedRows || false;
+                            that._aDeletedRows = oSaved.deletedRows || [];
+                            that._buildTable(oSaved.detailModel.columns || []);
+                        }
+                    });
+                });
+                return;
+            }
+
             if (oOwner._bPreventDetailReload) {
                 oOwner._bPreventDetailReload = false;
-                var that = this;
                 this._showUnsavedPopup(function () {
                     var oDetailModel = that.getView().getModel("detailModel");
                     oDetailModel.setProperty("/hasChanges", false);
@@ -1039,17 +1061,35 @@ sap.ui.define([
                 return;
             }
 
+            var that = this;
+            var oComponent = this.getOwnerComponent();
+
             sap.ushell.Container.getServiceAsync("CrossApplicationNavigation").then(function (oCrossAppNav) {
-                var sHash = oCrossAppNav.hrefForExternal({
-                    target: {
-                        semanticObject: "OutboundDelivery",
-                        action: "change"
-                    },
-                    params: {
-                        productallocationobject: sAllocationObject
-                    }
+                var oAppState = oCrossAppNav.createEmptyAppState(oComponent);
+                oAppState.setData({
+                    detailModel: oModel.getData(),
+                    cellKeys: that._oCellKeys,
+                    originalData: that._oOriginalData,
+                    hasDeletedRows: that._hasDeletedRows,
+                    deletedRows: that._aDeletedRows
                 });
-                window.open(sHash, "_blank");
+                oAppState.save().done(function () {
+                    var sKey = oAppState.getKey();
+                    var oHashChanger = sap.ui.core.routing.HashChanger.getInstance();
+                    var sHash = oHashChanger.getHash();
+                    sHash += (sHash.indexOf("?") > -1 ? "&" : "?") + "sap-iapp-state=" + sKey;
+                    oHashChanger.replaceHash(sHash);
+
+                    oCrossAppNav.toExternal({
+                        target: {
+                            semanticObject: "OutboundDelivery",
+                            action: "change"
+                        },
+                        params: {
+                            productallocationobject: sAllocationObject
+                        }
+                    });
+                });
             });
         },
 
