@@ -28,16 +28,24 @@ sap.ui.define([
             try {
                 sPendingKey = window.sessionStorage.getItem("zquot_pendingListAppStateKey");
             } catch (e) { /* ignore */ }
+            console.log("[ListReport] onInit - sPendingKey desde sessionStorage:", sPendingKey, "| sap.ushell disponible:", !!(sap.ushell && sap.ushell.Container));
             if (sPendingKey && sap.ushell && sap.ushell.Container) {
                 sap.ushell.Container.getServiceAsync("CrossApplicationNavigation").then(function (oCrossAppNav) {
+                    console.log("[ListReport] CrossApplicationNavigation obtenido, llamando getAppState con key:", sPendingKey);
                     oCrossAppNav.getAppState(oOwnerComp, sPendingKey).done(function (oAppState) {
                         var oSaved = oAppState.getData();
+                        console.log("[ListReport] getAppState resuelto. oSaved:", oSaved);
                         if (oSaved && oSaved.listModel) {
                             oModel.setData(oSaved.listModel);
+                            console.log("[ListReport] Modelo de lista restaurado con exito.");
+                        } else {
+                            console.warn("[ListReport] oSaved.listModel no existe, no se restauro nada.");
                         }
                         try {
                             window.sessionStorage.removeItem("zquot_pendingListAppStateKey");
                         } catch (e2) { /* ignore */ }
+                    }).fail(function () {
+                        console.error("[ListReport] getAppState fallo (posiblemente la key expiro o es invalida):", sPendingKey);
                     });
                 });
             }

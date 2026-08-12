@@ -1073,6 +1073,8 @@ sap.ui.define([
             var that = this;
             var oComponent = this.getOwnerComponent();
 
+            console.log("[Detail] onShowConsumption - oComponent._oListModel existe:", !!oComponent._oListModel, "| datos:", oComponent._oListModel ? oComponent._oListModel.getData() : null);
+
             sap.ushell.Container.getServiceAsync("CrossApplicationNavigation").then(function (oCrossAppNav) {
                 var oAppState = oCrossAppNav.createEmptyAppState(oComponent);
                 oAppState.setData({
@@ -1085,9 +1087,13 @@ sap.ui.define([
                 });
                 oAppState.save().done(function () {
                     var sKey = oAppState.getKey();
+                    console.log("[Detail] AppState guardado con key:", sKey);
                     try {
                         window.sessionStorage.setItem("zquot_pendingListAppStateKey", sKey);
-                    } catch (eStorage) { /* ignore */ }
+                        console.log("[Detail] sessionStorage zquot_pendingListAppStateKey seteado:", window.sessionStorage.getItem("zquot_pendingListAppStateKey"));
+                    } catch (eStorage) {
+                        console.error("[Detail] Error guardando sessionStorage:", eStorage);
+                    }
                     var oHashChanger = sap.ui.core.routing.HashChanger.getInstance();
                     var sHash = oHashChanger.getHash();
                     sHash += (sHash.indexOf("?") > -1 ? "&" : "?") + "sap-iapp-state=" + sKey;
