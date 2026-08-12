@@ -2432,8 +2432,12 @@ sap.ui.define([
         onCancel: function () {
             var that = this;
             this._showUnsavedPopup(function () {
-                that.getView().getModel("detailModel").setProperty("/hasChanges", false);
-                that._doNavBack();
+                var oModel = that.getView().getModel("detailModel");
+                oModel.setProperty("/hasChanges", false);
+                oModel.setProperty("/editMode", false);
+                var sQuotaId = oModel.getProperty("/productAllocationObject");
+                var sFilterValue = (oModel.getProperty("/allocationObjectFilter") || "").trim();
+                that._executeGoFilter(sQuotaId, sFilterValue);
             });
         },
 
