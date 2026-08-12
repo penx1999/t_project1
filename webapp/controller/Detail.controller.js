@@ -1048,8 +1048,17 @@ sap.ui.define([
             }
 
             var oModel = this.getView().getModel("detailModel");
-            var oSelectedRow = oModel.getProperty("/rows/" + aSelectedIndices[0]) || {};
-            var sAllocationObject = oSelectedRow.PRODUCTALLOCATIONOBJECT || oSelectedRow.productallocationobject || "";
+            var iSelectedIndex = aSelectedIndices[0];
+            var oSelectedRow = oModel.getProperty("/rows/" + iSelectedIndex) || {};
+            var aColumns = oModel.getProperty("/columns") || [];
+            var sAllocationObject = "";
+            for (var i = 0; i < aColumns.length && !sAllocationObject; i++) {
+                var oCellMeta = (this._oCellKeys || {})[iSelectedIndex + "_" + aColumns[i].name] || {};
+                sAllocationObject = oCellMeta.productallocationobject || "";
+            }
+            if (!sAllocationObject) {
+                sAllocationObject = oSelectedRow.PRODUCTALLOCATIONOBJECT || oSelectedRow.productallocationobject || "";
+            }
 
             if (!sAllocationObject) {
                 MessageToast.show(oBundle.getText("msgSelectRows"));
