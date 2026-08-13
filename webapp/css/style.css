@@ -52,3 +52,17 @@
     outline: none !important;
     box-shadow: none !important;
 }
+#idDynamicTable .sapMCb,
+#idDynamicTable .sapMCb *,
+#idDynamicTable .sapMCbBg,
+#idDynamicTable .sapMCbMark,
+#idDynamicTable .sapMCb input[type="checkbox"] {
+    outline: none !important;
+    box-shadow: none !important;
+}
+#idDynamicTable .sapMCb:focus,
+#idDynamicTable .sapMCb:focus-within,
+#idDynamicTable .sapMCb .sapMCbBg:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
