@@ -91,10 +91,10 @@ sap.ui.define([
         _onTableRowSelectionChange: function () {
             var oTable = this.byId("idDynamicTable");
             var oModel = this.getView().getModel("detailModel");
-            var iSelectedIndex = oTable.getSelectedIndex();
+            var aSelectedIndices = oTable.getSelectedIndices();
             var aRows = oModel.getProperty("/rows") || [];
             aRows.forEach(function (oRow, iIndex) {
-                oRow._isSelected = (iIndex === iSelectedIndex);
+                oRow._isSelected = aSelectedIndices.indexOf(iIndex) !== -1;
             });
             oModel.refresh();
         },
@@ -107,10 +107,21 @@ sap.ui.define([
             var sPath = oCtx.getPath();
             var iIndex = parseInt(sPath.substring(sPath.lastIndexOf("/") + 1), 10);
             var oTable = this.byId("idDynamicTable");
-            if (bSelected) {
-                oTable.setSelectedIndex(iIndex);
-            } else if (oTable.getSelectedIndex() === iIndex) {
-                oTable.clearSelection();
+            var oModel = this.getView().getModel("detailModel");
+            var bEditMode = oModel.getProperty("/editMode");
+
+            if (bEditMode) {
+                if (bSelected) {
+                    oTable.addSelectionInterval(iIndex, iIndex);
+                } else {
+                    oTable.removeSelectionInterval(iIndex, iIndex);
+                }
+            } else {
+                if (bSelected) {
+                    oTable.setSelectedIndex(iIndex);
+                } else if (oTable.getSelectedIndex() === iIndex) {
+                    oTable.clearSelection();
+                }
             }
             this._onTableRowSelectionChange();
         },
