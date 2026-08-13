@@ -598,7 +598,7 @@ sap.ui.define([
                 template: new CheckBox({
                     selected: "{detailModel>_isSelected}",
                     select: that._onRadioSelectRow.bind(that)
-                }).addStyleClass("sapUiSizeCompact"),
+                }),
                 resizable: false,
                 autoResizable: false,
                 hAlign: "Center"
