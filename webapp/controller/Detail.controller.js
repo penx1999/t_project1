@@ -1087,8 +1087,8 @@ sap.ui.define([
             var aSelectedIndices = oTable.getSelectedIndices();
             var oBundle = this.getView().getModel("i18n").getResourceBundle();
 
-            if (aSelectedIndices.length === 0) {
-                MessageToast.show(oBundle.getText("msgSelectRows"));
+            if (aSelectedIndices.length === 0 || aSelectedIndices.length > 1) {
+                MessageBox.error(oBundle.getText("msgSelectExactlyOneItem"));
                 return;
             }
 
