@@ -43,12 +43,3 @@
 .sapMSLI .sapMSLITitle {
     flex: none !important;
 }
-
-/* Quitar el recuadro de foco alrededor de la celda del checkbox de
-   seleccion de fila en la tabla dinamica del Detail (primera columna),
-   sin alterar el box-shadow propio del checkbox (necesario para su
-   apariencia normal). */
-#idDynamicTable .sapUiTableRow > .sapUiTableCell:first-child:focus,
-#idDynamicTable .sapUiTableRow > .sapUiTableCell:first-child.sapUiTableCellFocus {
-    outline: none !important;
-}

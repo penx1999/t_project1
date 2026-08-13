@@ -21,12 +21,11 @@ sap.ui.define([
     "sap/m/Table",
     "sap/m/Column",
     "sap/m/ColumnListItem",
-    "sap/m/CheckBox",
     "sap/ui/table/Column",
     "sap/ui/table/RowSettings",
     "sap/ui/core/format/DateFormat",
     "sap/ui/core/BusyIndicator"
-], function (Controller, History, JSONModel, Filter, FilterOperator, CustomData, MessageBox, MessageToast, Text, Input, ComboBox, CoreListItem, Label, DatePicker, Dialog, SearchField, VBox, HBox, Button, MTable, MColumn, ColumnListItem, CheckBox, UIColumn, RowSettings, DateFormat, BusyIndicator) {
+], function (Controller, History, JSONModel, Filter, FilterOperator, CustomData, MessageBox, MessageToast, Text, Input, ComboBox, CoreListItem, Label, DatePicker, Dialog, SearchField, VBox, HBox, Button, MTable, MColumn, ColumnListItem, UIColumn, RowSettings, DateFormat, BusyIndicator) {
     "use strict";
 
     var EDITABLE_FIELDS = [
@@ -81,49 +80,6 @@ sap.ui.define([
 
             var oRouter = this.getOwnerComponent().getRouter();
             oRouter.getRoute("RouteDetail").attachPatternMatched(this._onRouteMatched, this);
-
-            var oTable = this.byId("idDynamicTable");
-            if (oTable) {
-                oTable.attachRowSelectionChange(this._onTableRowSelectionChange, this);
-            }
-        },
-
-        _onTableRowSelectionChange: function () {
-            var oTable = this.byId("idDynamicTable");
-            var oModel = this.getView().getModel("detailModel");
-            var aSelectedIndices = oTable.getSelectedIndices();
-            var aRows = oModel.getProperty("/rows") || [];
-            aRows.forEach(function (oRow, iIndex) {
-                oRow._isSelected = aSelectedIndices.indexOf(iIndex) !== -1;
-            });
-            oModel.refresh();
-        },
-
-        _onRadioSelectRow: function (oEvent) {
-            var oCheckBox = oEvent.getSource();
-            var bSelected = oEvent.getParameter("selected");
-            var oCtx = oCheckBox.getBindingContext("detailModel");
-            if (!oCtx) { return; }
-            var sPath = oCtx.getPath();
-            var iIndex = parseInt(sPath.substring(sPath.lastIndexOf("/") + 1), 10);
-            var oTable = this.byId("idDynamicTable");
-            var oModel = this.getView().getModel("detailModel");
-            var bEditMode = oModel.getProperty("/editMode");
-
-            if (bEditMode) {
-                if (bSelected) {
-                    oTable.addSelectionInterval(iIndex, iIndex);
-                } else {
-                    oTable.removeSelectionInterval(iIndex, iIndex);
-                }
-            } else {
-                if (bSelected) {
-                    oTable.setSelectedIndex(iIndex);
-                } else if (oTable.getSelectedIndex() === iIndex) {
-                    oTable.clearSelection();
-                }
-            }
-            this._onTableRowSelectionChange();
         },
 
         _formatDateValue: function (oDate) {
@@ -602,18 +558,6 @@ sap.ui.define([
             });
 
             oTable.destroyColumns();
-
-            oTable.addColumn(new UIColumn({
-                width: "3rem",
-                label: new Label({ text: "" }),
-                template: new CheckBox({
-                    selected: "{detailModel>_isSelected}",
-                    select: that._onRadioSelectRow.bind(that)
-                }),
-                resizable: false,
-                autoResizable: false,
-                hAlign: "Center"
-            }));
 
             var sColWidth = "150px";
 
@@ -1098,8 +1042,8 @@ sap.ui.define([
             var aSelectedIndices = oTable.getSelectedIndices();
             var oBundle = this.getView().getModel("i18n").getResourceBundle();
 
-            if (aSelectedIndices.length === 0 || aSelectedIndices.length > 1) {
-                MessageBox.error(oBundle.getText("msgSelectExactlyOneItem"));
+            if (aSelectedIndices.length === 0) {
+                MessageToast.show(oBundle.getText("msgSelectRows"));
                 return;
             }
 
