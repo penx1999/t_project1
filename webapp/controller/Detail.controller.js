@@ -1047,6 +1047,11 @@ sap.ui.define([
                 return;
             }
 
+            if (aSelectedIndices.length > 1) {
+                MessageBox.error(oBundle.getText("msgSelectExactlyOneItem"));
+                return;
+            }
+
             var oModel = this.getView().getModel("detailModel");
             var iSelectedIndex = aSelectedIndices[0];
             var oSelectedRow = oModel.getProperty("/rows/" + iSelectedIndex) || {};
