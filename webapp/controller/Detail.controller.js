@@ -21,11 +21,12 @@ sap.ui.define([
     "sap/m/Table",
     "sap/m/Column",
     "sap/m/ColumnListItem",
+    "sap/m/RadioButton",
     "sap/ui/table/Column",
     "sap/ui/table/RowSettings",
     "sap/ui/core/format/DateFormat",
     "sap/ui/core/BusyIndicator"
-], function (Controller, History, JSONModel, Filter, FilterOperator, CustomData, MessageBox, MessageToast, Text, Input, ComboBox, CoreListItem, Label, DatePicker, Dialog, SearchField, VBox, HBox, Button, MTable, MColumn, ColumnListItem, UIColumn, RowSettings, DateFormat, BusyIndicator) {
+], function (Controller, History, JSONModel, Filter, FilterOperator, CustomData, MessageBox, MessageToast, Text, Input, ComboBox, CoreListItem, Label, DatePicker, Dialog, SearchField, VBox, HBox, Button, MTable, MColumn, ColumnListItem, RadioButton, UIColumn, RowSettings, DateFormat, BusyIndicator) {
     "use strict";
 
     var EDITABLE_FIELDS = [
@@ -80,6 +81,33 @@ sap.ui.define([
 
             var oRouter = this.getOwnerComponent().getRouter();
             oRouter.getRoute("RouteDetail").attachPatternMatched(this._onRouteMatched, this);
+
+            var oTable = this.byId("idDynamicTable");
+            if (oTable) {
+                oTable.attachRowSelectionChange(this._onTableRowSelectionChange, this);
+            }
+        },
+
+        _onTableRowSelectionChange: function () {
+            var oTable = this.byId("idDynamicTable");
+            var oModel = this.getView().getModel("detailModel");
+            var iSelectedIndex = oTable.getSelectedIndex();
+            var aRows = oModel.getProperty("/rows") || [];
+            aRows.forEach(function (oRow, iIndex) {
+                oRow._isSelected = (iIndex === iSelectedIndex);
+            });
+            oModel.refresh();
+        },
+
+        _onRadioSelectRow: function (oEvent) {
+            var oRadio = oEvent.getSource();
+            var oCtx = oRadio.getBindingContext("detailModel");
+            if (!oCtx) { return; }
+            var sPath = oCtx.getPath();
+            var iIndex = parseInt(sPath.substring(sPath.lastIndexOf("/") + 1), 10);
+            var oTable = this.byId("idDynamicTable");
+            oTable.setSelectedIndex(iIndex);
+            this._onTableRowSelectionChange();
         },
 
         _formatDateValue: function (oDate) {
@@ -558,6 +586,18 @@ sap.ui.define([
             });
 
             oTable.destroyColumns();
+
+            oTable.addColumn(new UIColumn({
+                width: "3rem",
+                label: new Label({ text: "" }),
+                template: new RadioButton({
+                    selected: "{detailModel>_isSelected}",
+                    select: that._onRadioSelectRow.bind(that)
+                }),
+                resizable: false,
+                autoResizable: false,
+                hAlign: "Center"
+            }));
 
             var sColWidth = "150px";
 

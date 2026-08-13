@@ -157,7 +157,7 @@
                         visibleRowCountMode="Fixed"
                         visibleRowCount="{detailModel>/rowCount}"
                         selectionMode="Single"
-                        selectionBehavior="Row"
+                        selectionBehavior="RowOnly"
                         columnHeaderHeight="32"
                         width="100%"
                         class="sapUiSmallMarginBottom">
