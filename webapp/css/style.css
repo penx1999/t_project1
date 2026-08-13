@@ -44,25 +44,11 @@
     flex: none !important;
 }
 
-/* Quitar el recuadro de foco alrededor del checkbox de seleccion de fila
-   en la tabla dinamica del Detail (primera columna). */
+/* Quitar el recuadro de foco alrededor de la celda del checkbox de
+   seleccion de fila en la tabla dinamica del Detail (primera columna),
+   sin alterar el box-shadow propio del checkbox (necesario para su
+   apariencia normal). */
 #idDynamicTable .sapUiTableRow > .sapUiTableCell:first-child:focus,
-#idDynamicTable .sapUiTableRow > .sapUiTableCell:first-child.sapUiTableCellFocus,
-#idDynamicTable .sapUiTableRow > .sapUiTableCell:first-child *:focus {
+#idDynamicTable .sapUiTableRow > .sapUiTableCell:first-child.sapUiTableCellFocus {
     outline: none !important;
-    box-shadow: none !important;
-}
-#idDynamicTable .sapMCb,
-#idDynamicTable .sapMCb *,
-#idDynamicTable .sapMCbBg,
-#idDynamicTable .sapMCbMark,
-#idDynamicTable .sapMCb input[type="checkbox"] {
-    outline: none !important;
-    box-shadow: none !important;
-}
-#idDynamicTable .sapMCb:focus,
-#idDynamicTable .sapMCb:focus-within,
-#idDynamicTable .sapMCb .sapMCbBg:focus {
-    outline: none !important;
-    box-shadow: none !important;
 }
