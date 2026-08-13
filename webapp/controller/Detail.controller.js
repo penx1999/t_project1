@@ -21,12 +21,12 @@ sap.ui.define([
     "sap/m/Table",
     "sap/m/Column",
     "sap/m/ColumnListItem",
-    "sap/m/RadioButton",
+    "sap/m/CheckBox",
     "sap/ui/table/Column",
     "sap/ui/table/RowSettings",
     "sap/ui/core/format/DateFormat",
     "sap/ui/core/BusyIndicator"
-], function (Controller, History, JSONModel, Filter, FilterOperator, CustomData, MessageBox, MessageToast, Text, Input, ComboBox, CoreListItem, Label, DatePicker, Dialog, SearchField, VBox, HBox, Button, MTable, MColumn, ColumnListItem, RadioButton, UIColumn, RowSettings, DateFormat, BusyIndicator) {
+], function (Controller, History, JSONModel, Filter, FilterOperator, CustomData, MessageBox, MessageToast, Text, Input, ComboBox, CoreListItem, Label, DatePicker, Dialog, SearchField, VBox, HBox, Button, MTable, MColumn, ColumnListItem, CheckBox, UIColumn, RowSettings, DateFormat, BusyIndicator) {
     "use strict";
 
     var EDITABLE_FIELDS = [
@@ -100,13 +100,18 @@ sap.ui.define([
         },
 
         _onRadioSelectRow: function (oEvent) {
-            var oRadio = oEvent.getSource();
-            var oCtx = oRadio.getBindingContext("detailModel");
+            var oCheckBox = oEvent.getSource();
+            var bSelected = oEvent.getParameter("selected");
+            var oCtx = oCheckBox.getBindingContext("detailModel");
             if (!oCtx) { return; }
             var sPath = oCtx.getPath();
             var iIndex = parseInt(sPath.substring(sPath.lastIndexOf("/") + 1), 10);
             var oTable = this.byId("idDynamicTable");
-            oTable.setSelectedIndex(iIndex);
+            if (bSelected) {
+                oTable.setSelectedIndex(iIndex);
+            } else if (oTable.getSelectedIndex() === iIndex) {
+                oTable.clearSelection();
+            }
             this._onTableRowSelectionChange();
         },
 
@@ -590,7 +595,7 @@ sap.ui.define([
             oTable.addColumn(new UIColumn({
                 width: "3rem",
                 label: new Label({ text: "" }),
-                template: new RadioButton({
+                template: new CheckBox({
                     selected: "{detailModel>_isSelected}",
                     select: that._onRadioSelectRow.bind(that)
                 }).addStyleClass("sapUiSizeCompact"),
