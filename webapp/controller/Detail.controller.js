@@ -2862,9 +2862,17 @@ sap.ui.define([
                 });
             });
 
-            this._aDeletedRows.forEach(function (oDeletedEntry) {
+            this._aDeletedRows.forEach(function (oDeletedEntry, iDelIdx) {
                 var iRowIndex = oDeletedEntry.rowIndex;
                 var oRowData = oDeletedEntry.rowData;
+                // La "position" debe ser unica dentro del payload para no
+                // colisionar con la de una fila actual (modificada/nueva)
+                // que haya quedado con el mismo indice tras el splice de
+                // la fila eliminada (por ejemplo: copiar una fila y luego
+                // eliminar el original hace que la copia recorra al indice
+                // que tenia el original). Se usa un offset fuera del rango
+                // de filas actuales para garantizar unicidad.
+                var iDelPosition = aAllRows.length + iDelIdx + 1;
 
                 aColumns.forEach(function (oCol) {
                     var sFieldName = oCol.name;
@@ -2892,7 +2900,7 @@ sap.ui.define([
                         name: sFieldName,
                         Value: "",
                         Value_old: sDelOldValue,
-                        position: String(iRowIndex + 1),
+                        position: String(iDelPosition),
                         prodallocationtimeseriesuuid: oCellMeta.prodallocationtimeseriesuuid || oRowData.prodallocationtimeseriesuuid || "",
                         productallocationobject: oCellMeta.productallocationobject || oRowData.productallocationobject || "",
                         CHARCVALUECOMBINATIONUUID: oCellMeta.CHARCVALUECOMBINATIONUUID || oRowData.CHARCVALUECOMBINATIONUUID || "",
