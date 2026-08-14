@@ -1079,10 +1079,18 @@ sap.ui.define([
             var oComponent = this.getOwnerComponent();
             var oCrossAppNav;
 
+            // DIAGNOSTICO TEMPORAL: medir tiempos de la cadena asincrona
+            // antes de toExternal, para comparar DEV vs QAS. Remover
+            // despues de confirmar/descartar la hipotesis de latencia.
+            var iTClick = Date.now();
+            console.log("[ShowConsumption][T0 click]", iTClick);
+
             sap.ushell.Container.getServiceAsync("CrossApplicationNavigation").then(function (oService) {
+                console.log("[ShowConsumption][T1 getServiceAsync]", Date.now() - iTClick, "ms");
                 oCrossAppNav = oService;
                 return oCrossAppNav.createEmptyAppStateAsync(oComponent);
             }).then(function (oAppState) {
+                console.log("[ShowConsumption][T2 createEmptyAppStateAsync]", Date.now() - iTClick, "ms");
                 oAppState.setData({
                     detailModel: oModel.getData(),
                     cellKeys: that._oCellKeys,
@@ -1092,6 +1100,7 @@ sap.ui.define([
                     listModel: oComponent._oListModel ? oComponent._oListModel.getData() : null
                 });
                 oAppState.save().done(function () {
+                    console.log("[ShowConsumption][T3 appState.save done]", Date.now() - iTClick, "ms");
                     var sKey = oAppState.getKey();
                     try {
                         window.sessionStorage.setItem("zquot_pendingListAppStateKey", sKey);
@@ -1101,6 +1110,7 @@ sap.ui.define([
                     sHash += (sHash.indexOf("?") > -1 ? "&" : "?") + "sap-iapp-state=" + sKey;
                     oHashChanger.replaceHash(sHash);
 
+                    console.log("[ShowConsumption][T4 antes de toExternal]", Date.now() - iTClick, "ms");
                     oCrossAppNav.toExternal({
                         target: {
                             semanticObject: "OutboundDelivery",
@@ -1110,6 +1120,7 @@ sap.ui.define([
                             productallocationobject: sAllocationObject
                         }
                     });
+                    console.log("[ShowConsumption][T5 despues de toExternal]", Date.now() - iTClick, "ms");
                 });
             });
         },
