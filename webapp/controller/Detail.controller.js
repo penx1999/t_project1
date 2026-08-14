@@ -2567,16 +2567,19 @@ sap.ui.define([
 
             if (bRequiredError) {
                 MessageBox.error(oBundle.getText("msgRequiredFields"));
+                oModel.setProperty("/hasChanges", false);
                 return;
             }
 
             if (bDateError) {
                 MessageBox.error(oBundle.getText("msgDateRangeError"));
+                oModel.setProperty("/hasChanges", false);
                 return;
             }
 
             if (bQuotaConsumedError) {
                 MessageBox.error("Quota Qty must be greater than or equal to Cnsmd QTy.");
+                oModel.setProperty("/hasChanges", false);
                 return;
             }
 
@@ -2654,6 +2657,7 @@ sap.ui.define([
             if (bOverlapError) {
                 oModel.setProperty("/rows", aRows);
                 MessageBox.error(oBundle.getText("msgDateOverlapError"));
+                oModel.setProperty("/hasChanges", false);
                 return;
             }
 
@@ -2696,6 +2700,7 @@ sap.ui.define([
                         if (sType === "Error") {
                             that._restoreDeletedRowsAfterSaveError();
                             oModel.setProperty("/busy", false);
+                            oModel.setProperty("/hasChanges", false);
                             return;
                         }
                     } else {
@@ -2713,6 +2718,7 @@ sap.ui.define([
                 .catch(function (oError) {
                     that._restoreDeletedRowsAfterSaveError();
                     oModel.setProperty("/busy", false);
+                    oModel.setProperty("/hasChanges", false);
                     var sMsg = oBundle.getText("msgSaveError");
                     try {
                         var oResp = JSON.parse(oError.responseText);
