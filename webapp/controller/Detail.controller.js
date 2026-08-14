@@ -1077,9 +1077,12 @@ sap.ui.define([
 
             var that = this;
             var oComponent = this.getOwnerComponent();
+            var oCrossAppNav;
 
-            sap.ushell.Container.getServiceAsync("CrossApplicationNavigation").then(function (oCrossAppNav) {
-                var oAppState = oCrossAppNav.createEmptyAppState(oComponent);
+            sap.ushell.Container.getServiceAsync("CrossApplicationNavigation").then(function (oService) {
+                oCrossAppNav = oService;
+                return oCrossAppNav.createEmptyAppStateAsync(oComponent);
+            }).then(function (oAppState) {
                 oAppState.setData({
                     detailModel: oModel.getData(),
                     cellKeys: that._oCellKeys,
