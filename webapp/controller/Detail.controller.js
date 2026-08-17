@@ -1075,53 +1075,32 @@ sap.ui.define([
                 return;
             }
 
-            var that = this;
-            var oComponent = this.getOwnerComponent();
-            var oCrossAppNav;
+            // Se abre la pestaña nueva de forma SINCRONA, en el mismo gesto de
+            // click del usuario, para evitar que el navegador bloquee el pop-up.
+            // La URL se asigna luego, cuando el FLP la resuelve de forma asincrona.
+            // La pestaña/ventana original NO se navega ni se recarga: sus datos
+            // permanecen visibles tal como estaban.
+            var oNewTab = window.open("", "_blank");
 
-            // DIAGNOSTICO TEMPORAL: medir tiempos de la cadena asincrona
-            // antes de toExternal, para comparar DEV vs QAS. Remover
-            // despues de confirmar/descartar la hipotesis de latencia.
-            var iTClick = Date.now();
-            console.log("[ShowConsumption][T0 click]", iTClick);
-
-            sap.ushell.Container.getServiceAsync("CrossApplicationNavigation").then(function (oService) {
-                console.log("[ShowConsumption][T1 getServiceAsync]", Date.now() - iTClick, "ms");
-                oCrossAppNav = oService;
-                return oCrossAppNav.createEmptyAppStateAsync(oComponent);
-            }).then(function (oAppState) {
-                console.log("[ShowConsumption][T2 createEmptyAppStateAsync]", Date.now() - iTClick, "ms");
-                oAppState.setData({
-                    detailModel: oModel.getData(),
-                    cellKeys: that._oCellKeys,
-                    originalData: that._oOriginalData,
-                    hasDeletedRows: that._hasDeletedRows,
-                    deletedRows: that._aDeletedRows,
-                    listModel: oComponent._oListModel ? oComponent._oListModel.getData() : null
-                });
-                oAppState.save().done(function () {
-                    console.log("[ShowConsumption][T3 appState.save done]", Date.now() - iTClick, "ms");
-                    var sKey = oAppState.getKey();
-                    try {
-                        window.sessionStorage.setItem("zquot_pendingListAppStateKey", sKey);
-                    } catch (eStorage) { /* ignore */ }
-                    var oHashChanger = sap.ui.core.routing.HashChanger.getInstance();
-                    var sHash = oHashChanger.getHash();
-                    sHash += (sHash.indexOf("?") > -1 ? "&" : "?") + "sap-iapp-state=" + sKey;
-                    oHashChanger.replaceHash(sHash);
-
-                    console.log("[ShowConsumption][T4 antes de toExternal]", Date.now() - iTClick, "ms");
-                    oCrossAppNav.toExternal({
-                        target: {
-                            semanticObject: "OutboundDelivery",
-                            action: "change"
-                        },
-                        params: {
-                            productallocationobject: sAllocationObject
-                        }
-                    });
-                    console.log("[ShowConsumption][T5 despues de toExternal]", Date.now() - iTClick, "ms");
-                });
+            sap.ushell.Container.getServiceAsync("CrossApplicationNavigation").then(function (oCrossAppNav) {
+                return oCrossAppNav.hrefForExternal({
+                    target: {
+                        semanticObject: "OutboundDelivery",
+                        action: "change"
+                    },
+                    params: {
+                        productallocationobject: sAllocationObject
+                    }
+                }, true);
+            }).then(function (sHref) {
+                if (oNewTab) {
+                    oNewTab.location.href = sHref;
+                } else {
+                    MessageBox.error(oBundle.getText("msgPopupBlocked"));
+                }
+            }).catch(function () {
+                if (oNewTab) { oNewTab.close(); }
+                MessageBox.error(oBundle.getText("msgShowConsumptionError"));
             });
         },
 
