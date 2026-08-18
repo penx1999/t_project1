@@ -674,9 +674,10 @@ sap.ui.define([
                         editable: false
                     }).addStyleClass("sapUiSizeCompact");
                 } else if (bRocField) {
+                    this._sRocField = sFieldName;
                     var bLockRocWhenConsumed = !!sConsumedQtyField;
                     oTemplate = new ComboBox({
-                        selectedKey: "{detailModel>" + sFieldName + "}",
+                        value: "{detailModel>" + sFieldName + "}",
                         width: "100%",
                         showSecondaryValues: true,
                         valueState: "{= ${detailModel>_err_" + sFieldName + "} ? 'Error' : 'None' }",
@@ -2367,15 +2368,12 @@ sap.ui.define([
             var oCtx = oCombo.getBindingContext("detailModel");
             var sValue = (oCombo.getValue() || "").trim();
 
+            if (oCtx) {
+                oCtx.getModel().setProperty(oCtx.getPath() + "/" + sFieldName, sValue);
+            }
+
             if (sValue && !this._isRocKeyValid(sValue)) {
                 MessageBox.error(oBundle.getText("msgRocNotExist"));
-                var sCurrentKey = oCtx ? oCtx.getProperty(sFieldName) : "";
-                oCombo.setValue(sCurrentKey);
-                oCombo.setSelectedKey(sCurrentKey);
-                if (oCtx) {
-                    oCtx.getModel().setProperty(oCtx.getPath() + "/_err_" + sFieldName, true);
-                }
-                return;
             }
 
             this._onFieldChange(oEvent);
@@ -2385,10 +2383,17 @@ sap.ui.define([
             jQuery.sap.log.info("Detail._onFieldChange triggered");
             var oModel = this.getView().getModel("detailModel");
             var aRows = oModel.getProperty("/rows");
+            var that = this;
             if (aRows) {
                 aRows.forEach(function (oRow) {
                     Object.keys(oRow).forEach(function (sKey) {
-                        if (sKey.indexOf("_err_") === 0) { oRow[sKey] = false; }
+                        if (sKey.indexOf("_err_") === 0) {
+                            if (that._sRocField && sKey === "_err_" + that._sRocField &&
+                                oRow[that._sRocField] && !that._isRocKeyValid(oRow[that._sRocField])) {
+                                return;
+                            }
+                            oRow[sKey] = false;
+                        }
                     });
                 });
                 oModel.setProperty("/rows", aRows);
