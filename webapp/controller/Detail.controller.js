@@ -674,7 +674,7 @@ sap.ui.define([
                         editable: false
                     }).addStyleClass("sapUiSizeCompact");
                 } else if (bRocField) {
-                    this._sRocField = sFieldName;
+                    that._sRocField = sFieldName;
                     var bLockRocWhenConsumed = !!sConsumedQtyField;
                     oTemplate = new ComboBox({
                         value: "{detailModel>" + sFieldName + "}",
