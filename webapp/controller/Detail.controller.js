@@ -690,7 +690,11 @@ sap.ui.define([
                                 return bEditMode === true && !(fConsumedQty > 0);
                             }
                         } : "{detailModel>/editMode}",
-                        change: that._onFieldChange.bind(that),
+                        change: (function (sRocField) {
+                            return function (oEvent) {
+                                that._onRocChange(oEvent, sRocField);
+                            };
+                        }(sFieldName)),
                         items: {
                             path: "rocOptions>/items",
                             templateShareable: false,
@@ -2347,6 +2351,36 @@ sap.ui.define([
             });
         },
 
+        _isRocKeyValid: function (sValue) {
+            if (!sValue) { return true; }
+            var oRocOptionsModel = this.getView().getModel("rocOptions");
+            if (!oRocOptionsModel) { return true; }
+            var aItems = oRocOptionsModel.getProperty("/allItems") || [];
+            return aItems.some(function (oItem) {
+                return (oItem.Clave || "") === sValue;
+            });
+        },
+
+        _onRocChange: function (oEvent, sFieldName) {
+            var oBundle = this.getView().getModel("i18n").getResourceBundle();
+            var oCombo = oEvent.getSource();
+            var oCtx = oCombo.getBindingContext("detailModel");
+            var sValue = (oCombo.getValue() || "").trim();
+
+            if (sValue && !this._isRocKeyValid(sValue)) {
+                MessageBox.error(oBundle.getText("msgRocNotExist"));
+                var sCurrentKey = oCtx ? oCtx.getProperty(sFieldName) : "";
+                oCombo.setValue(sCurrentKey);
+                oCombo.setSelectedKey(sCurrentKey);
+                if (oCtx) {
+                    oCtx.getModel().setProperty(oCtx.getPath() + "/_err_" + sFieldName, true);
+                }
+                return;
+            }
+
+            this._onFieldChange(oEvent);
+        },
+
         _onFieldChange: function (oEvent) {
             jQuery.sap.log.info("Detail._onFieldChange triggered");
             var oModel = this.getView().getModel("detailModel");
@@ -2467,6 +2501,7 @@ sap.ui.define([
             var bDateError = false;
             var bRequiredError = false;
             var bQuotaConsumedError = false;
+            var bRocError = false;
             var oController = this;
 
             var aNonRequired = [
@@ -2495,7 +2530,7 @@ sap.ui.define([
                 return str;
             };
 
-            var sStartField = null, sEndField = null, sQuotaQtyField = null, sConsumedQtyField = null;
+            var sStartField = null, sEndField = null, sQuotaQtyField = null, sConsumedQtyField = null, sRocField = null;
             aColumns.forEach(function (oCol) {
                 var u = oCol.name.toUpperCase();
                 var sLabelUpper = (oCol.label || "").toUpperCase().trim();
@@ -2503,6 +2538,7 @@ sap.ui.define([
                 if (u === "PRODALLOCPERIODENDUTCDATE")  { sEndField   = oCol.name; }
                 if (sLabelUpper === "QUOTA QTY") { sQuotaQtyField = oCol.name; }
                 if (sLabelUpper === "CNSMD QTY") { sConsumedQtyField = oCol.name; }
+                if (sLabelUpper === "ROC") { sRocField = oCol.name; }
             });
 
             aChangedRows.forEach(function (oChangedRow) {
@@ -2540,9 +2576,22 @@ sap.ui.define([
                         bQuotaConsumedError = true;
                     }
                 }
+
+                if (sRocField) {
+                    var sRocValue = (oRowData[sRocField] || "").toString().trim();
+                    if (sRocValue && !oController._isRocKeyValid(sRocValue)) {
+                        oRowData["_err_" + sRocField] = true;
+                        bRocError = true;
+                    }
+                }
             });
 
             oModel.setProperty("/rows", aRows);
+
+            if (bRocError) {
+                MessageBox.error(oBundle.getText("msgRocNotExist"));
+                return;
+            }
 
             if (bRequiredError) {
                 MessageBox.error(oBundle.getText("msgRequiredFields"));
