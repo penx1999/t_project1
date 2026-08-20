@@ -128,6 +128,23 @@ sap.ui.define([
             var oOwner = this.getOwnerComponent();
             var that = this;
 
+            var oCompDetailModel = oOwner.getModel("detailModel");
+            var oCompData = oCompDetailModel ? oCompDetailModel.getData() : null;
+            var bIsInitial = (sQuotaId || "").toUpperCase() === "INITIAL";
+            if (!bIsInitial && oCompData) {
+                for (var sCompKey in oCompData) {
+                    if (String(oCompData[sCompKey] || "").toUpperCase() === "INITIAL") {
+                        bIsInitial = true;
+                        break;
+                    }
+                }
+            }
+            if (bIsInitial) {
+                console.log("[Detail] Variables de pantalla 1 con valor 'initial' detectadas. Redirigiendo a pantalla 1.");
+                this.getOwnerComponent().getRouter().navTo("RouteListReport", {}, true);
+                return;
+            }
+
             var sCurrentHash = sap.ui.core.routing.HashChanger.getInstance().getHash();
             var aAppStateMatch = /sap-iapp-state=([^&]+)/.exec(sCurrentHash || "");
             if (aAppStateMatch && sap.ushell && sap.ushell.Container) {
