@@ -2139,6 +2139,7 @@ sap.ui.define([
                         var bsStart = fnNormDate(aGrp[jj].row[sStartField]);
                         var bsEnd   = fnNormDate(aGrp[jj].row[sEndField]);
                         if (asStart && asEnd && bsStart && bsEnd) {
+                            console.log("[_hasDateOverlap] Comparando fila", aGrp[ii].idx, "(inicio:", asStart, ", fin:", asEnd, ") con fila", aGrp[jj].idx, "(inicio:", bsStart, ", fin:", bsEnd, ")");
                             if (asStart <= bsEnd && bsStart <= asEnd) { bOverlap = true; }
                         }
                     }
@@ -2685,6 +2686,8 @@ sap.ui.define([
                         var bsStart = sStartField ? fnNormDate(rB[sStartField]) : "";
                         var bsEnd   = sEndField   ? fnNormDate(rB[sEndField])   : "";
                         if (!asStart || !asEnd || !bsStart || !bsEnd) { continue; }
+
+                        console.log("[DateConflict] Comparando fila", aGrp[ii].idx, "(inicio:", asStart, ", fin:", asEnd, ") con fila", aGrp[jj].idx, "(inicio:", bsStart, ", fin:", bsEnd, ")");
 
                         var bDatesIdentical = (asStart === bsStart && asEnd === bsEnd);
                         var bConflict = false;
