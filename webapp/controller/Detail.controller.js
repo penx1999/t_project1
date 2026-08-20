@@ -131,7 +131,11 @@ sap.ui.define([
             var oCompDetailModel = oOwner.getModel("detailModel");
             var oCompData = oCompDetailModel ? oCompDetailModel.getData() : null;
             var bIsInitial = (sQuotaId || "").toUpperCase() === "INITIAL";
+            if (!bIsInitial && !oCompData) { bIsInitial = true; }
             if (!bIsInitial && oCompData) {
+                var sProdAllocObj = (oCompData.PRODUCTALLOCATIONOBJECT || "").toString().trim();
+                var sDescription = (oCompData.DESCRIPTION || "").toString().trim();
+                if (!sProdAllocObj && !sDescription) { bIsInitial = true; }
                 for (var sCompKey in oCompData) {
                     if (String(oCompData[sCompKey] || "").toUpperCase() === "INITIAL") {
                         bIsInitial = true;
@@ -140,7 +144,7 @@ sap.ui.define([
                 }
             }
             if (bIsInitial) {
-                console.log("[Detail] Variables de pantalla 1 con valor 'initial' detectadas. Redirigiendo a pantalla 1.");
+                console.log("[Detail] Variables de pantalla 1 en estado 'initial' o vacío. Redirigiendo a pantalla 1.");
                 this.getOwnerComponent().getRouter().navTo("RouteListReport", {}, true);
                 return;
             }
