@@ -2666,7 +2666,8 @@ sap.ui.define([
                     var u = c.name.toUpperCase();
                     var lbl = (c.label || "").toLowerCase();
                     return u.indexOf("PRODUCTALLOCATIONOBJECT") === -1 &&
-                        lbl.indexOf("allocation object") === -1;
+                        lbl.indexOf("allocation object") === -1 &&
+                        u.slice(-4) !== "DESC";
                 }).map(function (c) { return c.name; });
             console.log("[DateConflict] Campos a la izquierda de Status (sin Allocation Object):", aLeftFields);
 
