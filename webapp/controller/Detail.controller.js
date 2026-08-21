@@ -1617,6 +1617,7 @@ sap.ui.define([
 
             // Build candidate new rows (not yet pushed)
             var bInvalidDate = false;
+            var sInvalidDateRow = "";
             var bInvalidStatus = false;
             var oController = this;
             var aCandidateRows = aDataRows.map(function (aXlsxRow, iDataIdx) {
@@ -1656,6 +1657,7 @@ sap.ui.define([
                         if (sParsed === null) {
                             if (!oNewRow._deleteFlag) {
                                 bInvalidDate = true;
+                                if (!sInvalidDateRow) { sInvalidDateRow = oNewRow._excelLine; }
                                 console.log("[UploadExcel] Fecha invalida en linea", oNewRow._excelLine, ", columna:", oCol.name, ", valor:", v);
                             }
                             sVal = "";
@@ -1683,7 +1685,7 @@ sap.ui.define([
             });
 
             if (bInvalidDate) {
-                MessageBox.error("ERROR! Dates in file!", { actions: ["OK"] });
+                MessageBox.error("ERROR! Dates in file! Row: " + sInvalidDateRow, { actions: ["OK"] });
                 fnReloadAfterError();
                 return;
             }
@@ -1780,17 +1782,19 @@ sap.ui.define([
             // Per-row date range validation: end date must be after start date
             if (sStartField && sEndField) {
                 var bRangeError = false;
+                var sRangeErrorRow = "";
                 aNonDeleteCandidates.forEach(function (oRow) {
                     if (bRangeError) { return; }
                     var s = fnNormDate(oRow[sStartField]);
                     var e = fnNormDate(oRow[sEndField]);
                     if (s && e && e <= s) {
                         bRangeError = true;
+                        sRangeErrorRow = oRow._excelLine;
                         console.log("[UploadExcel] Rango de fechas invalido en linea", oRow._excelLine, ", inicio:", s, ", fin:", e);
                     }
                 });
                 if (bRangeError) {
-                    MessageBox.error("ERROR! Dates in file!", { actions: ["OK"] });
+                    MessageBox.error("ERROR! Dates in file! Row: " + sRangeErrorRow, { actions: ["OK"] });
                     fnReloadAfterError();
                     return;
                 }
@@ -1877,8 +1881,9 @@ sap.ui.define([
 
             // Date overlap validation across existing + remaining new candidates
             var aAllRows = aWorkingRows.concat(aRemainingCandidates);
-            if (oControllerForDelete._hasDateOverlap(aAllRows, aColumns)) {
-                MessageBox.error("ERROR! Dates in file!", { actions: ["OK"] });
+            var sOverlapDetail = oControllerForDelete._hasDateOverlap(aAllRows, aColumns);
+            if (sOverlapDetail) {
+                MessageBox.error("ERROR! Dates in file!" + sOverlapDetail, { actions: ["OK"] });
                 fnReloadAfterError();
                 return;
             }
@@ -2136,11 +2141,13 @@ sap.ui.define([
                 oGroups[sGK].push({ idx: iIdx, row: oRow });
             });
 
-            var bOverlap = false;
+            var sOverlap = "";
             Object.keys(oGroups).forEach(function (sGK) {
+                if (sOverlap) { return; }
                 var aGrp = oGroups[sGK];
                 if (aGrp.length < 2) { return; }
                 for (var ii = 0; ii < aGrp.length; ii++) {
+                    if (sOverlap) { break; }
                     for (var jj = ii + 1; jj < aGrp.length; jj++) {
                         var asStart = fnNormDate(aGrp[ii].row[sStartField]);
                         var asEnd   = fnNormDate(aGrp[ii].row[sEndField]);
@@ -2149,14 +2156,19 @@ sap.ui.define([
                         if (asStart && asEnd && bsStart && bsEnd) {
                             console.log("[_hasDateOverlap] Comparando fila", aGrp[ii].idx, "(inicio:", asStart, ", fin:", asEnd, ") con fila", aGrp[jj].idx, "(inicio:", bsStart, ", fin:", bsEnd, ")");
                             if (asStart <= bsEnd && bsStart <= asEnd) {
+                                var sLineA = aGrp[ii].row._excelLine;
+                                var sLineB = aGrp[jj].row._excelLine;
+                                var sRefA = sLineA ? "Excel line " + sLineA : "table row " + aGrp[ii].idx;
+                                var sRefB = sLineB ? "Excel line " + sLineB : "table row " + aGrp[jj].idx;
                                 console.log("[_hasDateOverlap] Date conflict detectado entre fila", aGrp[ii].idx, "(inicio:", asStart, ", fin:", asEnd, ") y fila", aGrp[jj].idx, "(inicio:", bsStart, ", fin:", bsEnd, ")");
-                                bOverlap = true;
+                                sOverlap = " Row: " + sRefA + " and " + sRefB;
+                                break;
                             }
                         }
                     }
                 }
             });
-            return bOverlap;
+            return sOverlap;
         },
 
         _onValueHelpRequest: function (oEvent, sFieldName, sLabel) {
