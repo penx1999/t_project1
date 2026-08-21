@@ -1787,7 +1787,7 @@ sap.ui.define([
                     if (bRangeError) { return; }
                     var s = fnNormDate(oRow[sStartField]);
                     var e = fnNormDate(oRow[sEndField]);
-                    if (s && e && e <= s) {
+                    if (s && e && e < s) {
                         bRangeError = true;
                         sRangeErrorRow = oRow._excelLine;
                         console.log("[UploadExcel] Rango de fechas invalido en linea", oRow._excelLine, ", inicio:", s, ", fin:", e);
