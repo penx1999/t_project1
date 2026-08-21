@@ -2696,9 +2696,11 @@ sap.ui.define([
                         var bConflict = false;
 
                         if (bDatesIdentical) {
+                            console.log("[DateConflict] Fechas identicas, comparando aLeftFields entre fila", aGrp[ii].idx, "y fila", aGrp[jj].idx, ":");
                             bConflict = aLeftFields.every(function (f) {
                                 var vA = String(rA[f] || "").trim();
                                 var vB = String(rB[f] || "").trim();
+                                console.log("  [DateConflict] Campo", f, "-> fila", aGrp[ii].idx, ":", JSON.stringify(vA), "| fila", aGrp[jj].idx, ":", JSON.stringify(vB), "| coincide:", vA === vB);
                                 return vA === vB;
                             });
                         } else if (asStart <= bsEnd && bsStart <= asEnd) {
