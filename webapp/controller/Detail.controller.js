@@ -1654,7 +1654,10 @@ sap.ui.define([
                     if (oDateFieldSet[oCol.name]) {
                         var sParsed = fnParseDateCell(v);
                         if (sParsed === null) {
-                            if (!oNewRow._deleteFlag) { bInvalidDate = true; }
+                            if (!oNewRow._deleteFlag) {
+                                bInvalidDate = true;
+                                console.log("[UploadExcel] Fecha invalida en linea", oNewRow._excelLine, ", columna:", oCol.name, ", valor:", v);
+                            }
                             sVal = "";
                         } else { sVal = sParsed; }
                     } else if (sFieldUpper === "PRODALLOCATIONACTIVATIONSTATUS" || sFieldUpper === "PRODALLOCCHARCCONSTRAINTSTATUS") {
@@ -1776,10 +1779,15 @@ sap.ui.define([
 
             // Per-row date range validation: end date must be after start date
             if (sStartField && sEndField) {
-                var bRangeError = aNonDeleteCandidates.some(function (oRow) {
+                var bRangeError = false;
+                aNonDeleteCandidates.forEach(function (oRow) {
+                    if (bRangeError) { return; }
                     var s = fnNormDate(oRow[sStartField]);
                     var e = fnNormDate(oRow[sEndField]);
-                    return s && e && e <= s;
+                    if (s && e && e <= s) {
+                        bRangeError = true;
+                        console.log("[UploadExcel] Rango de fechas invalido en linea", oRow._excelLine, ", inicio:", s, ", fin:", e);
+                    }
                 });
                 if (bRangeError) {
                     MessageBox.error("ERROR! Dates in file!", { actions: ["OK"] });
@@ -2141,7 +2149,7 @@ sap.ui.define([
                         if (asStart && asEnd && bsStart && bsEnd) {
                             console.log("[_hasDateOverlap] Comparando fila", aGrp[ii].idx, "(inicio:", asStart, ", fin:", asEnd, ") con fila", aGrp[jj].idx, "(inicio:", bsStart, ", fin:", bsEnd, ")");
                             if (asStart <= bsEnd && bsStart <= asEnd) {
-                                console.log("[_hasDateOverlap] Date conflict detectado entre fila", aGrp[ii].idx, "y fila", aGrp[jj].idx);
+                                console.log("[_hasDateOverlap] Date conflict detectado entre fila", aGrp[ii].idx, "(inicio:", asStart, ", fin:", asEnd, ") y fila", aGrp[jj].idx, "(inicio:", bsStart, ", fin:", bsEnd, ")");
                                 bOverlap = true;
                             }
                         }
