@@ -2109,27 +2109,29 @@ sap.ui.define([
                 return str;
             };
 
-            // Determine key fields (same rule used in Save validation)
-            var that = this;
-            var iCsIdx = -1;
-            aColumns.forEach(function (oCol, iIdx) {
-                if (oCol.name.toUpperCase().indexOf("STATUS") !== -1) { iCsIdx = iIdx; }
-            });
-            var aNonKey = ["PRODALLOCPERDSTARTUTCDATE", "PRODALLOCPERIODENDUTCDATE",
-                           "PRODUCTALLOCATIONQUANTITY", "ZZRFCUT",
-                           "PRODALLOCCHARCVALUECOMBNCMNT", "PRODUCTALLOCATIONOBJECTUUID",
-                           "PRODUCTALLOCATIONOBJECT"];
-            var aKeyFields = (iCsIdx >= 0
-                ? aColumns.slice(0, iCsIdx + 1)
-                : aColumns
-            ).filter(function (c) {
-                var u = c.name.toUpperCase();
-                return aNonKey.indexOf(u) === -1 &&
-                       u.indexOf("STATUS") === -1 &&
-                       u.indexOf("AVBL")   === -1 &&
-                       u.indexOf("CNSMD")  === -1 &&
-                       !that._isProdDescColumn(c);
+            // Key fields for grouping = only Material Number and Plant (same rule as onSave)
+            var aKeyFields = aColumns.filter(function (c) {
+                var lbl = (c.label || "").toLowerCase();
+                return lbl.indexOf("material") !== -1 ||
+                    lbl.indexOf("plant") !== -1 ||
+                    lbl.indexOf("centro") !== -1;
             }).map(function (c) { return c.name; });
+
+            // Dynamic fields to the left of "Status", excluding "Allocation Object" and
+            // description (*DESC) columns. A conflict is only raised when dates overlap
+            // AND all of these fields match exactly (trimmed) between the two rows.
+            var iCsIdxLeft = -1;
+            aColumns.forEach(function (oCol, iIdx) {
+                if (oCol.name.toUpperCase().indexOf("STATUS") !== -1 && iCsIdxLeft === -1) { iCsIdxLeft = iIdx; }
+            });
+            var aLeftFields = (iCsIdxLeft >= 0 ? aColumns.slice(0, iCsIdxLeft) : aColumns.slice())
+                .filter(function (c) {
+                    var u = c.name.toUpperCase();
+                    var lbl = (c.label || "").toLowerCase();
+                    return u.indexOf("PRODUCTALLOCATIONOBJECT") === -1 &&
+                        lbl.indexOf("allocation object") === -1 &&
+                        u.slice(-4) !== "DESC";
+                }).map(function (c) { return c.name; });
 
             var oGroups = {};
             aRows.forEach(function (oRow, iIdx) {
@@ -2149,20 +2151,28 @@ sap.ui.define([
                 for (var ii = 0; ii < aGrp.length; ii++) {
                     if (sOverlap) { break; }
                     for (var jj = ii + 1; jj < aGrp.length; jj++) {
-                        var asStart = fnNormDate(aGrp[ii].row[sStartField]);
-                        var asEnd   = fnNormDate(aGrp[ii].row[sEndField]);
-                        var bsStart = fnNormDate(aGrp[jj].row[sStartField]);
-                        var bsEnd   = fnNormDate(aGrp[jj].row[sEndField]);
+                        var rA = aGrp[ii].row, rB = aGrp[jj].row;
+                        var asStart = fnNormDate(rA[sStartField]);
+                        var asEnd   = fnNormDate(rA[sEndField]);
+                        var bsStart = fnNormDate(rB[sStartField]);
+                        var bsEnd   = fnNormDate(rB[sEndField]);
                         if (asStart && asEnd && bsStart && bsEnd) {
                             console.log("[_hasDateOverlap] Comparando fila", aGrp[ii].idx, "(inicio:", asStart, ", fin:", asEnd, ") con fila", aGrp[jj].idx, "(inicio:", bsStart, ", fin:", bsEnd, ")");
                             if (asStart <= bsEnd && bsStart <= asEnd) {
-                                var sLineA = aGrp[ii].row._excelLine;
-                                var sLineB = aGrp[jj].row._excelLine;
-                                var sRefA = sLineA ? "Excel line " + sLineA : "table row " + aGrp[ii].idx;
-                                var sRefB = sLineB ? "Excel line " + sLineB : "table row " + aGrp[jj].idx;
-                                console.log("[_hasDateOverlap] Date conflict detectado entre fila", aGrp[ii].idx, "(inicio:", asStart, ", fin:", asEnd, ") y fila", aGrp[jj].idx, "(inicio:", bsStart, ", fin:", bsEnd, ")");
-                                sOverlap = " Row: " + sRefA + " and " + sRefB;
-                                break;
+                                var bLeftMatch = aLeftFields.every(function (f) {
+                                    var vA = String(rA[f] || "").trim();
+                                    var vB = String(rB[f] || "").trim();
+                                    return vA === vB;
+                                });
+                                if (bLeftMatch) {
+                                    var sLineA = aGrp[ii].row._excelLine;
+                                    var sLineB = aGrp[jj].row._excelLine;
+                                    var sRefA = sLineA ? "Excel line " + sLineA : "table row " + aGrp[ii].idx;
+                                    var sRefB = sLineB ? "Excel line " + sLineB : "table row " + aGrp[jj].idx;
+                                    console.log("[_hasDateOverlap] Date conflict detectado entre fila", aGrp[ii].idx, "(inicio:", asStart, ", fin:", asEnd, ") y fila", aGrp[jj].idx, "(inicio:", bsStart, ", fin:", bsEnd, ")");
+                                    sOverlap = " Row: " + sRefA + " and " + sRefB;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -2713,19 +2723,16 @@ sap.ui.define([
 
                         console.log("[DateConflict] Comparando fila", aGrp[ii].idx, "(inicio:", asStart, ", fin:", asEnd, ") con fila", aGrp[jj].idx, "(inicio:", bsStart, ", fin:", bsEnd, ")");
 
-                        var bDatesIdentical = (asStart === bsStart && asEnd === bsEnd);
                         var bConflict = false;
 
-                        if (bDatesIdentical) {
-                            console.log("[DateConflict] Fechas identicas, comparando aLeftFields entre fila", aGrp[ii].idx, "y fila", aGrp[jj].idx, ":");
+                        if (asStart <= bsEnd && bsStart <= asEnd) {
+                            console.log("[DateConflict] Fechas se traslapan, comparando aLeftFields entre fila", aGrp[ii].idx, "y fila", aGrp[jj].idx, ":");
                             bConflict = aLeftFields.every(function (f) {
                                 var vA = String(rA[f] || "").trim();
                                 var vB = String(rB[f] || "").trim();
                                 console.log("  [DateConflict] Campo", f, "-> fila", aGrp[ii].idx, ":", JSON.stringify(vA), "| fila", aGrp[jj].idx, ":", JSON.stringify(vB), "| coincide:", vA === vB);
                                 return vA === vB;
                             });
-                        } else if (asStart <= bsEnd && bsStart <= asEnd) {
-                            bConflict = true;
                         }
 
                         if (bConflict) {
