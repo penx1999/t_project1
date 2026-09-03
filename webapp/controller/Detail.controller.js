@@ -728,7 +728,8 @@ sap.ui.define([
                             : "{= ${detailModel>/editMode} === true && ${detailModel>_isNew} === true }",
                         required: bEndDateAlwaysEditable ? true : "{= ${detailModel>_isNew} === true }",
                         valueState: "{= ${detailModel>_err_" + sFieldName + "} ? 'Error' : 'None' }",
-                        change: fnDateChange
+                        change: fnDateChange,
+                        liveChange: fnDateChange
                     }).addStyleClass("sapUiSizeCompact");
                 } else if (bNonEditableInput) {
                     oTemplate = new Input({
