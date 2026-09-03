@@ -255,7 +255,31 @@ sap.ui.define([
             }
         },
 
-        onDateChange: function () {
+        _isRealDate: function (sValue) {
+            if (!sValue) { return true; }
+            var m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(sValue).trim());
+            if (!m) { return false; }
+            var iDay = parseInt(m[1], 10);
+            var iMonth = parseInt(m[2], 10);
+            var iYear = parseInt(m[3], 10);
+            if (iMonth < 1 || iMonth > 12 || iDay < 1 || iDay > 31) { return false; }
+            var oDate = new Date(iYear, iMonth - 1, iDay);
+            return oDate.getFullYear() === iYear && oDate.getMonth() === iMonth - 1 && oDate.getDate() === iDay;
+        },
+
+        onDateChange: function (oEvent) {
+            var oSource = oEvent.getSource();
+            var sValue = oEvent.getParameter("value");
+            var bValid = this._isRealDate(sValue);
+
+            if (!bValid) {
+                console.log("[Detail] Fecha invalida en", oSource.getId(), ":", sValue);
+                oSource.setValueState("Error");
+                oSource.setValueStateText("Ingrese una fecha real y v\u00e1lida (dd/mm/aaaa).");
+                MessageBox.error("ERROR! La fecha ingresada no es una fecha real.", { actions: ["OK"] });
+                return;
+            }
+            oSource.setValueState("None");
             this.onGoFilter();
         },
 
@@ -311,6 +335,20 @@ sap.ui.define([
             var oModel = this.getView().getModel("detailModel");
             var sQuotaId = oModel.getProperty("/productAllocationObject");
             var sFilterValue = (oModel.getProperty("/allocationObjectFilter") || "").trim();
+
+            var sFecIniCheck = oModel.getProperty("/fec_ini");
+            var sFecFinCheck = oModel.getProperty("/fec_fin");
+            var oDateFrom = this.byId("idDateFrom");
+            var oDateTo = this.byId("idDateTo");
+            var bFecIniValid = this._isRealDate(sFecIniCheck);
+            var bFecFinValid = this._isRealDate(sFecFinCheck);
+            if (oDateFrom) { oDateFrom.setValueState(bFecIniValid ? "None" : "Error"); }
+            if (oDateTo) { oDateTo.setValueState(bFecFinValid ? "None" : "Error"); }
+            if (!bFecIniValid || !bFecFinValid) {
+                console.log("[Detail] Rango de fechas invalido, no se ejecuta el OData. fec_ini:", sFecIniCheck, ", fec_fin:", sFecFinCheck);
+                MessageBox.error("ERROR! La fecha ingresada no es una fecha real.", { actions: ["OK"] });
+                return;
+            }
 
             if (oModel.getProperty("/hasChanges")) {
                 var that = this;
