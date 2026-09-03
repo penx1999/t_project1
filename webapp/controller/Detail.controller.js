@@ -2601,6 +2601,7 @@ sap.ui.define([
             var aColumns = oModel.getProperty("/columns") || [];
             var bDateError = false;
             var bRequiredError = false;
+            var bEndDatePastError = false;
             var bQuotaConsumedError = false;
             var bRocError = false;
             var oController = this;
@@ -2642,6 +2643,11 @@ sap.ui.define([
                 if (sLabelUpper === "ROC") { sRocField = oCol.name; }
             });
 
+            var oTodayForCheck = new Date();
+            var sTodayNorm = oTodayForCheck.getFullYear() + "-" +
+                ("0" + (oTodayForCheck.getMonth() + 1)).slice(-2) + "-" +
+                ("0" + oTodayForCheck.getDate()).slice(-2);
+
             aChangedRows.forEach(function (oChangedRow) {
                 var oRowData = oChangedRow.rowData;
 
@@ -2667,6 +2673,17 @@ sap.ui.define([
                     if (sStartField) { oRowData["_err_" + sStartField] = true; }
                     if (sEndField)   { oRowData["_err_" + sEndField]   = true; }
                     bDateError = true;
+                }
+
+                if (sEndField) {
+                    var sEndValue = (oRowData[sEndField] || "").toString().trim();
+                    if (!sEndValue) {
+                        oRowData["_err_" + sEndField] = true;
+                        bRequiredError = true;
+                    } else if (sEnd && sEnd < sTodayNorm) {
+                        oRowData["_err_" + sEndField] = true;
+                        bEndDatePastError = true;
+                    }
                 }
 
                 if (sQuotaQtyField && sConsumedQtyField) {
@@ -2696,6 +2713,12 @@ sap.ui.define([
 
             if (bRequiredError) {
                 MessageBox.error(oBundle.getText("msgRequiredFields"));
+                oModel.setProperty("/hasChanges", false);
+                return;
+            }
+
+            if (bEndDatePastError) {
+                MessageBox.error(oBundle.getText("msgEndDatePastError"));
                 oModel.setProperty("/hasChanges", false);
                 return;
             }
