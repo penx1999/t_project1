@@ -694,6 +694,7 @@ sap.ui.define([
                     }).addStyleClass("sapUiSizeCompact");
                 } else if (bDateField) {
                     var sDateFieldName = sFieldName;
+                    var bEndDateAlwaysEditable = (sFieldUpper === "PRODALLOCPERIODENDUTCDATE");
                     var fnDateChange = (function (sField) {
                         return function (oEvent) {
                             var oDP = oEvent.getSource();
@@ -722,8 +723,10 @@ sap.ui.define([
                         valueFormat: "yyyy-MM-dd",
                         displayFormat: "medium",
                         placeholder: " ",
-                        editable: "{= ${detailModel>/editMode} === true && ${detailModel>_isNew} === true }",
-                        required: "{= ${detailModel>_isNew} === true }",
+                        editable: bEndDateAlwaysEditable
+                            ? "{detailModel>/editMode}"
+                            : "{= ${detailModel>/editMode} === true && ${detailModel>_isNew} === true }",
+                        required: bEndDateAlwaysEditable ? true : "{= ${detailModel>_isNew} === true }",
                         valueState: "{= ${detailModel>_err_" + sFieldName + "} ? 'Error' : 'None' }",
                         change: fnDateChange
                     }).addStyleClass("sapUiSizeCompact");
