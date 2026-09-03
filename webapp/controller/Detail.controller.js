@@ -273,10 +273,10 @@ sap.ui.define([
             var bValid = this._isRealDate(sValue);
 
             if (!bValid) {
-                console.log("[Detail] Fecha invalida en", oSource.getId(), ":", sValue);
+                console.log("[Detail] Invalid date in", oSource.getId(), ":", sValue);
                 oSource.setValueState("Error");
-                oSource.setValueStateText("Ingrese una fecha real y v\u00e1lida (dd/mm/aaaa).");
-                MessageBox.error("ERROR! La fecha ingresada no es una fecha real.", { actions: ["OK"] });
+                oSource.setValueStateText("Enter a real, valid date (dd/mm/yyyy).");
+                MessageBox.error("ERROR! The entered date is not a real date.", { actions: ["OK"] });
                 return;
             }
             oSource.setValueState("None");
@@ -346,7 +346,7 @@ sap.ui.define([
             if (oDateTo) { oDateTo.setValueState(bFecFinValid ? "None" : "Error"); }
             if (!bFecIniValid || !bFecFinValid) {
                 console.log("[Detail] Rango de fechas invalido, no se ejecuta el OData. fec_ini:", sFecIniCheck, ", fec_fin:", sFecFinCheck);
-                MessageBox.error("ERROR! La fecha ingresada no es una fecha real.", { actions: ["OK"] });
+                MessageBox.error("ERROR! The entered date is not a real date.", { actions: ["OK"] });
                 return;
             }
 
