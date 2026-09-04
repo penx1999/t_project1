@@ -2666,6 +2666,18 @@ sap.ui.define([
                             bRequiredError = true;
                         }
                     });
+                } else {
+                    aColumns.forEach(function (oCol) {
+                        var sFieldName = oCol.name;
+                        var sFieldUpper = sFieldName.toUpperCase();
+                        if (EDITABLE_FIELDS.indexOf(sFieldUpper) === -1) { return; }
+                        if (aNonRequired.indexOf(sFieldUpper) !== -1) { return; }
+                        var sValue = (oRowData[sFieldName] || "").toString().trim();
+                        if (!sValue) {
+                            oRowData["_err_" + sFieldName] = true;
+                            bRequiredError = true;
+                        }
+                    });
                 }
 
                 var sStart = sStartField ? fnNormDate(oRowData[sStartField]) : "";
