@@ -2725,8 +2725,6 @@ sap.ui.define([
             }
 
             if (bRequiredError) {
-                MessageBox.error(oBundle.getText("msgRequiredFields"));
-                oModel.setProperty("/hasChanges", false);
                 return;
             }
 
