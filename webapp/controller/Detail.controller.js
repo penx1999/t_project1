@@ -1366,12 +1366,26 @@ sap.ui.define([
         },
 
         _loadSheetJS: function () {
+            var sSrc = "https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js";
+            var fnIsValidXlsx = function (o) {
+                return !!o && typeof o.read === "function";
+            };
             return new Promise(function (resolve, reject) {
-                if (window.XLSX) { resolve(window.XLSX); return; }
+                if (fnIsValidXlsx(window.XLSX)) { resolve(window.XLSX); return; }
+
+                // window.XLSX may exist but be a broken/stale stub (e.g. left over from a
+                // previous failed/partial load). Discard it and force a fresh script load.
+                if (window.XLSX) {
+                    console.warn("[UploadExcel] window.XLSX existe pero es invalido (falta .read). Recargando SheetJS.");
+                    delete window.XLSX;
+                }
+                Array.prototype.slice.call(document.querySelectorAll('script[src="' + sSrc + '"]'))
+                    .forEach(function (oOld) { oOld.parentNode.removeChild(oOld); });
+
                 var oScript = document.createElement("script");
-                oScript.src = "https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js";
+                oScript.src = sSrc;
                 oScript.onload = function () {
-                    if (window.XLSX) {
+                    if (fnIsValidXlsx(window.XLSX)) {
                         resolve(window.XLSX);
                     } else {
                         reject(new Error("SheetJS script loaded but XLSX object is not available."));
