@@ -942,10 +942,28 @@ sap.ui.define([
 
             var oModel = this.getView().getModel("detailModel");
             var aRows = oModel.getProperty("/rows") || [];
+            var aColumns = oModel.getProperty("/columns") || [];
+
+            // Locate the consumed quantity field by its column label
+            var sConsumedQtyField = "";
+            aColumns.forEach(function (oCol) {
+                if ((oCol.label || "").toUpperCase().trim() === "CNSMD QTY") {
+                    sConsumedQtyField = oCol.name;
+                }
+            });
+
+            if (sConsumedQtyField) {
+                for (var iSel = 0; iSel < aSelectedIndices.length; iSel++) {
+                    var oRow = aRows[aSelectedIndices[iSel]];
+                    var fConsumedQty = parseFloat(String(oRow[sConsumedQtyField] || "0").replace(/,/g, ""));
+                    if (!isNaN(fConsumedQty) && fConsumedQty > 0) {
+                        MessageBox.error(this.getView().getModel("i18n").getResourceBundle().getText("msgConsumeDetected"));
+                        return;
+                    }
+                }
+            }
 
             aSelectedIndices.sort(function (a, b) { return b - a; });
-
-            var aColumns = oModel.getProperty("/columns") || [];
 
             for (var i = 0; i < aSelectedIndices.length; i++) {
                 var iIndex = aSelectedIndices[i];
