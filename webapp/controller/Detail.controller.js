@@ -1801,6 +1801,16 @@ sap.ui.define([
                 return aParts.join("|");
             };
 
+            // Build update key = keyFields + normalized start (used to allow End Date changes)
+            var fnUpdateKey = function (oRow) {
+                var aParts = aKeyFields.map(function (f) {
+                    var v = oRow[f];
+                    return String(v == null ? "" : v).trim();
+                });
+                aParts.push(sStartField ? fnNormDate(oRow[sStartField]) : "");
+                return aParts.join("|");
+            };
+
             // Separate delete markers from regular candidates
             var aDeleteCandidates = [];
             var aNonDeleteCandidates = [];
@@ -1910,9 +1920,12 @@ sap.ui.define([
             aDeletedExistingIndices.forEach(function (iIdx) { aDeletedSet[iIdx] = true; });
             var aWorkingRows = JSON.parse(JSON.stringify(aExistingRows.filter(function (oRow, iIdx) { return !aDeletedSet[iIdx]; })));
             var oExistingByKey = {};
+            var oExistingByUpdateKey = {};
             aWorkingRows.forEach(function (oRow, iIdx) {
                 var k = fnMatchKey(oRow);
                 if (!oExistingByKey[k]) { oExistingByKey[k] = iIdx; }
+                var kUpd = fnUpdateKey(oRow);
+                if (!oExistingByUpdateKey[kUpd]) { oExistingByUpdateKey[kUpd] = iIdx; }
             });
 
             var aRemainingCandidates = [];
@@ -1920,10 +1933,20 @@ sap.ui.define([
             var iUpdatedCount = 0;
             aNonDeleteCandidates.forEach(function (oCand) {
                 var k = fnMatchKey(oCand);
+                var kUpd = "";
                 var iIdx = oExistingByKey[k];
+                if (iIdx === undefined && sStartField) {
+                    kUpd = fnUpdateKey(oCand);
+                    iIdx = oExistingByUpdateKey[kUpd];
+                }
                 if (iIdx !== undefined) {
                     var oTarget = aWorkingRows[iIdx];
                     var aUpdatedFields = [];
+                    // If matched by start+key (not exact end), allow updating End Date
+                    if (kUpd && sEndField && oCand[sEndField]) {
+                        oTarget[sEndField] = oCand[sEndField];
+                        aUpdatedFields.push("End Date");
+                    }
                     if (sQuotaQtyField && oCand[sQuotaQtyField] !== undefined) {
                         oTarget[sQuotaQtyField] = oCand[sQuotaQtyField];
                         aUpdatedFields.push("Quota Qty");
@@ -1953,7 +1976,7 @@ sap.ui.define([
                         excelLine: oCand._excelLine,
                         tableRow: iIdx + 1,
                         updatedFields: aUpdatedFields,
-                        matchKey: k
+                        matchKey: kUpd || k
                     });
                     iUpdatedCount++;
                 } else {
