@@ -1824,6 +1824,7 @@ sap.ui.define([
 
             // Block delete markers that target existing rows with consumed quantity
             var bDeleteConsumedError = false;
+            var iConsumeDetectedExcelLine = -1;
             if (sConsumedQtyField) {
                 aDeleteCandidates.forEach(function (oCand) {
                     if (bDeleteConsumedError) { return; }
@@ -1833,12 +1834,17 @@ sap.ui.define([
                         var fConsumedQty = parseFloat(String(aExistingRows[iMatchedIdx][sConsumedQtyField] || "0").replace(/,/g, ""));
                         if (!isNaN(fConsumedQty) && fConsumedQty > 0) {
                             bDeleteConsumedError = true;
+                            iConsumeDetectedExcelLine = oCand._excelLine;
                         }
                     }
                 });
             }
             if (bDeleteConsumedError) {
-                MessageBox.error(oBundle.getText("msgConsumeDetected"));
+                var sConsumeMsg = oBundle.getText("msgConsumeDetected");
+                if (iConsumeDetectedExcelLine !== -1) {
+                    sConsumeMsg += " - Excel line: " + iConsumeDetectedExcelLine;
+                }
+                MessageBox.error(sConsumeMsg);
                 fnReloadAfterError();
                 return;
             }
