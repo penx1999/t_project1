@@ -2635,6 +2635,7 @@ sap.ui.define([
             var bDateError = false;
             var bRequiredError = false;
             var bEndDatePastError = false;
+            var bEndDateConsumedFutureError = false;
             var bQuotaConsumedError = false;
             var bRocError = false;
             var oController = this;
@@ -2725,9 +2726,18 @@ sap.ui.define([
                     if (!sEndValue) {
                         oRowData["_err_" + sEndField] = true;
                         bRequiredError = true;
-                    } else if (sEnd && sEnd < sTodayNorm) {
-                        oRowData["_err_" + sEndField] = true;
-                        bEndDatePastError = true;
+                    } else if (sEnd) {
+                        var fConsumedQtyForEnd = sConsumedQtyField ?
+                            parseFloat(String(oRowData[sConsumedQtyField] || "0").replace(/,/g, "")) : 0;
+                        if (!isNaN(fConsumedQtyForEnd) && fConsumedQtyForEnd > 0) {
+                            if (sEnd <= sTodayNorm) {
+                                oRowData["_err_" + sEndField] = true;
+                                bEndDateConsumedFutureError = true;
+                            }
+                        } else if (sEnd < sTodayNorm) {
+                            oRowData["_err_" + sEndField] = true;
+                            bEndDatePastError = true;
+                        }
                     }
                 }
 
@@ -2762,6 +2772,12 @@ sap.ui.define([
 
             if (bEndDatePastError) {
                 MessageBox.error(oBundle.getText("msgEndDatePastError"));
+                oModel.setProperty("/hasChanges", false);
+                return;
+            }
+
+            if (bEndDateConsumedFutureError) {
+                MessageBox.error(oBundle.getText("msgEndDateConsumedFutureError"));
                 oModel.setProperty("/hasChanges", false);
                 return;
             }
