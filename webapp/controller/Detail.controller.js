@@ -2684,6 +2684,7 @@ sap.ui.define([
 
             aChangedRows.forEach(function (oChangedRow) {
                 var oRowData = oChangedRow.rowData;
+                var oOriginal = oChangedRow.originalData || {};
 
                 if (oRowData._isNew) {
                     aColumns.forEach(function (oCol) {
@@ -2730,7 +2731,8 @@ sap.ui.define([
                         var fConsumedQtyForEnd = sConsumedQtyField ?
                             parseFloat(String(oRowData[sConsumedQtyField] || "0").replace(/,/g, "")) : 0;
                         if (!isNaN(fConsumedQtyForEnd) && fConsumedQtyForEnd > 0) {
-                            if (sEnd <= sTodayNorm) {
+                            var sEndOrig = (oOriginal && sEndField) ? fnNormDate(oOriginal[sEndField]) : "";
+                            if (sEndOrig && sEnd <= sEndOrig) {
                                 oRowData["_err_" + sEndField] = true;
                                 bEndDateConsumedFutureError = true;
                             }
