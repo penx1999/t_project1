@@ -1545,6 +1545,7 @@ sap.ui.define([
             var oModel = this.getView().getModel("detailModel");
             var sProductAllocationObject = oModel.getProperty("/productAllocationObject") || "";
             var oControllerForReload = this;
+            var oBundle = this.getView().getModel("i18n").getResourceBundle();
             var fnReloadAfterError = function () {
                 console.log("[UploadExcel] Validación fallida, re-lanzando OData /DynamicFieldSet para refrescar pantalla.");
                 oModel.setProperty("/busy", true);
@@ -1820,6 +1821,28 @@ sap.ui.define([
             });
 
             var oController = oControllerForDelete;
+
+            // Block delete markers that target existing rows with consumed quantity
+            var bDeleteConsumedError = false;
+            if (sConsumedQtyField) {
+                aDeleteCandidates.forEach(function (oCand) {
+                    if (bDeleteConsumedError) { return; }
+                    var k = fnMatchKey(oCand);
+                    var iMatchedIdx = oOriginalByKey[k];
+                    if (iMatchedIdx !== undefined) {
+                        var fConsumedQty = parseFloat(String(aExistingRows[iMatchedIdx][sConsumedQtyField] || "0").replace(/,/g, ""));
+                        if (!isNaN(fConsumedQty) && fConsumedQty > 0) {
+                            bDeleteConsumedError = true;
+                        }
+                    }
+                });
+            }
+            if (bDeleteConsumedError) {
+                MessageBox.error(oBundle.getText("msgConsumeDetected"));
+                fnReloadAfterError();
+                return;
+            }
+
             aDeleteCandidates.forEach(function (oCand) {
                 var k = fnMatchKey(oCand);
                 var iMatchedIdx = oOriginalByKey[k];
