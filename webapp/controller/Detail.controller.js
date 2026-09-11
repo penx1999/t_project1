@@ -2784,7 +2784,7 @@ sap.ui.define([
                             parseFloat(String(oRowData[sConsumedQtyField] || "0").replace(/,/g, "")) : 0;
                         if (!isNaN(fConsumedQtyForEnd) && fConsumedQtyForEnd > 0) {
                             var sEndOrig = (oOriginal && sEndField) ? fnNormDate(oOriginal[sEndField]) : "";
-                            if (sEndOrig && sEnd <= sEndOrig) {
+                            if (sEndOrig && sEnd < sEndOrig) {
                                 oRowData["_err_" + sEndField] = true;
                                 bEndDateConsumedFutureError = true;
                             }
