@@ -4,8 +4,19 @@ sap.ui.define([
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
     "sap/m/MessageToast",
-    "sap/m/MessageBox"
-], function (Controller, JSONModel, Filter, FilterOperator, MessageToast, MessageBox) {
+    "sap/m/MessageBox",
+    "sap/m/Dialog",
+    "sap/m/SearchField",
+    "sap/m/Text",
+    "sap/m/Label",
+    "sap/m/VBox",
+    "sap/m/Button",
+    "sap/m/Table",
+    "sap/m/Column",
+    "sap/m/ColumnListItem",
+    "sap/ui/core/BusyIndicator"
+], function (Controller, JSONModel, Filter, FilterOperator, MessageToast, MessageBox,
+    Dialog, SearchField, Text, Label, VBox, Button, MTable, MColumn, ColumnListItem, BusyIndicator) {
     "use strict";
 
     return Controller.extend("t_project1.controller.ListReport", {
@@ -203,6 +214,192 @@ sap.ui.define([
 
             this.getOwnerComponent().getRouter().navTo("RouteDetail", {
                 quotaId: sId
+            });
+        },
+
+        onDivisionValueHelp: function (oEvent) {
+            var oInput = oEvent.getSource();
+            var that = this;
+
+            var oVHModel = new JSONModel({
+                allItems: [],
+                items: [],
+                displayedCount: 0,
+                totalCount: 0,
+                pageSize: 100,
+                currentPage: 1,
+                totalPages: 1,
+                moreText: "[ 0 / 0 ]",
+                canMore: false
+            });
+            var oDialog;
+            var fnApplyValueHelpPage = function (iPage) {
+                var aAllItems = oVHModel.getProperty("/allItems") || [];
+                var iPageSize = oVHModel.getProperty("/pageSize") || 100;
+                var iTotalPages = Math.max(Math.ceil(aAllItems.length / iPageSize), 1);
+                var iCurrentPage = Math.min(Math.max(iPage || 1, 1), iTotalPages);
+                var iDisplayCount = Math.min(iCurrentPage * iPageSize, aAllItems.length);
+                var aPageItems = aAllItems.slice(0, iDisplayCount);
+
+                oVHModel.setProperty("/items", aPageItems);
+                oVHModel.setProperty("/displayedCount", aPageItems.length);
+                oVHModel.setProperty("/totalCount", aAllItems.length);
+                oVHModel.setProperty("/currentPage", iCurrentPage);
+                oVHModel.setProperty("/totalPages", iTotalPages);
+                oVHModel.setProperty("/moreText", "[ " + aPageItems.length + " / " + aAllItems.length + " ]");
+                oVHModel.setProperty("/canMore", aPageItems.length < aAllItems.length);
+            };
+            var oSearchField = new SearchField({
+                width: "100%",
+                placeholder: "Search",
+                search: function (oEv) {
+                    var sQuery = oEv.getParameter("query") || oEv.getParameter("value") || "";
+                    that._loadDivisionValueHelp(sQuery || "*", oVHModel, fnApplyValueHelpPage);
+                }
+            });
+            var oValueHelpTable = new MTable({
+                width: "100%",
+                mode: "None",
+                fixedLayout: true,
+                columns: [
+                    new MColumn({
+                        width: "30rem",
+                        header: new Label({ text: "Division" })
+                    }),
+                    new MColumn({
+                        header: new Label({ text: "Description" })
+                    })
+                ],
+                items: {
+                    path: "/items",
+                    template: new ColumnListItem({
+                        type: "Active",
+                        cells: [
+                            new Text({ text: "{Clave}", wrapping: false }),
+                            new Text({ text: "{Desc}", wrapping: false })
+                        ],
+                        press: function (oEv) {
+                            var oRowContext = oEv.getSource().getBindingContext();
+                            if (!oRowContext) { return; }
+                            var sClave = oRowContext.getProperty("Clave");
+                            oInput.setValue(sClave);
+                            oDialog.close();
+                        }
+                    })
+                }
+            });
+
+            oValueHelpTable.setModel(oVHModel);
+
+            oDialog = new Dialog({
+                title: "Search Help: Division",
+                contentWidth: "80rem",
+                contentHeight: "42rem",
+                verticalScrolling: true,
+                resizable: true,
+                draggable: true,
+                content: [
+                    new VBox({
+                        width: "100%",
+                        items: [
+                            oSearchField,
+                            oValueHelpTable,
+                            new VBox({
+                                width: "100%",
+                                alignItems: "Center",
+                                items: [
+                                    new Button({
+                                        text: "More",
+                                        type: "Transparent",
+                                        enabled: "{/canMore}",
+                                        press: function () {
+                                            fnApplyValueHelpPage((oVHModel.getProperty("/currentPage") || 1) + 1);
+                                        }
+                                    }),
+                                    new Text({ text: "{/moreText}" })
+                                ]
+                            })
+                        ]
+                    })
+                ],
+                endButton: new Button({
+                    text: "Cancel",
+                    press: function () { oDialog.close(); }
+                }),
+                afterClose: function () { oDialog.destroy(); }
+            });
+
+            oDialog.setModel(oVHModel);
+            oDialog.open();
+            this._loadDivisionValueHelp("*", oVHModel, fnApplyValueHelpPage);
+        },
+
+        _loadDivisionValueHelp: function (sSource, oVHModel, fnApplyValueHelpPage) {
+            var oODataModel = this.getOwnerComponent().getModel();
+            if (!oODataModel) { return; }
+            var oModel = this.getView().getModel();
+            var sAlloc = (oModel.getProperty("/filterProdAlloc") || "").trim() || "*";
+            if (sAlloc.length > 300) {
+                sAlloc = sAlloc.substring(0, 300);
+            }
+            var aFilters = [
+                new Filter("source",           FilterOperator.EQ, sSource),
+                new Filter("allocationObject", FilterOperator.EQ, sAlloc),
+                new Filter("data_element",     FilterOperator.EQ, "SPART")
+            ];
+            console.log("[ValueHelp] GET /ValueHelpSet?$filter=source eq '" + sSource +
+                "' and allocationObject eq '" + sAlloc + "' and data_element eq 'SPART'");
+            BusyIndicator.show(0);
+            var iStartTime = Date.now();
+            oVHModel.__iReqSeq = (oVHModel.__iReqSeq || 0) + 1;
+            var iReqSeq = oVHModel.__iReqSeq;
+            oODataModel.read("/ValueHelpSet", {
+                filters: aFilters,
+                success: function (oData) {
+                    console.log("ValueHelp OData response time ms:", Date.now() - iStartTime);
+                    if (iReqSeq !== oVHModel.__iReqSeq) {
+                        BusyIndicator.hide();
+                        return;
+                    }
+                    var aItems = (oData && oData.results) ? oData.results : (oData ? [oData] : []);
+                    console.log("ValueHelp OData records returned:", aItems.length);
+                    oVHModel.setSizeLimit(Math.max(aItems.length, 100));
+                    oVHModel.setProperty("/allItems", aItems);
+                    if (fnApplyValueHelpPage) {
+                        fnApplyValueHelpPage(1);
+                    } else {
+                        oVHModel.setProperty("/items", aItems);
+                        oVHModel.setProperty("/displayedCount", aItems.length);
+                        oVHModel.setProperty("/totalCount", aItems.length);
+                    }
+                    BusyIndicator.hide();
+                },
+                error: function (oErr) {
+                    console.log("ValueHelp OData response time ms:", Date.now() - iStartTime);
+                    if (iReqSeq !== oVHModel.__iReqSeq) {
+                        BusyIndicator.hide();
+                        return;
+                    }
+                    var sStatus = (oErr && oErr.statusCode) ? oErr.statusCode : "";
+                    var sDetail = "";
+                    try {
+                        var oResp = JSON.parse(oErr.responseText);
+                        sDetail = oResp.error.message.value || "";
+                    } catch (e) {
+                        sDetail = (oErr && oErr.message) ? oErr.message : "";
+                    }
+                    jQuery.sap.log.error("ValueHelp call failed (" + sStatus + "): " + sDetail);
+                    console.error("[ValueHelp] OData error", sStatus, sDetail, oErr);
+                    oVHModel.setProperty("/allItems", []);
+                    oVHModel.setProperty("/items", []);
+                    oVHModel.setProperty("/displayedCount", 0);
+                    oVHModel.setProperty("/totalCount", 0);
+                    oVHModel.setProperty("/currentPage", 1);
+                    oVHModel.setProperty("/totalPages", 1);
+                    oVHModel.setProperty("/moreText", "[ 0 / 0 ]");
+                    oVHModel.setProperty("/canMore", false);
+                    BusyIndicator.hide();
+                }
             });
         },
 

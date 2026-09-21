@@ -47,6 +47,8 @@
                                 id="idDivision"
                                 value="{/filterDivision}"
                                 maxLength="2"
+                                showValueHelp="true"
+                                valueHelpRequest=".onDivisionValueHelp"
                                 submit=".onSearch"/>
                         </VBox>
 
