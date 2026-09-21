@@ -345,10 +345,10 @@ sap.ui.define([
             var aFilters = [
                 new Filter("source",           FilterOperator.EQ, sSource),
                 new Filter("allocationObject", FilterOperator.EQ, sAlloc),
-                new Filter("data_element",     FilterOperator.EQ, "SPART")
+                new Filter("data_element",     FilterOperator.EQ, "DIVISION")
             ];
             console.log("[ValueHelp] GET /ValueHelpSet?$filter=source eq '" + sSource +
-                "' and allocationObject eq '" + sAlloc + "' and data_element eq 'SPART'");
+                "' and allocationObject eq '" + sAlloc + "' and data_element eq 'DIVISION'");
             BusyIndicator.show(0);
             var iStartTime = Date.now();
             oVHModel.__iReqSeq = (oVHModel.__iReqSeq || 0) + 1;
