@@ -70,9 +70,9 @@
                 class="sapUiSmallMarginBeginEnd sapUiTinyMarginTop sapUiTinyMarginBottom"
                 alignItems="Center"
                 visible="{= !!${detailModel>/division} }">
-                <Text text="{i18n>divisionLabel}:" class="sapUiTinyMarginEnd"/>
-                <Text text="{detailModel>/division}" class="sapUiTinyMarginEnd"/>
-                <Text text="{detailModel>/divisionDesc}"/>
+                <Title text="{i18n>divisionLabel}:" level="H2" titleStyle="H2" class="sapUiTinyMarginEnd"/>
+                <Title text="{detailModel>/division}" level="H2" titleStyle="H2" class="sapUiTinyMarginEnd"/>
+                <Title text="{detailModel>/divisionDesc}" level="H2" titleStyle="H2"/>
             </HBox>
 
             <!-- Selection Range Panel -->
