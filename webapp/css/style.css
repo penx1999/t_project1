@@ -43,3 +43,11 @@
 .sapMSLI .sapMSLITitle {
     flex: none !important;
 }
+
+/* Banda de Division bajo el titulo del ObjectHeader: usa el mismo fondo
+   translucido del encabezado y alinea el texto al mismo margen (1rem). */
+.zqDivisionBand {
+    background-color: var(--sapObjectHeader_Background, #f5f6f7);
+    padding: 0 1rem 0.5rem 1rem;
+    box-sizing: border-box;
+}

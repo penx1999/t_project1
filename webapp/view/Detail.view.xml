@@ -55,6 +55,16 @@
                 backgroundDesign="Translucent">
             </ObjectHeader>
 
+            <!-- Division Info -->
+            <HBox
+                class="zqDivisionBand"
+                alignItems="Center"
+                visible="{= !!${detailModel>/division} }">
+                <Title text="{i18n>divisionLabel}:" level="H2" titleStyle="H2" class="sapUiTinyMarginEnd"/>
+                <Title text="{detailModel>/division}" level="H2" titleStyle="H2" class="sapUiTinyMarginEnd"/>
+                <Title text="{detailModel>/divisionDesc}" level="H2" titleStyle="H2"/>
+            </HBox>
+
             <!-- Service Message Strip -->
             <MessageStrip
                 id="idServiceMessage"
@@ -64,16 +74,6 @@
                 showCloseButton="true"
                 class="sapUiSmallMarginBeginEnd sapUiSmallMarginTop"
                 close=".onMessageClose"/>
-
-            <!-- Division Info -->
-            <HBox
-                class="sapUiSmallMarginBeginEnd sapUiTinyMarginTop sapUiTinyMarginBottom"
-                alignItems="Center"
-                visible="{= !!${detailModel>/division} }">
-                <Title text="{i18n>divisionLabel}:" level="H2" titleStyle="H2" class="sapUiTinyMarginEnd"/>
-                <Title text="{detailModel>/division}" level="H2" titleStyle="H2" class="sapUiTinyMarginEnd"/>
-                <Title text="{detailModel>/divisionDesc}" level="H2" titleStyle="H2"/>
-            </HBox>
 
             <!-- Selection Range Panel -->
             <Panel
