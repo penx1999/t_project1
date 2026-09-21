@@ -41,6 +41,15 @@
                 <VBox class="sapUiSmallMarginBeginEnd sapUiSmallMarginTopBottom">
                     <FlexBox wrap="Wrap" alignItems="End">
 
+                        <VBox class="sapUiSmallMarginEnd" width="6rem">
+                            <Label text="{i18n>divisionLabel}" labelFor="idDivision"/>
+                            <Input
+                                id="idDivision"
+                                value="{/filterDivision}"
+                                maxLength="2"
+                                submit=".onSearch"/>
+                        </VBox>
+
                         <VBox class="sapUiSmallMarginEnd" width="18rem">
                             <Label text="{i18n>ProdAllocObj}" labelFor="idProdAlloc"/>
                             <Input

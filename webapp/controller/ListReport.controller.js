@@ -12,6 +12,7 @@ sap.ui.define([
 
         onInit: function () {
             var oModel = new JSONModel({
+                filterDivision: "",
                 filterProdAlloc: "",
                 filterDescription: "",
                 filterAllocationObject: "",
@@ -85,8 +86,10 @@ sap.ui.define([
             var sProdAlloc = (oModel.getProperty("/filterProdAlloc") || "").trim();
             var oBundle = this.getView().getModel("i18n").getResourceBundle();
             var sAllocationObject = (oModel.getProperty("/filterAllocationObject") || "").trim();
+            var sDivision = (oModel.getProperty("/filterDivision") || "").trim();
 
             console.log("[ListReport] Botón 'Go' ejecutado.", {
+                filterDivision: sDivision,
                 filterProdAlloc: sProdAlloc,
                 filterDescription: (oModel.getProperty("/filterDescription") || "").trim(),
                 filterAllocationObject: sAllocationObject
@@ -107,6 +110,8 @@ sap.ui.define([
             aFilters.push(new Filter("DESCRIPTION", FilterOperator.EQ, sDescription || "*"));
 
             aFilters.push(new Filter("DATA_ELEMENT", FilterOperator.EQ, sAllocationObject || "*"));
+
+            aFilters.push(new Filter("DIVISION", FilterOperator.EQ, sDivision || "*"));
 
             var that = this;
 
@@ -141,6 +146,7 @@ sap.ui.define([
 
         onClear: function () {
             var oModel = this.getView().getModel();
+            oModel.setProperty("/filterDivision", "");
             oModel.setProperty("/filterProdAlloc", "");
             oModel.setProperty("/filterDescription", "");
             oModel.setProperty("/filterAllocationObject", "");
