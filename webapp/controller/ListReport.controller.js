@@ -24,6 +24,7 @@ sap.ui.define([
         onInit: function () {
             var oModel = new JSONModel({
                 filterDivision: "",
+                filterDivisionDesc: "",
                 filterProdAlloc: "",
                 filterDescription: "",
                 filterAllocationObject: "",
@@ -155,9 +156,14 @@ sap.ui.define([
             });
         },
 
+        onDivisionChange: function () {
+            this.getView().getModel().setProperty("/filterDivisionDesc", "");
+        },
+
         onClear: function () {
             var oModel = this.getView().getModel();
             oModel.setProperty("/filterDivision", "");
+            oModel.setProperty("/filterDivisionDesc", "");
             oModel.setProperty("/filterProdAlloc", "");
             oModel.setProperty("/filterDescription", "");
             oModel.setProperty("/filterAllocationObject", "");
@@ -201,11 +207,28 @@ sap.ui.define([
 
         _navigateToDetail: function (oItem, sAllocationObjectFilter) {
             var sId = encodeURIComponent(oItem.PRODUCTALLOCATIONOBJECT || oItem.DESCRIPTION);
+            var oModel = this.getView().getModel();
+            var sDivision = (oModel.getProperty("/filterDivision") || "").trim();
+            var sDivisionDesc = (oModel.getProperty("/filterDivisionDesc") || "").trim();
 
             if (!this.getOwnerComponent().getModel("detailModel")) {
                 this.getOwnerComponent().setModel(new JSONModel(oItem), "detailModel");
             } else {
                 this.getOwnerComponent().getModel("detailModel").setData(oItem);
+            }
+
+            var oOwner = this.getOwnerComponent();
+            var oDetailModel = oOwner.getModel("detailModel");
+            oDetailModel.setProperty("/division", sDivision);
+            oDetailModel.setProperty("/divisionDesc", sDivisionDesc);
+
+            if (sDivision && !sDivisionDesc) {
+                this._fetchDivisionDesc(sDivision, function (sDesc) {
+                    oDetailModel.setProperty("/divisionDesc", sDesc || "");
+                    if (oOwner._oDetailModel) {
+                        oOwner._oDetailModel.setProperty("/divisionDesc", sDesc || "");
+                    }
+                });
             }
 
             if (sAllocationObjectFilter) {
@@ -282,7 +305,9 @@ sap.ui.define([
                             var oRowContext = oEv.getSource().getBindingContext();
                             if (!oRowContext) { return; }
                             var sClave = oRowContext.getProperty("Clave");
+                            var sDesc = oRowContext.getProperty("Desc");
                             oInput.setValue(sClave);
+                            that.getView().getModel().setProperty("/filterDivisionDesc", sDesc || "");
                             oDialog.close();
                         }
                     })
@@ -399,6 +424,35 @@ sap.ui.define([
                     oVHModel.setProperty("/moreText", "[ 0 / 0 ]");
                     oVHModel.setProperty("/canMore", false);
                     BusyIndicator.hide();
+                }
+            });
+        },
+
+        _fetchDivisionDesc: function (sDivision, fnCallback) {
+            var oODataModel = this.getOwnerComponent().getModel();
+            if (!oODataModel) { fnCallback(""); return; }
+            var sAlloc = (this.getView().getModel().getProperty("/filterProdAlloc") || "").trim() || "*";
+            if (sAlloc.length > 300) { sAlloc = sAlloc.substring(0, 300); }
+            var aFilters = [
+                new Filter("source",           FilterOperator.EQ, "*"),
+                new Filter("allocationObject", FilterOperator.EQ, sAlloc),
+                new Filter("data_element",     FilterOperator.EQ, "DIVISION")
+            ];
+            var sDivUpper = String(sDivision || "").trim().toUpperCase();
+            oODataModel.read("/ValueHelpSet", {
+                filters: aFilters,
+                success: function (oData) {
+                    var aItems = (oData && oData.results) ? oData.results : [];
+                    var sDesc = "";
+                    aItems.forEach(function (oIt) {
+                        if (!sDesc && String(oIt.Clave || "").trim().toUpperCase() === sDivUpper) {
+                            sDesc = oIt.Desc || "";
+                        }
+                    });
+                    fnCallback(sDesc);
+                },
+                error: function () {
+                    fnCallback("");
                 }
             });
         },

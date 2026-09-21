@@ -65,6 +65,16 @@
                 class="sapUiSmallMarginBeginEnd sapUiSmallMarginTop"
                 close=".onMessageClose"/>
 
+            <!-- Division Info -->
+            <HBox
+                class="sapUiSmallMarginBeginEnd sapUiTinyMarginTop sapUiTinyMarginBottom"
+                alignItems="Center"
+                visible="{= !!${detailModel>/division} }">
+                <Text text="{i18n>divisionLabel}:" class="sapUiTinyMarginEnd"/>
+                <Text text="{detailModel>/division}" class="sapUiTinyMarginEnd"/>
+                <Text text="{detailModel>/divisionDesc}"/>
+            </HBox>
+
             <!-- Selection Range Panel -->
             <Panel
                 headerText=" "

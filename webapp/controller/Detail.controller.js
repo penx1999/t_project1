@@ -62,6 +62,8 @@ sap.ui.define([
                 materialFilter: "",
                 plantFilter: "",
                 l_key_char: "",
+                division: "",
+                divisionDesc: "",
                 tableTitle: "",
                 columns: [],
                 rows: [],
@@ -199,6 +201,8 @@ sap.ui.define([
                 }
             }
             oModel.setProperty("/l_key_char", sKeyChar);
+            oModel.setProperty("/division", (oCompData && oCompData.division) ? oCompData.division : "");
+            oModel.setProperty("/divisionDesc", (oCompData && oCompData.divisionDesc) ? oCompData.divisionDesc : "");
             console.log("[Detail] l_key_char capturado de pantalla 1:", sKeyChar, "| datos completos:", oCompDetailModel ? oCompDetailModel.getData() : null);
 
             oModel.setProperty("/productAllocationObject", sQuotaId);
