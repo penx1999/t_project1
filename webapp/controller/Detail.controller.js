@@ -3207,9 +3207,12 @@ sap.ui.define([
 
             var oODataModel = this.getOwnerComponent().getModel();
 
+            var sDivision = (this.getView().getModel("detailModel").getProperty("/division") || "").trim();
+
             var oData = {
                 name: "",
                 tablename: "PAL",
+                Division: sDivision,
                 DataSetAsoc: []
             };
 
