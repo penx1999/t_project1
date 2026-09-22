@@ -47,6 +47,7 @@
                                 id="idDivision"
                                 value="{/filterDivision}"
                                 maxLength="2"
+                                required="true"
                                 showValueHelp="true"
                                 valueHelpRequest=".onDivisionValueHelp"
                                 change=".onDivisionChange"

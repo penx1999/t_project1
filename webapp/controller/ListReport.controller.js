@@ -107,6 +107,14 @@ sap.ui.define([
                 filterAllocationObject: sAllocationObject
             });
 
+            var oDivisionInput = this.byId("idDivision");
+            if (!sDivision) {
+                if (oDivisionInput) { oDivisionInput.setValueState("Error"); }
+                MessageBox.error(oBundle.getText("msgDivisionRequired"));
+                return;
+            }
+            if (oDivisionInput) { oDivisionInput.setValueState("None"); }
+
             if (sAllocationObject) {
                 console.log("[ListReport] Allocation Object con valor: navegando directo a pantalla 2 y ejecutando su Go.");
                 this._navigateToDetail({ PRODUCTALLOCATIONOBJECT: sProdAlloc || "-" }, sAllocationObject);
@@ -157,7 +165,12 @@ sap.ui.define([
         },
 
         onDivisionChange: function () {
-            this.getView().getModel().setProperty("/filterDivisionDesc", "");
+            var oModel = this.getView().getModel();
+            oModel.setProperty("/filterDivisionDesc", "");
+            var oDivisionInput = this.byId("idDivision");
+            if (oDivisionInput && (oModel.getProperty("/filterDivision") || "").trim()) {
+                oDivisionInput.setValueState("None");
+            }
         },
 
         onClear: function () {
@@ -170,6 +183,9 @@ sap.ui.define([
             oModel.setProperty("/QuotaResults", []);
             oModel.setProperty("/detailEnabled", false);
             oModel.setProperty("/selectedItems", []);
+
+            var oDivisionInput = this.byId("idDivision");
+            if (oDivisionInput) { oDivisionInput.setValueState("None"); }
 
             var oCountText = this.byId("idRecordCount");
             if (oCountText) { oCountText.setText(""); }
