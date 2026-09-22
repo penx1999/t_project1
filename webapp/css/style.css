@@ -45,11 +45,13 @@
 }
 
 /* Segundo ObjectHeader (linea de Division) pegado justo debajo del
-   ObjectHeader principal, para que ambos se vean como una sola cabecera
-   continua con el mismo estilo (misma fuente, tamano y fondo). */
-.zqDivisionBand {
-    margin-top: 0;
+   ObjectHeader principal: se elimina el padding vertical que separa
+   ambos (padding-bottom del primero, padding-top del segundo) para que
+   ambos se vean como una sola cabecera continua, con el mismo estilo. */
+.zqMainHeader.sapMOH {
+    padding-bottom: 0;
 }
 .zqDivisionBand.sapMOH {
+    padding-top: 0;
     border-top: 0;
 }

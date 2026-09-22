@@ -52,10 +52,11 @@
             <ObjectHeader
                 title="{detailModel>/l_key_char}"
                 titleLevel="H2"
-                backgroundDesign="Translucent">
+                backgroundDesign="Translucent"
+                class="zqMainHeader">
             </ObjectHeader>
 
-            <!-- Division Info: same control/style as the ObjectHeader above -->
+            <!-- Division Info: same control/style as the ObjectHeader above, glued right below it -->
             <ObjectHeader
                 title="{= ${i18n>divisionLabel} + ': ' + ${detailModel>/division} + (${detailModel>/divisionDesc} ? ' ' + ${detailModel>/divisionDesc} : '') }"
                 titleLevel="H2"
