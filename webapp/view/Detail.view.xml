@@ -55,15 +55,14 @@
                 backgroundDesign="Translucent">
             </ObjectHeader>
 
-            <!-- Division Info -->
-            <HBox
+            <!-- Division Info: same control/style as the ObjectHeader above -->
+            <ObjectHeader
+                title="{= ${i18n>divisionLabel} + ': ' + ${detailModel>/division} + (${detailModel>/divisionDesc} ? ' ' + ${detailModel>/divisionDesc} : '') }"
+                titleLevel="H2"
+                backgroundDesign="Translucent"
                 class="zqDivisionBand"
-                alignItems="Center"
                 visible="{= !!${detailModel>/division} }">
-                <Title text="{i18n>divisionLabel}:" level="H2" titleStyle="H2" class="sapUiTinyMarginEnd"/>
-                <Title text="{detailModel>/division}" level="H2" titleStyle="H2" class="sapUiTinyMarginEnd"/>
-                <Title text="{detailModel>/divisionDesc}" level="H2" titleStyle="H2"/>
-            </HBox>
+            </ObjectHeader>
 
             <!-- Service Message Strip -->
             <MessageStrip
