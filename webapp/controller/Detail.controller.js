@@ -398,7 +398,7 @@ sap.ui.define([
             if (sType) { aFilterParts.push("data_element eq '" + String(sType).replace(/'/g, "''") + "'"); }
             if (sPlantFilter) { aFilterParts.push("werks eq '" + sPlantFilter.replace(/'/g, "''") + "'"); }
             if (sMatFilter) { aFilterParts.push("matnr eq '" + sMatFilter.replace(/'/g, "''") + "'"); }
-            if (sDivision) { aFilterParts.push("spart eq '" + sDivision.replace(/'/g, "''") + "'"); }
+            if (sDivision) { aFilterParts.push("Division eq '" + sDivision.replace(/'/g, "''") + "'"); }
 
             console.log("[DynamicTable] Ejecutando OData /DynamicFieldSet", {
                 productAllocationObject: sLKeyChar,
@@ -407,7 +407,7 @@ sap.ui.define([
                 data_element: sType || "",
                 MATNR: sMatFilter || "",
                 WERKS: sPlantFilter || "",
-                SPART: sDivision || ""
+                Division: sDivision || ""
             });
             oODataModel.read("/DynamicFieldSet", {
                 urlParameters: { "$expand": "DataSetAsoc", "$filter": aFilterParts.join(" and ") },
