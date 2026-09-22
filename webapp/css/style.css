@@ -45,13 +45,16 @@
 }
 
 /* Segundo ObjectHeader (linea de Division) pegado justo debajo del
-   ObjectHeader principal: se elimina el padding vertical que separa
-   ambos (padding-bottom del primero, padding-top del segundo) para que
-   ambos se vean como una sola cabecera continua, con el mismo estilo. */
+   ObjectHeader principal. sap.m.ObjectHeader (no responsive) trae un
+   padding vertical grande por defecto (3rem en desktop, y variantes de
+   1.5rem/2rem segun el ancho via media queries dentro de la propia
+   libreria UI5), con selectores mas especificos que una simple clase.
+   Se usa !important para garantizar que el padding vertical que separa
+   ambas cabeceras quede en 0 sin importar el ancho del contenedor. */
 .zqMainHeader.sapMOH {
-    padding-bottom: 0;
+    padding-bottom: 0 !important;
 }
 .zqDivisionBand.sapMOH {
-    padding-top: 0;
+    padding-top: 0 !important;
     border-top: 0;
 }
