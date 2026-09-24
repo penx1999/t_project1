@@ -166,11 +166,66 @@ sap.ui.define([
 
         onDivisionChange: function () {
             var oModel = this.getView().getModel();
+            var oInput = this.byId("idDivision");
+            var sValue = (oModel.getProperty("/filterDivision") || "").trim();
+            var oBundle = this.getView().getModel("i18n").getResourceBundle();
+            var that = this;
+
             oModel.setProperty("/filterDivisionDesc", "");
-            var oDivisionInput = this.byId("idDivision");
-            if (oDivisionInput && (oModel.getProperty("/filterDivision") || "").trim()) {
-                oDivisionInput.setValueState("None");
+
+            if (!sValue) {
+                if (oInput) { oInput.setValueState("None"); }
+                return;
             }
+
+            this._validateDivision(sValue, function (oMatch) {
+                if (oMatch) {
+                    oModel.setProperty("/filterDivision", (oMatch.Clave || sValue));
+                    oModel.setProperty("/filterDivisionDesc", oMatch.Desc || "");
+                    if (oInput) {
+                        oInput.setValueState("None");
+                        oInput.setValueStateText("");
+                    }
+                } else {
+                    oModel.setProperty("/filterDivision", "");
+                    if (oInput) {
+                        oInput.setValueState("Error");
+                        oInput.setValueStateText(oBundle.getText("msgDivisionInvalid"));
+                    }
+                    MessageToast.show(oBundle.getText("msgDivisionInvalid"));
+                }
+            });
+        },
+
+        _validateDivision: function (sDivision, fnCallback) {
+            var oODataModel = this.getOwnerComponent().getModel();
+            if (!oODataModel) { fnCallback(null); return; }
+            var sAlloc = (this.getView().getModel().getProperty("/filterProdAlloc") || "").trim() || "*";
+            if (sAlloc.length > 300) { sAlloc = sAlloc.substring(0, 300); }
+            var aFilters = [
+                new Filter("source",           FilterOperator.EQ, "*"),
+                new Filter("allocationObject", FilterOperator.EQ, sAlloc),
+                new Filter("data_element",     FilterOperator.EQ, "DIVISION")
+            ];
+            var sDivUpper = String(sDivision || "").trim().toUpperCase();
+            oODataModel.read("/ValueHelpSet", {
+                filters: aFilters,
+                success: function (oData) {
+                    var aItems = (oData && oData.results) ? oData.results : [];
+                    var oMatch = null;
+                    aItems.forEach(function (oIt) {
+                        if (!oMatch && String(oIt.Clave || "").trim().toUpperCase() === sDivUpper) {
+                            oMatch = oIt;
+                        }
+                    });
+                    fnCallback(oMatch);
+                },
+                error: function () {
+                    // Si no se pudo verificar contra el backend, no se rechaza
+                    // el valor; el usuario no tiene forma de saber la lista.
+                    fnCallback({ Clave: sDivision, Desc: "" });
+                }
+            });
         },
 
         onClear: function () {
@@ -445,31 +500,8 @@ sap.ui.define([
         },
 
         _fetchDivisionDesc: function (sDivision, fnCallback) {
-            var oODataModel = this.getOwnerComponent().getModel();
-            if (!oODataModel) { fnCallback(""); return; }
-            var sAlloc = (this.getView().getModel().getProperty("/filterProdAlloc") || "").trim() || "*";
-            if (sAlloc.length > 300) { sAlloc = sAlloc.substring(0, 300); }
-            var aFilters = [
-                new Filter("source",           FilterOperator.EQ, "*"),
-                new Filter("allocationObject", FilterOperator.EQ, sAlloc),
-                new Filter("data_element",     FilterOperator.EQ, "DIVISION")
-            ];
-            var sDivUpper = String(sDivision || "").trim().toUpperCase();
-            oODataModel.read("/ValueHelpSet", {
-                filters: aFilters,
-                success: function (oData) {
-                    var aItems = (oData && oData.results) ? oData.results : [];
-                    var sDesc = "";
-                    aItems.forEach(function (oIt) {
-                        if (!sDesc && String(oIt.Clave || "").trim().toUpperCase() === sDivUpper) {
-                            sDesc = oIt.Desc || "";
-                        }
-                    });
-                    fnCallback(sDesc);
-                },
-                error: function () {
-                    fnCallback("");
-                }
+            this._validateDivision(sDivision, function (oMatch) {
+                fnCallback(oMatch ? (oMatch.Desc || "") : "");
             });
         },
 
