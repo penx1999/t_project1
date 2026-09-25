@@ -2498,13 +2498,13 @@ sap.ui.define([
                 aFilters.push(new Filter("Division", FilterOperator.EQ, sDivision));
             }
             if (sDcGroup) {
-                aFilters.push(new Filter("DC_GROUP", FilterOperator.EQ, sDcGroup));
+                aFilters.push(new Filter("Dc_group", FilterOperator.EQ, sDcGroup));
             }
             console.log("[ValueHelp] GET " + sServiceUrl + "/ValueHelpSet?$filter=" +
                 "source eq '" + sSource + "' and allocationObject eq '" + sAlloc +
                 "' and data_element eq '" + (sDataElement || "") + "'" +
                 (sDivision ? " and Division eq '" + sDivision + "'" : "") +
-                (sDcGroup ? " and DC_GROUP eq '" + sDcGroup + "'" : ""));
+                (sDcGroup ? " and Dc_group eq '" + sDcGroup + "'" : ""));
             BusyIndicator.show(0);
             var iStartTime = Date.now();
             // Guard against out-of-order/stale responses: only the latest request for this
