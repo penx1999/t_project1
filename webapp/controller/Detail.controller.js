@@ -1827,7 +1827,7 @@ sap.ui.define([
             });
 
             var oControllerForDelete = this;
-            var fnContinueUpload = function () {
+            var fnContinueUploadBody = function () {
             // Process Delete column: existing rows go to _aDeletedRows and are removed;
             // non-existing rows are added to _aDeletedRows as if added then deleted.
             var aDeletedExistingIndices = [];
@@ -2051,6 +2051,23 @@ sap.ui.define([
             var sMsg = sDeleteMsg + aRemainingCandidates.length + " new row(s) loaded and " +
                 iUpdatedCount + " duplicate row(s) updated from file.";
             MessageToast.show(sMsg);
+            };
+
+            // Gate the upload on the "Plant" values (of rows contributing a value,
+            // i.e. not marked for deletion) being present in the search help list
+            // for their row's "DC Group" (same rule enforced on manual Save).
+            var fnContinueUpload = function () {
+                oControllerForDelete._validatePlantValues(aNonDeleteCandidates, aColumns).then(function (aInvalidPlantRows) {
+                    if (aInvalidPlantRows && aInvalidPlantRows.length > 0) {
+                        var iInvalidExcelLine = aInvalidPlantRows[0]._excelLine || "";
+                        var sPlantMsg = oBundle.getText("msgPlantNotInSearchHelp");
+                        if (iInvalidExcelLine) { sPlantMsg += " - Excel line: " + iInvalidExcelLine; }
+                        MessageBox.error(sPlantMsg);
+                        fnReloadAfterError();
+                        return;
+                    }
+                    fnContinueUploadBody();
+                });
             };
 
             // For every row loaded from the excel (not only Delete-marked ones): verify
@@ -2578,6 +2595,120 @@ sap.ui.define([
             });
         },
 
+        // Identify the technical field names for "Plant" and "DC Group" among the
+        // dynamic columns of the table, matched by label (same approach used
+        // elsewhere in this controller, e.g. _onValueHelpRequest / _hasDateOverlap).
+        _getPlantAndDcGroupFields: function (aColumns) {
+            var sPlantField = null, sDcGroupField = null;
+            (aColumns || []).forEach(function (oCol) {
+                var sLbl = (oCol.label || "").toLowerCase().trim();
+                if (!sPlantField && (sLbl === "plant" || sLbl.indexOf("plant") !== -1 || sLbl.indexOf("centro") !== -1)) {
+                    sPlantField = oCol.name;
+                }
+                if (!sDcGroupField && sLbl.replace(/\s+/g, " ").indexOf("dc group") !== -1) {
+                    sDcGroupField = oCol.name;
+                }
+            });
+            return { plantField: sPlantField, dcGroupField: sDcGroupField };
+        },
+
+        // Fetches (with caching) the set of valid "Plant" values from /ValueHelpSet
+        // for a given data_element/Division/Dc_group combination. Resolves to an
+        // object exposing has(sUpperValue); on OData error resolves to a
+        // "accept everything" set so a connectivity issue never blocks Save/Upload
+        // with a false positive.
+        _fetchPlantValidSet: function (sDataElement, sDivision, sDcGroup) {
+            this._oPlantValueCache = this._oPlantValueCache || {};
+            var sCacheKey = sDataElement + "|" + sDivision + "|" + sDcGroup;
+            if (this._oPlantValueCache[sCacheKey]) {
+                return this._oPlantValueCache[sCacheKey];
+            }
+
+            var oODataModel = this.getOwnerComponent().getModel();
+            var oDetailModel = this.getView().getModel("detailModel");
+            var sAlloc = oDetailModel.getProperty("/productAllocationObject") || oDetailModel.getProperty("/l_key_char") || "";
+            if (sAlloc.length > 300) { sAlloc = sAlloc.substring(0, 300); }
+
+            var aFilters = [
+                new Filter("source",           FilterOperator.EQ, "*"),
+                new Filter("allocationObject", FilterOperator.EQ, sAlloc),
+                new Filter("data_element",     FilterOperator.EQ, sDataElement || "")
+            ];
+            if (sDivision) { aFilters.push(new Filter("Division", FilterOperator.EQ, sDivision)); }
+            if (sDcGroup)  { aFilters.push(new Filter("Dc_group", FilterOperator.EQ, sDcGroup)); }
+
+            console.log("[PlantValidation] GET /ValueHelpSet?$filter=source eq '*' and allocationObject eq '" + sAlloc +
+                "' and data_element eq '" + (sDataElement || "") + "'" +
+                (sDivision ? " and Division eq '" + sDivision + "'" : "") +
+                (sDcGroup ? " and Dc_group eq '" + sDcGroup + "'" : ""));
+
+            var oPromise = new Promise(function (resolve) {
+                oODataModel.read("/ValueHelpSet", {
+                    filters: aFilters,
+                    success: function (oData) {
+                        var aItems = (oData && oData.results) ? oData.results : [];
+                        var oSet = {};
+                        aItems.forEach(function (oIt) {
+                            oSet[String(oIt.Clave || "").trim().toUpperCase()] = true;
+                        });
+                        resolve({ has: function (sUpper) { return !!oSet[sUpper]; } });
+                    },
+                    error: function (oErr) {
+                        console.error("[PlantValidation] Error consultando ValueHelpSet, no se bloquea Save/Upload:", oErr);
+                        resolve({ has: function () { return true; } });
+                    }
+                });
+            });
+            this._oPlantValueCache[sCacheKey] = oPromise;
+            return oPromise;
+        },
+
+        // Validates the "Plant" value of every row in aRowDataList against the
+        // search help list for that row's "DC Group" (and current screen Division).
+        // Returns a Promise resolving to the array of row objects whose Plant
+        // value is NOT present in the corresponding search help list.
+        _validatePlantValues: function (aRowDataList, aColumns) {
+            var that = this;
+            var oFields = this._getPlantAndDcGroupFields(aColumns);
+            var sPlantField = oFields.plantField;
+            var sDcGroupField = oFields.dcGroupField;
+
+            if (!sPlantField) { return Promise.resolve([]); }
+
+            var sDataElement = (this._oFieldMetadata && this._oFieldMetadata[sPlantField] &&
+                this._oFieldMetadata[sPlantField].data_element) || "";
+            var sDivision = (this.getView().getModel("detailModel").getProperty("/division") || "").trim();
+
+            var oRowsByDcGroup = {};
+            (aRowDataList || []).forEach(function (oRowData) {
+                var sPlantValue = (oRowData[sPlantField] || "").toString().trim();
+                if (!sPlantValue) { return; }
+                var sDcGroupValue = sDcGroupField ? (oRowData[sDcGroupField] || "").toString().trim() : "";
+                if (!oRowsByDcGroup[sDcGroupValue]) { oRowsByDcGroup[sDcGroupValue] = []; }
+                oRowsByDcGroup[sDcGroupValue].push(oRowData);
+            });
+
+            var aDcGroupKeys = Object.keys(oRowsByDcGroup);
+            if (aDcGroupKeys.length === 0) { return Promise.resolve([]); }
+
+            return Promise.all(aDcGroupKeys.map(function (sDcGroupValue) {
+                return that._fetchPlantValidSet(sDataElement, sDivision, sDcGroupValue).then(function (oValidSet) {
+                    return { dcGroup: sDcGroupValue, validSet: oValidSet };
+                });
+            })).then(function (aResults) {
+                var aInvalidRows = [];
+                aResults.forEach(function (oResult) {
+                    (oRowsByDcGroup[oResult.dcGroup] || []).forEach(function (oRowData) {
+                        var sPlantUpper = (oRowData[sPlantField] || "").toString().trim().toUpperCase();
+                        if (!oResult.validSet.has(sPlantUpper)) {
+                            aInvalidRows.push(oRowData);
+                        }
+                    });
+                });
+                return aInvalidRows;
+            });
+        },
+
         _onRocChange: function (oEvent, sFieldName) {
             var oBundle = this.getView().getModel("i18n").getResourceBundle();
             var oCombo = oEvent.getSource();
@@ -2717,6 +2848,17 @@ sap.ui.define([
                 return;
             }
 
+            var that = this;
+            var aColumnsForPlantCheck = oModel.getProperty("/columns") || [];
+            var aRowDataForPlantCheck = aChangedRows.map(function (oCr) { return oCr.rowData; });
+            this._validatePlantValues(aRowDataForPlantCheck, aColumnsForPlantCheck).then(function (aInvalidPlantRows) {
+                that._onSaveAfterPlantCheck(aChangedRows, aInvalidPlantRows);
+            });
+        },
+
+        _onSaveAfterPlantCheck: function (aChangedRows, aInvalidPlantRows) {
+            var oModel = this.getView().getModel("detailModel");
+            var oBundle = this.getView().getModel("i18n").getResourceBundle();
             var aRows = oModel.getProperty("/rows") || [];
             var aColumns = oModel.getProperty("/columns") || [];
             var bDateError = false;
@@ -2725,6 +2867,8 @@ sap.ui.define([
             var bEndDateConsumedFutureError = false;
             var bQuotaConsumedError = false;
             var bRocError = false;
+            var bPlantValueError = (aInvalidPlantRows || []).length > 0;
+            var sPlantFieldForCheck = this._getPlantAndDcGroupFields(aColumns).plantField;
             var oController = this;
 
             var aNonRequired = [
@@ -2743,6 +2887,12 @@ sap.ui.define([
                 });
                 oRow._overlapError = false;
             });
+
+            if (bPlantValueError && sPlantFieldForCheck) {
+                aInvalidPlantRows.forEach(function (oRowData) {
+                    oRowData["_err_" + sPlantFieldForCheck] = true;
+                });
+            }
 
             var fnNormDate = function (s) {
                 if (!s) { return ""; }
@@ -2852,6 +3002,11 @@ sap.ui.define([
 
             if (bRocError) {
                 MessageBox.error(oBundle.getText("msgRocNotExist"));
+                return;
+            }
+
+            if (bPlantValueError) {
+                MessageBox.error(oBundle.getText("msgPlantNotInSearchHelp"));
                 return;
             }
 
