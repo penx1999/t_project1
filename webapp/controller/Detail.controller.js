@@ -2468,15 +2468,20 @@ sap.ui.define([
                 console.warn("[ValueHelp] allocationObject supera maxLength=300, se truncar\u00e1:", sAlloc);
                 sAlloc = sAlloc.substring(0, 300);
             }
+            var sDivision = (oDetailModel.getProperty("/division") || "").trim();
             var sServiceUrl = (oODataModel.sServiceUrl || "").replace(/\/$/, "");
             var aFilters = [
                 new Filter("source",           FilterOperator.EQ, sSource),
                 new Filter("allocationObject", FilterOperator.EQ, sAlloc),
                 new Filter("data_element",     FilterOperator.EQ, sDataElement || "")
             ];
+            if (sDivision) {
+                aFilters.push(new Filter("Division", FilterOperator.EQ, sDivision));
+            }
             console.log("[ValueHelp] GET " + sServiceUrl + "/ValueHelpSet?$filter=" +
                 "source eq '" + sSource + "' and allocationObject eq '" + sAlloc +
-                "' and data_element eq '" + (sDataElement || "") + "'");
+                "' and data_element eq '" + (sDataElement || "") + "'" +
+                (sDivision ? " and Division eq '" + sDivision + "'" : ""));
             BusyIndicator.show(0);
             var iStartTime = Date.now();
             // Guard against out-of-order/stale responses: only the latest request for this
