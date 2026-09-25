@@ -2343,6 +2343,25 @@ sap.ui.define([
                 oCellKeysEntry: oCtx ? (this._oCellKeys || {})[((oCtx.getPath().match(/\/rows\/(\d+)/) || [])[1]) + "_" + sFieldName] : null
             });
 
+            // Si el search help es del campo "Plant" (Centro), se inyecta al
+            // servicio el valor del campo "DC Group" de la misma fila.
+            var sDcGroupValue = "";
+            var sLabelLower = (sLabel || "").toLowerCase();
+            if (sLabelLower.indexOf("plant") !== -1 || sLabelLower.indexOf("centro") !== -1) {
+                var aVhCols = this.getView().getModel("detailModel").getProperty("/columns") || [];
+                var sDcField = "";
+                aVhCols.forEach(function (oCol) {
+                    var sColLbl = (oCol.label || "").toLowerCase().replace(/\s+/g, " ");
+                    if (!sDcField && sColLbl.indexOf("dc group") !== -1) {
+                        sDcField = oCol.name;
+                    }
+                });
+                if (sDcField && oCtx) {
+                    sDcGroupValue = (oCtx.getProperty(sDcField) || "").trim();
+                }
+                console.log("[ValueHelp] Campo Plant detectado. DC Group field:", sDcField, "valor:", sDcGroupValue);
+            }
+
             var oVHModel = new JSONModel({
                 allItems: [],
                 items: [],
@@ -2377,7 +2396,7 @@ sap.ui.define([
                 placeholder: "Search",
                 search: function (oEv) {
                     var sQuery = oEv.getParameter("query") || oEv.getParameter("value") || "";
-                    that._loadValueHelp(sQuery || "*", "", oVHModel, sDataElement, oDialog, fnApplyValueHelpPage);
+                    that._loadValueHelp(sQuery || "*", "", oVHModel, sDataElement, oDialog, fnApplyValueHelpPage, sDcGroupValue);
                 }
             });
             var oValueHelpTable = new MTable({
@@ -2456,10 +2475,10 @@ sap.ui.define([
             oDialog.setModel(oVHModel);
 
             oDialog.open();
-            this._loadValueHelp("*", "", oVHModel, sDataElement, oDialog, fnApplyValueHelpPage);
+            this._loadValueHelp("*", "", oVHModel, sDataElement, oDialog, fnApplyValueHelpPage, sDcGroupValue);
         },
 
-        _loadValueHelp: function (sSource, sSearch, oVHModel, sDataElement, oDialog, fnApplyValueHelpPage) {
+        _loadValueHelp: function (sSource, sSearch, oVHModel, sDataElement, oDialog, fnApplyValueHelpPage, sDcGroup) {
             var oODataModel = this.getOwnerComponent().getModel();
             if (!oODataModel) { return; }
             var oDetailModel = this.getView().getModel("detailModel");
@@ -2478,10 +2497,14 @@ sap.ui.define([
             if (sDivision) {
                 aFilters.push(new Filter("Division", FilterOperator.EQ, sDivision));
             }
+            if (sDcGroup) {
+                aFilters.push(new Filter("DC_GROUP", FilterOperator.EQ, sDcGroup));
+            }
             console.log("[ValueHelp] GET " + sServiceUrl + "/ValueHelpSet?$filter=" +
                 "source eq '" + sSource + "' and allocationObject eq '" + sAlloc +
                 "' and data_element eq '" + (sDataElement || "") + "'" +
-                (sDivision ? " and Division eq '" + sDivision + "'" : ""));
+                (sDivision ? " and Division eq '" + sDivision + "'" : "") +
+                (sDcGroup ? " and DC_GROUP eq '" + sDcGroup + "'" : ""));
             BusyIndicator.show(0);
             var iStartTime = Date.now();
             // Guard against out-of-order/stale responses: only the latest request for this
