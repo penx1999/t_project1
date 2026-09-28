@@ -2057,6 +2057,27 @@ sap.ui.define([
             // i.e. not marked for deletion) being present in the search help list
             // for their row's "DC Group" (same rule enforced on manual Save).
             var fnContinueUpload = function () {
+                // El valor "#" en "Plant" solo es valido cuando la columna
+                // "DC Group" de la misma linea del excel tiene un valor.
+                var oPlantDcFields = oControllerForDelete._getPlantAndDcGroupFields(aColumns);
+                var sPlantFieldXlsx = oPlantDcFields.plantField;
+                var sDcGroupFieldXlsx = oPlantDcFields.dcGroupField;
+                if (sPlantFieldXlsx) {
+                    var oHashInvalidRow = null;
+                    aNonDeleteCandidates.forEach(function (oCand) {
+                        if (oHashInvalidRow) { return; }
+                        var sPlantVal = (oCand[sPlantFieldXlsx] || "").toString().trim();
+                        var sDcVal = sDcGroupFieldXlsx ? (oCand[sDcGroupFieldXlsx] || "").toString().trim() : "";
+                        if (sPlantVal === "#" && !sDcVal) { oHashInvalidRow = oCand; }
+                    });
+                    if (oHashInvalidRow) {
+                        var sHashMsg = oBundle.getText("msgPlantHashRequiresDcGroup");
+                        if (oHashInvalidRow._excelLine) { sHashMsg += " - Excel line: " + oHashInvalidRow._excelLine; }
+                        MessageBox.error(sHashMsg);
+                        fnReloadAfterError();
+                        return;
+                    }
+                }
                 oControllerForDelete._validatePlantValues(aNonDeleteCandidates, aColumns).then(function (aInvalidPlantRows) {
                     if (aInvalidPlantRows && aInvalidPlantRows.length > 0) {
                         var iInvalidExcelLine = aInvalidPlantRows[0]._excelLine || "";
@@ -2683,6 +2704,9 @@ sap.ui.define([
             (aRowDataList || []).forEach(function (oRowData) {
                 var sPlantValue = (oRowData[sPlantField] || "").toString().trim();
                 if (!sPlantValue) { return; }
+                // "#" es un valor especial regido por la regla propia
+                // (requiere DC Group con valor), no por la lista del search help.
+                if (sPlantValue === "#") { return; }
                 var sDcGroupValue = sDcGroupField ? (oRowData[sDcGroupField] || "").toString().trim() : "";
                 if (!oRowsByDcGroup[sDcGroupValue]) { oRowsByDcGroup[sDcGroupValue] = []; }
                 oRowsByDcGroup[sDcGroupValue].push(oRowData);
@@ -2868,7 +2892,9 @@ sap.ui.define([
             var bQuotaConsumedError = false;
             var bRocError = false;
             var bPlantValueError = (aInvalidPlantRows || []).length > 0;
-            var sPlantFieldForCheck = this._getPlantAndDcGroupFields(aColumns).plantField;
+            var oPlantDcFields = this._getPlantAndDcGroupFields(aColumns);
+            var sPlantFieldForCheck = oPlantDcFields.plantField;
+            var sDcGroupFieldForCheck = oPlantDcFields.dcGroupField;
             var oController = this;
 
             var aNonRequired = [
@@ -2891,6 +2917,22 @@ sap.ui.define([
             if (bPlantValueError && sPlantFieldForCheck) {
                 aInvalidPlantRows.forEach(function (oRowData) {
                     oRowData["_err_" + sPlantFieldForCheck] = true;
+                });
+            }
+
+            // El valor "#" en "Plant" solo es valido cuando el campo "DC Group"
+            // de la misma linea tiene un valor.
+            var bPlantHashError = false;
+            if (sPlantFieldForCheck) {
+                aChangedRows.forEach(function (oChangedRow) {
+                    var oRowData = oChangedRow.rowData;
+                    var sPlantVal = (oRowData[sPlantFieldForCheck] || "").toString().trim();
+                    var sDcVal = sDcGroupFieldForCheck ?
+                        (oRowData[sDcGroupFieldForCheck] || "").toString().trim() : "";
+                    if (sPlantVal === "#" && !sDcVal) {
+                        oRowData["_err_" + sPlantFieldForCheck] = true;
+                        bPlantHashError = true;
+                    }
                 });
             }
 
@@ -3007,6 +3049,11 @@ sap.ui.define([
 
             if (bPlantValueError) {
                 MessageBox.error(oBundle.getText("msgPlantNotInSearchHelp"));
+                return;
+            }
+
+            if (bPlantHashError) {
+                MessageBox.error(oBundle.getText("msgPlantHashRequiresDcGroup"));
                 return;
             }
 
