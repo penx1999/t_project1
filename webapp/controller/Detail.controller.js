@@ -2692,6 +2692,8 @@ sap.ui.define([
                     filters: aFilters,
                     success: function (oData) {
                         var aItems = (oData && oData.results) ? oData.results : [];
+                        console.log("[PlantValidation] Registros devueltos:", aItems.length,
+                            "| Claves:", aItems.map(function (oIt) { return oIt.Clave; }));
                         var oSet = {};
                         aItems.forEach(function (oIt) {
                             oSet[String(oIt.Clave || "").trim().toUpperCase()] = true;
