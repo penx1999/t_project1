@@ -2078,7 +2078,10 @@ sap.ui.define([
                         return;
                     }
                 }
-                oControllerForDelete._validatePlantValues(aNonDeleteCandidates, aColumns).then(function (aInvalidPlantRows) {
+                var aPlantCheckEntries = aNonDeleteCandidates.map(function (oCand) {
+                    return { rowData: oCand, rowIndex: -1 };
+                });
+                oControllerForDelete._validatePlantValues(aPlantCheckEntries, aColumns).then(function (aInvalidPlantRows) {
                     if (aInvalidPlantRows && aInvalidPlantRows.length > 0) {
                         var iInvalidExcelLine = aInvalidPlantRows[0]._excelLine || "";
                         var sPlantMsg = oBundle.getText("msgPlantNotInSearchHelp");
@@ -2656,6 +2659,10 @@ sap.ui.define([
         // "accept everything" set so a connectivity issue never blocks Save/Upload
         // with a false positive.
         _fetchPlantValidSet: function (sDataElement, sDivision, sDcGroup) {
+            if (!sDataElement) {
+                console.warn("[PlantValidation] data_element vacio, no se puede verificar el Plant; se acepta el valor.");
+                return Promise.resolve({ has: function () { return true; } });
+            }
             this._oPlantValueCache = this._oPlantValueCache || {};
             var sCacheKey = sDataElement + "|" + sDivision + "|" + sDcGroup;
             if (this._oPlantValueCache[sCacheKey]) {
@@ -2701,11 +2708,12 @@ sap.ui.define([
             return oPromise;
         },
 
-        // Validates the "Plant" value of every row in aRowDataList against the
+        // Validates the "Plant" value of every row in aRowEntries against the
         // search help list for that row's "DC Group" (and current screen Division).
+        // aRowEntries items: { rowData: <row object>, rowIndex: <index en /rows o -1> }.
         // Returns a Promise resolving to the array of row objects whose Plant
         // value is NOT present in the corresponding search help list.
-        _validatePlantValues: function (aRowDataList, aColumns) {
+        _validatePlantValues: function (aRowEntries, aColumns) {
             var that = this;
             var oFields = this._getPlantAndDcGroupFields(aColumns);
             var sPlantField = oFields.plantField;
@@ -2716,33 +2724,53 @@ sap.ui.define([
 
             if (!sPlantField) { return Promise.resolve([]); }
 
-            var sDataElement = (this._oFieldMetadata && this._oFieldMetadata[sPlantField] &&
-                this._oFieldMetadata[sPlantField].data_element) || "";
             var sDivision = (this.getView().getModel("detailModel").getProperty("/division") || "").trim();
 
-            var oRowsByDcGroup = {};
-            (aRowDataList || []).forEach(function (oRowData) {
+            var oRowsByListKey = {};
+            (aRowEntries || []).forEach(function (oEntry) {
+                var oRowData = oEntry.rowData || oEntry;
                 var sPlantValue = (oRowData[sPlantField] || "").toString().trim();
                 if (!sPlantValue) { return; }
                 // "#" es un valor especial regido por la regla propia
                 // (requiere DC Group con valor), no por la lista del search help.
                 if (sPlantValue === "#") { return; }
+
+                // Misma resolucion que _onValueHelpRequest: data_element del
+                // metadata de la celda (filas existentes) y, si no hay, el
+                // metadata del campo.
+                var sRowDataElement = "";
+                var iRowIdx = oEntry.rowIndex;
+                if (iRowIdx !== undefined && iRowIdx !== null && iRowIdx >= 0) {
+                    var oCellMeta = (that._oCellKeys || {})[iRowIdx + "_" + sPlantField];
+                    if (oCellMeta && oCellMeta.data_element) {
+                        sRowDataElement = oCellMeta.data_element;
+                    }
+                }
+                if (!sRowDataElement) {
+                    var oFieldMeta = (that._oFieldMetadata || {})[sPlantField];
+                    sRowDataElement = (oFieldMeta && oFieldMeta.data_element) || "";
+                }
+
                 var sDcGroupValue = sDcGroupField ? (oRowData[sDcGroupField] || "").toString().trim() : "";
-                if (!oRowsByDcGroup[sDcGroupValue]) { oRowsByDcGroup[sDcGroupValue] = []; }
-                oRowsByDcGroup[sDcGroupValue].push(oRowData);
+                var sListKey = sRowDataElement + "|" + sDcGroupValue;
+                if (!oRowsByListKey[sListKey]) { oRowsByListKey[sListKey] = []; }
+                oRowsByListKey[sListKey].push(oRowData);
             });
 
-            var aDcGroupKeys = Object.keys(oRowsByDcGroup);
-            if (aDcGroupKeys.length === 0) { return Promise.resolve([]); }
+            var aListKeys = Object.keys(oRowsByListKey);
+            if (aListKeys.length === 0) { return Promise.resolve([]); }
 
-            return Promise.all(aDcGroupKeys.map(function (sDcGroupValue) {
+            return Promise.all(aListKeys.map(function (sListKey) {
+                var aKeyParts = sListKey.split("|");
+                var sDataElement = aKeyParts[0];
+                var sDcGroupValue = aKeyParts.slice(1).join("|");
                 return that._fetchPlantValidSet(sDataElement, sDivision, sDcGroupValue).then(function (oValidSet) {
-                    return { dcGroup: sDcGroupValue, validSet: oValidSet };
+                    return { listKey: sListKey, validSet: oValidSet };
                 });
             })).then(function (aResults) {
                 var aInvalidRows = [];
                 aResults.forEach(function (oResult) {
-                    (oRowsByDcGroup[oResult.dcGroup] || []).forEach(function (oRowData) {
+                    (oRowsByListKey[oResult.listKey] || []).forEach(function (oRowData) {
                         var sPlantUpper = (oRowData[sPlantField] || "").toString().trim().toUpperCase();
                         if (!oResult.validSet.has(sPlantUpper)) {
                             aInvalidRows.push(oRowData);
@@ -2894,7 +2922,9 @@ sap.ui.define([
 
             var that = this;
             var aColumnsForPlantCheck = oModel.getProperty("/columns") || [];
-            var aRowDataForPlantCheck = aChangedRows.map(function (oCr) { return oCr.rowData; });
+            var aRowDataForPlantCheck = aChangedRows.map(function (oCr) {
+                return { rowData: oCr.rowData, rowIndex: oCr.rowIndex };
+            });
             this._validatePlantValues(aRowDataForPlantCheck, aColumnsForPlantCheck).then(function (aInvalidPlantRows) {
                 that._onSaveAfterPlantCheck(aChangedRows, aInvalidPlantRows);
             });
