@@ -2653,18 +2653,24 @@ sap.ui.define([
             return bVisible;
         },
 
-        // Fetches (with caching) the set of valid "Plant" values from /ValueHelpSet
-        // for a given data_element/Division/Dc_group combination. Resolves to an
-        // object exposing has(sUpperValue); on OData error resolves to a
-        // "accept everything" set so a connectivity issue never blocks Save/Upload
-        // with a false positive.
-        _fetchPlantValidSet: function (sDataElement, sDivision, sDcGroup) {
+        // Checks (with caching) whether a single "Plant" value exists in
+        // /ValueHelpSet for a given data_element/Division/Dc_group combination.
+        // IMPORTANT: the backend paginates /ValueHelpSet (observed cap: 500
+        // records) when queried with source='*' (wildcard/full list), so a
+        // full-list-then-check-membership approach silently misses values
+        // outside the first page (e.g. alphabetically later ones). Instead,
+        // exactly like the interactive search help does when the user types
+        // a value, this queries with source=<the value itself> so the
+        // backend filters server-side and returns only matching entries.
+        // Resolves to true/false; on OData error resolves to true (does not
+        // block Save/Upload with a false positive on connectivity issues).
+        _fetchIsPlantValueValid: function (sDataElement, sDivision, sDcGroup, sPlantValue) {
             if (!sDataElement) {
                 console.warn("[PlantValidation] data_element vacio, no se puede verificar el Plant; se acepta el valor.");
-                return Promise.resolve({ has: function () { return true; } });
+                return Promise.resolve(true);
             }
             this._oPlantValueCache = this._oPlantValueCache || {};
-            var sCacheKey = sDataElement + "|" + sDivision + "|" + sDcGroup;
+            var sCacheKey = sDataElement + "|" + sDivision + "|" + sDcGroup + "|" + sPlantValue.toUpperCase();
             if (this._oPlantValueCache[sCacheKey]) {
                 return this._oPlantValueCache[sCacheKey];
             }
@@ -2675,34 +2681,33 @@ sap.ui.define([
             if (sAlloc.length > 300) { sAlloc = sAlloc.substring(0, 300); }
 
             var aFilters = [
-                new Filter("source",           FilterOperator.EQ, "*"),
+                new Filter("source",           FilterOperator.EQ, sPlantValue),
                 new Filter("allocationObject", FilterOperator.EQ, sAlloc),
                 new Filter("data_element",     FilterOperator.EQ, sDataElement || "")
             ];
             if (sDivision) { aFilters.push(new Filter("Division", FilterOperator.EQ, sDivision)); }
             if (sDcGroup)  { aFilters.push(new Filter("Dc_group", FilterOperator.EQ, sDcGroup)); }
 
-            console.log("[PlantValidation] GET /ValueHelpSet?$filter=source eq '*' and allocationObject eq '" + sAlloc +
-                "' and data_element eq '" + (sDataElement || "") + "'" +
+            console.log("[PlantValidation] GET /ValueHelpSet?$filter=source eq '" + sPlantValue +
+                "' and allocationObject eq '" + sAlloc + "' and data_element eq '" + (sDataElement || "") + "'" +
                 (sDivision ? " and Division eq '" + sDivision + "'" : "") +
                 (sDcGroup ? " and Dc_group eq '" + sDcGroup + "'" : ""));
 
+            var sPlantUpper = sPlantValue.toUpperCase();
             var oPromise = new Promise(function (resolve) {
                 oODataModel.read("/ValueHelpSet", {
                     filters: aFilters,
                     success: function (oData) {
                         var aItems = (oData && oData.results) ? oData.results : [];
-                        console.log("[PlantValidation] Registros devueltos:", aItems.length,
-                            "| Claves:", aItems.map(function (oIt) { return oIt.Clave; }));
-                        var oSet = {};
-                        aItems.forEach(function (oIt) {
-                            oSet[String(oIt.Clave || "").trim().toUpperCase()] = true;
+                        var bValid = aItems.some(function (oIt) {
+                            return String(oIt.Clave || "").trim().toUpperCase() === sPlantUpper;
                         });
-                        resolve({ has: function (sUpper) { return !!oSet[sUpper]; } });
+                        console.log("[PlantValidation] Registros devueltos:", aItems.length, "| valido:", bValid);
+                        resolve(bValid);
                     },
                     error: function (oErr) {
                         console.error("[PlantValidation] Error consultando ValueHelpSet, no se bloquea Save/Upload:", oErr);
-                        resolve({ has: function () { return true; } });
+                        resolve(true);
                     }
                 });
             });
@@ -2728,7 +2733,7 @@ sap.ui.define([
 
             var sDivision = (this.getView().getModel("detailModel").getProperty("/division") || "").trim();
 
-            var oRowsByListKey = {};
+            var oRowsByCheckKey = {};
             (aRowEntries || []).forEach(function (oEntry) {
                 var oRowData = oEntry.rowData || oEntry;
                 var sPlantValue = (oRowData[sPlantField] || "").toString().trim();
@@ -2754,30 +2759,33 @@ sap.ui.define([
                 }
 
                 var sDcGroupValue = sDcGroupField ? (oRowData[sDcGroupField] || "").toString().trim() : "";
-                var sListKey = sRowDataElement + "|" + sDcGroupValue;
-                if (!oRowsByListKey[sListKey]) { oRowsByListKey[sListKey] = []; }
-                oRowsByListKey[sListKey].push(oRowData);
+                var sCheckKey = sRowDataElement + "|" + sDcGroupValue + "|" + sPlantValue.toUpperCase();
+                if (!oRowsByCheckKey[sCheckKey]) {
+                    oRowsByCheckKey[sCheckKey] = {
+                        dataElement: sRowDataElement,
+                        dcGroup: sDcGroupValue,
+                        plantValue: sPlantValue,
+                        rows: []
+                    };
+                }
+                oRowsByCheckKey[sCheckKey].rows.push(oRowData);
             });
 
-            var aListKeys = Object.keys(oRowsByListKey);
-            if (aListKeys.length === 0) { return Promise.resolve([]); }
+            var aCheckKeys = Object.keys(oRowsByCheckKey);
+            if (aCheckKeys.length === 0) { return Promise.resolve([]); }
 
-            return Promise.all(aListKeys.map(function (sListKey) {
-                var aKeyParts = sListKey.split("|");
-                var sDataElement = aKeyParts[0];
-                var sDcGroupValue = aKeyParts.slice(1).join("|");
-                return that._fetchPlantValidSet(sDataElement, sDivision, sDcGroupValue).then(function (oValidSet) {
-                    return { listKey: sListKey, validSet: oValidSet };
-                });
+            return Promise.all(aCheckKeys.map(function (sCheckKey) {
+                var oEntry = oRowsByCheckKey[sCheckKey];
+                return that._fetchIsPlantValueValid(oEntry.dataElement, sDivision, oEntry.dcGroup, oEntry.plantValue)
+                    .then(function (bValid) {
+                        return { checkKey: sCheckKey, valid: bValid };
+                    });
             })).then(function (aResults) {
                 var aInvalidRows = [];
                 aResults.forEach(function (oResult) {
-                    (oRowsByListKey[oResult.listKey] || []).forEach(function (oRowData) {
-                        var sPlantUpper = (oRowData[sPlantField] || "").toString().trim().toUpperCase();
-                        if (!oResult.validSet.has(sPlantUpper)) {
-                            aInvalidRows.push(oRowData);
-                        }
-                    });
+                    if (!oResult.valid) {
+                        aInvalidRows = aInvalidRows.concat(oRowsByCheckKey[oResult.checkKey].rows);
+                    }
                 });
                 return aInvalidRows;
             });
