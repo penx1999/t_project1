@@ -2633,6 +2633,23 @@ sap.ui.define([
             return { plantField: sPlantField, dcGroupField: sDcGroupField };
         },
 
+        // Devuelve true solo si la columna "DC Group" existe en la tabla y esta
+        // visible (el usuario puede ocultar columnas con el menu del header).
+        _isDcGroupColumnVisible: function () {
+            var oTable = this.byId("idDynamicTable");
+            if (!oTable) { return false; }
+            var bVisible = false;
+            oTable.getColumns().forEach(function (oUiCol) {
+                var oLbl = oUiCol.getLabel && oUiCol.getLabel();
+                var sText = oLbl && oLbl.getText ? String(oLbl.getText()) : "";
+                sText = sText.toLowerCase().replace(/\s+/g, " ").replace(/\s*\*\s*$/, "").trim();
+                if (!bVisible && sText.indexOf("dc group") !== -1 && oUiCol.getVisible()) {
+                    bVisible = true;
+                }
+            });
+            return bVisible;
+        },
+
         // Fetches (with caching) the set of valid "Plant" values from /ValueHelpSet
         // for a given data_element/Division/Dc_group combination. Resolves to an
         // object exposing has(sUpperValue); on OData error resolves to a
@@ -2692,7 +2709,10 @@ sap.ui.define([
             var that = this;
             var oFields = this._getPlantAndDcGroupFields(aColumns);
             var sPlantField = oFields.plantField;
-            var sDcGroupField = oFields.dcGroupField;
+            // La validacion Plant-pertenece-a-DC_GROUP solo aplica cuando la
+            // columna DC Group esta visible; si no, se valida contra la lista
+            // general del search help (sin filtro Dc_group).
+            var sDcGroupField = this._isDcGroupColumnVisible() ? oFields.dcGroupField : null;
 
             if (!sPlantField) { return Promise.resolve([]); }
 
