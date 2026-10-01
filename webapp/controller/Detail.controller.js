@@ -2939,10 +2939,10 @@ sap.ui.define([
 
             var that = this;
             // La validacion de Plant contra el search help no se ejecuta si el
-            // guardado incluye filas eliminadas (boton DELETE): borrar una fila
-            // no debe bloquearse ni condicionarse por el valor de Plant de las
-            // demas filas.
-            if (this._aDeletedRows && this._aDeletedRows.length > 0) {
+            // guardado incluye filas eliminadas (boton DELETE, sea una fila ya
+            // existente o una recien agregada): borrar una fila no debe
+            // bloquearse ni condicionarse por el valor de Plant de las demas filas.
+            if (this._hasDeletedRows) {
                 this._onSaveAfterPlantCheck(aChangedRows, []);
                 return;
             }
