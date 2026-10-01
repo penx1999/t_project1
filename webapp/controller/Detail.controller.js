@@ -51,7 +51,48 @@ sap.ui.define([
         _hasDeletedRows: false,
         _aDeletedRows: [],
 
+        // ===================================================================
+        // LOCKING (bloqueo optimista por caracteristica / fila)
+        // ===================================================================
+        // Para evitar que dos usuarios modifiquen al mismo tiempo la misma
+        // combinacion de valores de caracteristicas (una fila de la tabla
+        // dinamica, identificada por CHARCVALUECOMBINATIONUUID), el backend
+        // debe exponer una entidad OData "CharcLockSet" respaldada por una
+        // tabla Z (ej. ZSD_PAL_LOCK: MANDT, CHARC_UUID, PRODALLOCOBJECT,
+        // LOCKED_BY, LOCKED_AT), con el siguiente contrato:
+        //
+        //   GET /CharcLockSet?$filter=ProductAllocationObject eq '<id>'
+        //     -> devuelve los locks activos para ese Allocation Object.
+        //     Campos esperados por fila: Key (= CHARCVALUECOMBINATIONUUID),
+        //     ProductAllocationObject, LockedBy, LockedByName (opcional),
+        //     LockedAt, IsLockedByMe (boolean, calculado por el backend
+        //     comparando LockedBy contra el usuario de la sesion).
+        //
+        //   POST /CharcLockSet  body: { Key, ProductAllocationObject }
+        //     -> intenta tomar el lock de esa fila:
+        //        - si no existe lock previo: lo crea (LockedBy/LockedAt
+        //          desde la sesion del backend, nunca desde el cliente) y
+        //          responde 201 con IsLockedByMe = true.
+        //        - si ya existe un lock del MISMO usuario: responde 200/201
+        //          igual (renovar/idempotente).
+        //        - si ya existe un lock de OTRO usuario: responde error
+        //          (ej. 409) con el formato estandar OData
+        //          { error: { message: { value: "Locked by <user>" } } },
+        //          igual al patron de errores ya usado en este controller.
+        //
+        //   DELETE /CharcLockSet('<Key>')
+        //     -> libera el lock SOLO si pertenece al usuario de la sesion
+        //        (no-op si no existe o pertenece a otro usuario).
+        //
+        // El lock se libera explicitamente al Guardar, Cancelar o salir de
+        // la pantalla (sin expiracion pasiva por tiempo, segun lo definido).
+        _aHeldLockKeys: [],
+        _oLockStatusByKey: null,
+
         onInit: function () {
+            this._aHeldLockKeys = [];
+            this._oLockStatusByKey = {};
+
             var oToday = new Date();
             var oFirstOfMonth = new Date(oToday.getFullYear(), oToday.getMonth(), 1);
             var oNextYear = new Date(oFirstOfMonth.getFullYear(), oFirstOfMonth.getMonth() + 2, 0);
@@ -82,6 +123,13 @@ sap.ui.define([
 
             var oRouter = this.getOwnerComponent().getRouter();
             oRouter.getRoute("RouteDetail").attachPatternMatched(this._onRouteMatched, this);
+        },
+
+        // Red de seguridad adicional: si la vista se destruye por cualquier
+        // otro medio distinto de onNavBack/onCancel (navegacion directa,
+        // recarga del router, etc.), se liberan igualmente los locks tomados.
+        onExit: function () {
+            this._releaseAllHeldLocks();
         },
 
         _formatDateValue: function (oDate) {
@@ -126,6 +174,12 @@ sap.ui.define([
         },
 
         _onRouteMatched: function (oEvent) {
+            // La vista puede reutilizarse entre entradas a esta ruta (UI5 no
+            // siempre la destruye), por lo que onExit no es suficiente: se
+            // liberan aqui tambien los locks que hubieran quedado de una
+            // visita anterior antes de cargar el nuevo Allocation Object.
+            this._releaseAllHeldLocks();
+
             var sQuotaId = decodeURIComponent(oEvent.getParameter("arguments").quotaId);
             var oOwner = this.getOwnerComponent();
             var that = this;
@@ -249,10 +303,12 @@ sap.ui.define([
             oModel.setProperty("/messageText", "");
             oModel.setProperty("/messageType", "None");
             oModel.setProperty("/cancelForceEnabled", true);
+            var that = this;
             if (sQuotaId) {
                 oModel.setProperty("/busy", true);
                 this._loadDynamicFields(sQuotaId, function () {
                     oModel.setProperty("/editMode", true);
+                    that._acquireLocksForEditableRows();
                 }, sFilterValue);
             } else {
                 oModel.setProperty("/editMode", true);
@@ -584,9 +640,18 @@ sap.ui.define([
                     console.log("[DynamicTable] Tras GET - productAllocationObject:", oModel.getProperty("/productAllocationObject"), "| l_key_char:", oModel.getProperty("/l_key_char"));
 
                     that._buildTable(aColumns);
-                    if (typeof fnAfterSuccess === "function") {
-                        fnAfterSuccess();
-                    }
+
+                    // Un nuevo GET siempre vuelve a modo lectura (ver arriba:
+                    // /editMode = false), asi que cualquier lock que se tuviera
+                    // de una edicion anterior sobre este mismo Allocation Object
+                    // ya no aplica; se libera y se consulta el estado vigente
+                    // (solo informativo, no intenta tomar locks).
+                    that._releaseAllHeldLocks();
+                    that._refreshLockStatus(sProductAllocationObject).then(function () {
+                        if (typeof fnAfterSuccess === "function") {
+                            fnAfterSuccess();
+                        }
+                    });
                 },
                 error: function (oError) {
                     oModel.setProperty("/busy", false);
@@ -731,7 +796,7 @@ sap.ui.define([
                         displayFormat: "medium",
                         placeholder: " ",
                         editable: bEndDateAlwaysEditable
-                            ? "{detailModel>/editMode}"
+                            ? "{= ${detailModel>/editMode} === true && ${detailModel>_lockedByOther} !== true }"
                             : "{= ${detailModel>/editMode} === true && ${detailModel>_isNew} === true }",
                         required: bEndDateAlwaysEditable ? true : "{= ${detailModel>_isNew} === true }",
                         valueState: "{= ${detailModel>_err_" + sFieldName + "} ? 'Error' : 'None' }",
@@ -754,13 +819,14 @@ sap.ui.define([
                         enabled: bLockRocWhenConsumed ? {
                             parts: [
                                 { path: "detailModel>/editMode" },
-                                { path: "detailModel>" + sConsumedQtyField }
+                                { path: "detailModel>" + sConsumedQtyField },
+                                { path: "detailModel>_lockedByOther" }
                             ],
-                            formatter: function (bEditMode, vConsumedQty) {
+                            formatter: function (bEditMode, vConsumedQty, bLockedByOther) {
                                 var fConsumedQty = parseFloat(String(vConsumedQty || "0").replace(/,/g, ""));
-                                return bEditMode === true && !(fConsumedQty > 0);
+                                return bEditMode === true && !(fConsumedQty > 0) && bLockedByOther !== true;
                             }
-                        } : "{detailModel>/editMode}",
+                        } : "{= ${detailModel>/editMode} === true && ${detailModel>_lockedByOther} !== true }",
                         change: (function (sRocField) {
                             return function (oEvent) {
                                 that._onRocChange(oEvent, sRocField);
@@ -779,7 +845,7 @@ sap.ui.define([
                 } else if (bEditableField) {
                     var oInputCfg = {
                         value: "{detailModel>" + sFieldName + "}",
-                        editable: "{detailModel>/editMode}",
+                        editable: "{= ${detailModel>/editMode} === true && ${detailModel>_lockedByOther} !== true }",
                         change: that._onFieldChange.bind(that),
                         liveChange: bIsComment ? that._onFieldChange.bind(that) : fnUpper
                     };
@@ -816,7 +882,8 @@ sap.ui.define([
 
             oTable.setFixedColumnCount(iFixedCount);
             oTable.setRowSettingsTemplate(new RowSettings({
-                highlight: "{= ${detailModel>_overlapError} ? 'Error' : 'None' }"
+                highlight: "{= ${detailModel>_overlapError} ? 'Error' : (${detailModel>_lockedByOther} ? 'Information' : 'None') }",
+                highlightText: "{= ${detailModel>_lockedByOther} ? ${detailModel>_lockedByUser} : '' }"
             }));
             oTable.bindRows("detailModel>/rows");
 
@@ -846,6 +913,7 @@ sap.ui.define([
                     oDetailModel.setProperty("/messageVisible", false);
                     oDetailModel.setProperty("/messageText", "");
                     oDetailModel.setProperty("/messageType", "None");
+                    that._releaseAllHeldLocks();
                     that.getOwnerComponent().getRouter().navTo("RouteListReport", {}, true);
                 });
                 return;
@@ -854,6 +922,7 @@ sap.ui.define([
         },
 
         _doNavBack: function () {
+            this._releaseAllHeldLocks();
             var oModel = this.getView().getModel("detailModel");
             oModel.setProperty("/messageVisible", false);
             oModel.setProperty("/messageText", "");
@@ -2171,6 +2240,7 @@ sap.ui.define([
                 oModel.setProperty("/busy", true);
                 oControllerForDelete._loadDynamicFields(sProductAllocationObject, function () {
                     oModel.setProperty("/editMode", true);
+                    oControllerForDelete._acquireLocksForEditableRows();
                     aExistingRows = oModel.getProperty("/rows") || [];
                     console.log("[UploadExcel] OData re-ejecutado tras corregir condiciones. Filas recargadas:", aExistingRows.length, "- continuando match de borrado con el mismo criterio.");
                     fnContinueUpload();
@@ -2616,6 +2686,175 @@ sap.ui.define([
             });
         },
 
+        // Devuelve el valor de CHARCVALUECOMBINATIONUUID de una fila existente
+        // (clave del lock), o "" si la fila no tiene uno (ej. fila nueva aun
+        // no guardada, que no participa del mecanismo de lock).
+        _getRowLockKey: function (oRowData) {
+            if (!oRowData || oRowData._isNew) { return ""; }
+            return (oRowData.CHARCVALUECOMBINATIONUUID || "").trim();
+        },
+
+        // Consulta al backend que filas (por CHARCVALUECOMBINATIONUUID) del
+        // Allocation Object actual estan bloqueadas por otro usuario, y marca
+        // cada fila del modelo con _lockedByOther / _lockedByUser para que la
+        // tabla las muestre en modo solo lectura. No intenta tomar el lock
+        // (eso solo ocurre al entrar a modo edicion), solo informa el estado.
+        _refreshLockStatus: function (sProductAllocationObject) {
+            var that = this;
+            var oODataModel = this.getOwnerComponent().getModel();
+            var oModel = this.getView().getModel("detailModel");
+            if (!oODataModel || !sProductAllocationObject) { return Promise.resolve(); }
+
+            return new Promise(function (resolve) {
+                oODataModel.read("/CharcLockSet", {
+                    filters: [new Filter("ProductAllocationObject", FilterOperator.EQ, sProductAllocationObject)],
+                    success: function (oData) {
+                        var aLocks = (oData && oData.results) ? oData.results : [];
+                        var oByKey = {};
+                        aLocks.forEach(function (oLock) {
+                            oByKey[oLock.Key] = oLock;
+                        });
+                        that._oLockStatusByKey = oByKey;
+                        that._applyLockStatusToRows();
+                        resolve(oByKey);
+                    },
+                    error: function (oErr) {
+                        // Si el backend aun no implementa CharcLockSet (o falla la
+                        // consulta), no se bloquea la pantalla: simplemente no hay
+                        // informacion de locks disponible por ahora.
+                        console.warn("[Lock] No se pudo consultar CharcLockSet, se omite el bloqueo por esta vez:", oErr);
+                        that._oLockStatusByKey = {};
+                        resolve({});
+                    }
+                });
+            });
+        },
+
+        // Aplica el mapa _oLockStatusByKey (ya cargado) a las filas actuales
+        // del modelo, marcando _lockedByOther / _lockedByUser.
+        _applyLockStatusToRows: function () {
+            var that = this;
+            var oModel = this.getView().getModel("detailModel");
+            var aRows = oModel.getProperty("/rows") || [];
+            var oByKey = this._oLockStatusByKey || {};
+            aRows.forEach(function (oRow) {
+                var sKey = that._getRowLockKey(oRow);
+                var oLock = sKey ? oByKey[sKey] : null;
+                var bLockedByOther = !!(oLock && !oLock.IsLockedByMe);
+                oRow._lockedByOther = bLockedByOther;
+                oRow._lockedByUser = bLockedByOther ? (oLock.LockedByName || oLock.LockedBy || "") : "";
+            });
+            oModel.setProperty("/rows", aRows);
+        },
+
+        // Intenta tomar el lock de todas las filas existentes (no nuevas)
+        // actualmente cargadas, para habilitar su edicion. Las filas cuyo
+        // lock pertenece a otro usuario quedan marcadas como solo lectura
+        // (_lockedByOther = true) sin impedir editar el resto.
+        _acquireLocksForEditableRows: function () {
+            var that = this;
+            var oModel = this.getView().getModel("detailModel");
+            var oBundle = this.getView().getModel("i18n").getResourceBundle();
+            var sProductAllocationObject = oModel.getProperty("/productAllocationObject");
+            var aRows = oModel.getProperty("/rows") || [];
+
+            var aKeysToLock = [];
+            aRows.forEach(function (oRow) {
+                var sKey = that._getRowLockKey(oRow);
+                if (sKey && that._aHeldLockKeys.indexOf(sKey) === -1) {
+                    aKeysToLock.push(sKey);
+                }
+            });
+
+            if (aKeysToLock.length === 0) { return Promise.resolve(); }
+
+            return Promise.all(aKeysToLock.map(function (sKey) {
+                return that._acquireLock(sKey, sProductAllocationObject);
+            })).then(function (aResults) {
+                var aLockedByOthers = [];
+                aResults.forEach(function (oResult) {
+                    if (oResult.ok) {
+                        if (that._aHeldLockKeys.indexOf(oResult.key) === -1) {
+                            that._aHeldLockKeys.push(oResult.key);
+                        }
+                    } else {
+                        aLockedByOthers.push(oResult);
+                    }
+                });
+
+                aRows.forEach(function (oRow) {
+                    var sKey = that._getRowLockKey(oRow);
+                    var oConflict = aLockedByOthers.filter(function (o) { return o.key === sKey; })[0];
+                    if (oConflict) {
+                        oRow._lockedByOther = true;
+                        oRow._lockedByUser = oConflict.lockedByUser || "";
+                    } else if (sKey && that._aHeldLockKeys.indexOf(sKey) !== -1) {
+                        oRow._lockedByOther = false;
+                        oRow._lockedByUser = "";
+                    }
+                });
+                oModel.setProperty("/rows", aRows);
+
+                if (aLockedByOthers.length > 0) {
+                    var aUsers = aLockedByOthers.map(function (o) { return o.lockedByUser; })
+                        .filter(function (v, i, a) { return v && a.indexOf(v) === i; });
+                    MessageToast.show(
+                        oBundle.getText("msgRowsLockedByOthers", [aLockedByOthers.length, aUsers.join(", ")])
+                    );
+                }
+            });
+        },
+
+        // Intenta tomar el lock de una fila puntual. Resuelve siempre (nunca
+        // rechaza) con { ok, key, lockedByUser }, para poder usarse dentro de
+        // un Promise.all sin que un conflicto de lock aborte a los demas.
+        _acquireLock: function (sKey, sProductAllocationObject) {
+            var oODataModel = this.getOwnerComponent().getModel();
+            return new Promise(function (resolve) {
+                oODataModel.create("/CharcLockSet", {
+                    Key: sKey,
+                    ProductAllocationObject: sProductAllocationObject
+                }, {
+                    success: function (oData) {
+                        resolve({ ok: true, key: sKey });
+                    },
+                    error: function (oErr) {
+                        var sLockedByUser = "";
+                        try {
+                            var oResp = JSON.parse(oErr.responseText);
+                            sLockedByUser = oResp.error.message.value || "";
+                        } catch (e) { /* ignore */ }
+                        console.warn("[Lock] No se pudo tomar el lock de " + sKey + ":", sLockedByUser || oErr);
+                        resolve({ ok: false, key: sKey, lockedByUser: sLockedByUser });
+                    }
+                });
+            });
+        },
+
+        // Libera (best-effort) un lock puntual.
+        _releaseLock: function (sKey) {
+            var oODataModel = this.getOwnerComponent().getModel();
+            return new Promise(function (resolve) {
+                oODataModel.remove("/CharcLockSet('" + encodeURIComponent(sKey) + "')", {
+                    success: function () { resolve(); },
+                    error: function (oErr) {
+                        console.warn("[Lock] No se pudo liberar el lock de " + sKey + ":", oErr);
+                        resolve();
+                    }
+                });
+            });
+        },
+
+        // Libera (best-effort) todos los locks tomados por esta sesion de
+        // pantalla. Se llama al Guardar, Cancelar o salir de la pantalla.
+        _releaseAllHeldLocks: function () {
+            var that = this;
+            var aKeys = this._aHeldLockKeys || [];
+            if (aKeys.length === 0) { return Promise.resolve(); }
+            this._aHeldLockKeys = [];
+            return Promise.all(aKeys.map(function (sKey) { return that._releaseLock(sKey); }));
+        },
+
         _isRocKeyValid: function (sValue) {
             if (!sValue) { return true; }
             var oRocOptionsModel = this.getView().getModel("rocOptions");
@@ -2921,6 +3160,7 @@ sap.ui.define([
                 var oModel = that.getView().getModel("detailModel");
                 oModel.setProperty("/hasChanges", false);
                 oModel.setProperty("/editMode", false);
+                that._releaseAllHeldLocks();
                 var sQuotaId = oModel.getProperty("/productAllocationObject");
                 var sFilterValue = (oModel.getProperty("/allocationObjectFilter") || "").trim();
                 that._executeGoFilter(sQuotaId, sFilterValue);
