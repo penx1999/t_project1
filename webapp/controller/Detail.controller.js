@@ -2078,6 +2078,13 @@ sap.ui.define([
                         return;
                     }
                 }
+                // La validacion de Plant contra el search help no se ejecuta si el
+                // excel incluye filas marcadas para eliminar (columna Delete): borrar
+                // filas no debe bloquearse ni condicionarse por el valor de Plant.
+                if (aDeleteCandidates.length > 0) {
+                    fnContinueUploadBody();
+                    return;
+                }
                 var aPlantCheckEntries = aNonDeleteCandidates.map(function (oCand) {
                     return { rowData: oCand, rowIndex: -1 };
                 });
@@ -2931,6 +2938,14 @@ sap.ui.define([
             }
 
             var that = this;
+            // La validacion de Plant contra el search help no se ejecuta si el
+            // guardado incluye filas eliminadas (boton DELETE): borrar una fila
+            // no debe bloquearse ni condicionarse por el valor de Plant de las
+            // demas filas.
+            if (this._aDeletedRows && this._aDeletedRows.length > 0) {
+                this._onSaveAfterPlantCheck(aChangedRows, []);
+                return;
+            }
             var aColumnsForPlantCheck = oModel.getProperty("/columns") || [];
             var aRowDataForPlantCheck = aChangedRows.map(function (oCr) {
                 return { rowData: oCr.rowData, rowIndex: oCr.rowIndex };
