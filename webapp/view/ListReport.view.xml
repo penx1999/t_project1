@@ -69,7 +69,7 @@
                             <Input
                                 id="idDescription"
                                 value="{/filterDescription}"
-                                maxLength="60"
+                                maxLength="200"
                                 placeholder="{i18n>placeholderDescription}"
                                 submit=".onSearch"/>
                         </VBox>
