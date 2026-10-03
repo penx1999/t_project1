@@ -1687,17 +1687,15 @@ sap.ui.define([
                 return;
             }
 
-            // Determine the reference "Allocation Object" (PRODUCTALLOCATIONOBJECT is a row-level UUID
-            // from the backend, NOT the screen identifier stored in VAR_CHAR / "/productAllocationObject").
-            // Rows in the file whose Allocation Object does not match this reference (or is blank, or the
-            // column itself does not exist on screen yet) are treated as new rows with that column blank
-            // (see per-row handling below), instead of rejecting the whole file.
-            var aExistingRowsForAllocCheck = oModel.getProperty("/rows") || [];
-            var sExpectedAlloc = null;
-            for (var iEx = 0; iEx < aExistingRowsForAllocCheck.length; iEx++) {
-                var sCandidateAlloc = (aExistingRowsForAllocCheck[iEx].PRODUCTALLOCATIONOBJECT || "").trim();
-                if (sCandidateAlloc) { sExpectedAlloc = sCandidateAlloc; break; }
-            }
+            // "Allocation Object" (PRODUCTALLOCATIONOBJECT) is a row-level UUID assigned by the
+            // backend, unique per existing row (NOT the screen identifier stored in VAR_CHAR /
+            // "/productAllocationObject"). Every row built from the uploaded file is, at this point,
+            // only a *candidate*: it may later be matched against an existing row (in which case the
+            // existing row's own UUID is kept untouched, see the merge logic below) or end up as a
+            // genuinely new/unmatched row. A genuinely new row can never legitimately carry another
+            // row's UUID (e.g. a stale value left over from copy/pasting a template row), so this
+            // column is always left blank on the candidate here, regardless of whatever value the
+            // file cell contains.
 
             var bEn = this._getSapLang() === "en";
             var sDefStatus     = "Active";
@@ -1827,11 +1825,10 @@ sap.ui.define([
                         } else { sVal = sNormalized; }
                         oNewRow["_has" + sFieldUpper] = true;
                     } else if (sFieldUpper === "PRODUCTALLOCATIONOBJECT") {
-                        // Only keep the file's value if it matches the UUID already loaded on screen.
-                        // Otherwise (mismatch, or no reference yet) leave it blank so the row is
-                        // treated as a new row with this column shown empty.
-                        var sFileAllocVal = String(v).trim();
-                        sVal = (sExpectedAlloc !== null && sFileAllocVal === sExpectedAlloc) ? sFileAllocVal : "";
+                        // Always blank on the candidate itself (see comment above): if this row
+                        // later matches an existing one, the existing row's own UUID is preserved
+                        // by the merge logic further below, untouched by this candidate value.
+                        sVal = "";
                     } else {
                         sVal = String(v).trim();
                     }
