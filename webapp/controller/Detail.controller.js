@@ -2833,6 +2833,20 @@ sap.ui.define([
                             var oResp = JSON.parse(oErr.responseText);
                             sLockedByUser = oResp.error.message.value || "";
                         } catch (e) { /* ignore */ }
+
+                        // Solo un 409 (conflicto real de lock) debe marcar la
+                        // fila como bloqueada por otro usuario. Cualquier otro
+                        // codigo (404 "Resource not found" si CharcLockSet aun
+                        // no existe en el backend, 500, timeout, etc.) significa
+                        // que el mecanismo de lock no esta disponible por ahora,
+                        // y no debe impedir editar: se trata como exito (ok).
+                        var sStatus = (oErr && oErr.statusCode) ? String(oErr.statusCode) : "";
+                        if (sStatus !== "409") {
+                            console.warn("[Lock] CharcLockSet no disponible (status " + sStatus + "), se omite el bloqueo para " + sKey + ":", sLockedByUser || oErr);
+                            resolve({ ok: true, key: sKey });
+                            return;
+                        }
+
                         console.warn("[Lock] No se pudo tomar el lock de " + sKey + ":", sLockedByUser || oErr);
                         resolve({ ok: false, key: sKey, lockedByUser: sLockedByUser });
                     }
