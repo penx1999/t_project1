@@ -308,6 +308,10 @@ sap.ui.define([
                 oModel.setProperty("/busy", true);
                 this._loadDynamicFields(sQuotaId, function () {
                     oModel.setProperty("/editMode", true);
+                    // Al entrar a modo edicion se intenta tomar el lock de
+                    // cada fila existente; las que ya estan bloqueadas por
+                    // otro usuario quedan marcadas _lockedByOther (solo
+                    // lectura) sin impedir editar el resto de la tabla.
                     that._acquireLocksForEditableRows();
                 }, sFilterValue);
             } else {
@@ -922,6 +926,8 @@ sap.ui.define([
         },
 
         _doNavBack: function () {
+            // Salir de la pantalla de detalle tambien libera explicitamente
+            // todos los locks que esta sesion tenia tomados (ver onNavBack).
             this._releaseAllHeldLocks();
             var oModel = this.getView().getModel("detailModel");
             oModel.setProperty("/messageVisible", false);
@@ -2240,6 +2246,9 @@ sap.ui.define([
                 oModel.setProperty("/busy", true);
                 oControllerForDelete._loadDynamicFields(sProductAllocationObject, function () {
                     oModel.setProperty("/editMode", true);
+                    // La recarga por ajuste de 'Selection Range' tambien
+                    // vuelve a entrar a modo edicion, asi que hay que
+                    // reintentar la toma de locks sobre las filas recargadas.
                     oControllerForDelete._acquireLocksForEditableRows();
                     aExistingRows = oModel.getProperty("/rows") || [];
                     console.log("[UploadExcel] OData re-ejecutado tras corregir condiciones. Filas recargadas:", aExistingRows.length, "- continuando match de borrado con el mismo criterio.");
@@ -3160,6 +3169,9 @@ sap.ui.define([
                 var oModel = that.getView().getModel("detailModel");
                 oModel.setProperty("/hasChanges", false);
                 oModel.setProperty("/editMode", false);
+                // Cancelar descarta los cambios y libera de inmediato todos
+                // los locks tomados por esta pantalla (liberacion explicita,
+                // sin esperar expiracion por tiempo).
                 that._releaseAllHeldLocks();
                 var sQuotaId = oModel.getProperty("/productAllocationObject");
                 var sFilterValue = (oModel.getProperty("/allocationObjectFilter") || "").trim();
