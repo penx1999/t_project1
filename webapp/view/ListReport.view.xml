@@ -59,7 +59,7 @@
                             <Input
                                 id="idProdAlloc"
                                 value="{/filterProdAlloc}"
-                                maxLength="40"
+                                maxLength="600"
                                 placeholder="{i18n>placeholderProdAlloc}"
                                 submit=".onSearch"/>
                         </VBox>
