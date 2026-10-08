@@ -2424,8 +2424,8 @@ sap.ui.define([
                                 if (bLeftMatch) {
                                     var sLineA = aGrp[ii].row._excelLine;
                                     var sLineB = aGrp[jj].row._excelLine;
-                                    var sRefA = sLineA ? "Excel line " + sLineA : "table row " + (aGrp[ii].idx + 1);
-                                    var sRefB = sLineB ? "Excel line " + sLineB : "table row " + (aGrp[jj].idx + 1);
+                                    var sRefA = sLineA ? "Excel line " + sLineA : "screen row " + (aGrp[ii].idx + 1);
+                                    var sRefB = sLineB ? "Excel line " + sLineB : "screen row " + (aGrp[jj].idx + 1);
                                     console.log("[_hasDateOverlap] Date conflict detectado entre fila", aGrp[ii].idx, "(inicio:", asStart, ", fin:", asEnd, ") y fila", aGrp[jj].idx, "(inicio:", bsStart, ", fin:", bsEnd, ")");
                                     sOverlap = " Row: " + sRefA + " and " + sRefB;
                                     break;
