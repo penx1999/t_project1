@@ -3076,6 +3076,29 @@ sap.ui.define([
 
         _onFieldChange: function (oEvent) {
             jQuery.sap.log.info("Detail._onFieldChange triggered");
+
+            // Al terminar de editar (evento "change": blur/Enter, no en cada
+            // tecla de "liveChange"), elimina espacios al inicio/fin del valor
+            // del campo editado. Se resuelve el path de forma generica a partir
+            // del binding "value" del control + su contexto de fila, para que
+            // aplique a cualquier campo editable (filas nuevas o existentes)
+            // que use este handler, sin acoplarse a un nombre de campo fijo.
+            if (oEvent.getId() === "change") {
+                var oSource = oEvent.getSource();
+                var oValueBinding = oSource.getBinding && oSource.getBinding("value");
+                var oRowCtx = oSource.getBindingContext && oSource.getBindingContext("detailModel");
+                if (oValueBinding && oRowCtx) {
+                    var sFullPath = oRowCtx.getPath() + "/" + oValueBinding.getPath();
+                    var vCurrent = oRowCtx.getModel().getProperty(sFullPath);
+                    if (typeof vCurrent === "string") {
+                        var sTrimmed = vCurrent.trim();
+                        if (sTrimmed !== vCurrent) {
+                            oRowCtx.getModel().setProperty(sFullPath, sTrimmed);
+                        }
+                    }
+                }
+            }
+
             var oModel = this.getView().getModel("detailModel");
             var aRows = oModel.getProperty("/rows");
             var that = this;
