@@ -992,8 +992,11 @@ sap.ui.define([
             oNewRow["KEY_CHAR"] = sKeyChar;
             oNewRow["KEY_CHAR_old"] = sKeyChar;
             var bEn = this._getSapLang() === "en";
+            var sDivision = (oModel.getProperty("/division") || "").trim().toUpperCase();
             var sDefStatus     = "Active";
-            var sDefConstraint = bEn ? "As in Sequence Constraint" : "Como en restricci\u00f3n de secuencia";
+            var sDefConstraint = (sDivision === "EU")
+                ? (bEn ? "Restricted Availablity" : "Disponibilidad restringida")
+                : (bEn ? "As in Sequence Constraint" : "Como en restricci\u00f3n de secuencia");
             oNewRow["PRODALLOCATIONACTIVATIONSTATUS"] = sDefStatus;
             oNewRow["PRODALLOCATIONACTIVATIONSTATUS_old"] = sDefStatus;
             oNewRow["PRODALLOCCHARCCONSTRAINTSTATUS"] = sDefConstraint;
