@@ -655,6 +655,16 @@ sap.ui.define([
                         if (typeof fnAfterSuccess === "function") {
                             fnAfterSuccess();
                         }
+                    }).catch(function (oErr) {
+                        // Sin estado de locks no se puede garantizar la
+                        // exclusividad de edicion: se muestra el error y se
+                        // regresa a pantalla 1 (no se permite continuar).
+                        console.error("[Lock] CharcLockSet no disponible, se interrumpe la carga:", oErr);
+                        MessageBox.error(oBundle.getText("msgLockServiceUnavailable"), {
+                            onClose: function () {
+                                that.getOwnerComponent().getRouter().navTo("RouteListReport", {}, true);
+                            }
+                        });
                     });
                 },
                 error: function (oError) {
@@ -2246,10 +2256,15 @@ sap.ui.define([
                     // La recarga por ajuste de 'Selection Range' tambien
                     // vuelve a entrar a modo edicion, asi que hay que
                     // reintentar la toma de locks sobre las filas recargadas.
-                    oControllerForDelete._acquireLocksForEditableRows();
-                    aExistingRows = oModel.getProperty("/rows") || [];
-                    console.log("[UploadExcel] OData re-ejecutado tras corregir condiciones. Filas recargadas:", aExistingRows.length, "- continuando match de borrado con el mismo criterio.");
-                    fnContinueUpload();
+                    oControllerForDelete._acquireLocksForEditableRows().then(function (bLocksOk) {
+                        // Si el servicio de locks no respondio la funcion ya
+                        // mostro el error y reverto a solo lectura: no se
+                        // continua con la carga del excel.
+                        if (!bLocksOk) { return; }
+                        aExistingRows = oModel.getProperty("/rows") || [];
+                        console.log("[UploadExcel] OData re-ejecutado tras corregir condiciones. Filas recargadas:", aExistingRows.length, "- continuando match de borrado con el mismo criterio.");
+                        fnContinueUpload();
+                    });
                 }, "");
                 return;
             }
@@ -2705,13 +2720,15 @@ sap.ui.define([
         // cada fila del modelo con _lockedByOther / _lockedByUser para que la
         // tabla las muestre en modo solo lectura. No intenta tomar el lock
         // (eso solo ocurre al entrar a modo edicion), solo informa el estado.
+        // Si la consulta falla la promesa RECHAZA: sin informacion de locks
+        // no es seguro continuar (no se sabe que filas edita otro usuario).
         _refreshLockStatus: function (sProductAllocationObject) {
             var that = this;
             var oODataModel = this.getOwnerComponent().getModel();
             var oModel = this.getView().getModel("detailModel");
             if (!oODataModel || !sProductAllocationObject) { return Promise.resolve(); }
 
-            return new Promise(function (resolve) {
+            return new Promise(function (resolve, reject) {
                 oODataModel.read("/CharcLockSet", {
                     filters: [new Filter("ProductAllocationObject", FilterOperator.EQ, sProductAllocationObject)],
                     success: function (oData) {
@@ -2725,12 +2742,8 @@ sap.ui.define([
                         resolve(oByKey);
                     },
                     error: function (oErr) {
-                        // Si el backend aun no implementa CharcLockSet (o falla la
-                        // consulta), no se bloquea la pantalla: simplemente no hay
-                        // informacion de locks disponible por ahora.
-                        console.warn("[Lock] No se pudo consultar CharcLockSet, se omite el bloqueo por esta vez:", oErr);
-                        that._oLockStatusByKey = {};
-                        resolve({});
+                        console.error("[Lock] No se pudo consultar CharcLockSet:", oErr);
+                        reject(oErr);
                     }
                 });
             });
@@ -2757,6 +2770,10 @@ sap.ui.define([
         // actualmente cargadas, para habilitar su edicion. Las filas cuyo
         // lock pertenece a otro usuario quedan marcadas como solo lectura
         // (_lockedByOther = true) sin impedir editar el resto.
+        // Resuelve true si el servicio de locks respondio (con o sin
+        // conflictos), y false si CharcLockSet no esta disponible: en ese
+        // caso se muestra un error y se revierte a solo lectura, porque
+        // no se puede editar sin garantizar la exclusividad.
         _acquireLocksForEditableRows: function () {
             var that = this;
             var oModel = this.getView().getModel("detailModel");
@@ -2772,21 +2789,33 @@ sap.ui.define([
                 }
             });
 
-            if (aKeysToLock.length === 0) { return Promise.resolve(); }
+            if (aKeysToLock.length === 0) { return Promise.resolve(true); }
 
             return Promise.all(aKeysToLock.map(function (sKey) {
                 return that._acquireLock(sKey, sProductAllocationObject);
             })).then(function (aResults) {
                 var aLockedByOthers = [];
+                var bUnavailable = false;
                 aResults.forEach(function (oResult) {
                     if (oResult.ok) {
                         if (that._aHeldLockKeys.indexOf(oResult.key) === -1) {
                             that._aHeldLockKeys.push(oResult.key);
                         }
+                    } else if (oResult.unavailable) {
+                        bUnavailable = true;
                     } else {
                         aLockedByOthers.push(oResult);
                     }
                 });
+
+                if (bUnavailable) {
+                    // El servicio de locks no respondio: no se puede
+                    // garantizar la exclusividad, se revierte a solo
+                    // lectura y se muestra el error (no se continua).
+                    oModel.setProperty("/editMode", false);
+                    MessageBox.error(oBundle.getText("msgLockServiceUnavailable"));
+                    return false;
+                }
 
                 aRows.forEach(function (oRow) {
                     var sKey = that._getRowLockKey(oRow);
@@ -2808,6 +2837,7 @@ sap.ui.define([
                         oBundle.getText("msgRowsLockedByOthers", [aLockedByOthers.length, aUsers.join(", ")])
                     );
                 }
+                return true;
             });
         },
 
@@ -2835,12 +2865,13 @@ sap.ui.define([
                         // fila como bloqueada por otro usuario. Cualquier otro
                         // codigo (404 "Resource not found" si CharcLockSet aun
                         // no existe en el backend, 500, timeout, etc.) significa
-                        // que el mecanismo de lock no esta disponible por ahora,
-                        // y no debe impedir editar: se trata como exito (ok).
+                        // que el servicio de locks no esta disponible: como no
+                        // se puede garantizar la exclusividad, se reporta
+                        // "unavailable" y el llamador impide continuar.
                         var sStatus = (oErr && oErr.statusCode) ? String(oErr.statusCode) : "";
                         if (sStatus !== "409") {
-                            console.warn("[Lock] CharcLockSet no disponible (status " + sStatus + "), se omite el bloqueo para " + sKey + ":", sLockedByUser || oErr);
-                            resolve({ ok: true, key: sKey });
+                            console.error("[Lock] CharcLockSet no disponible (status " + sStatus + ") para " + sKey + ":", sLockedByUser || oErr);
+                            resolve({ ok: false, key: sKey, unavailable: true });
                             return;
                         }
 
