@@ -59,16 +59,17 @@ sap.ui.define([
         // dinamica, identificada por CHARCVALUECOMBINATIONUUID), el backend
         // debe exponer una entidad OData "CharcLockSet" respaldada por una
         // tabla Z (ej. ZSD_PAL_LOCK: MANDT, CHARC_UUID, PRODALLOCOBJECT,
-        // LOCKED_BY, LOCKED_AT), con el siguiente contrato:
+        // DIVISION, LOCKED_BY, LOCKED_AT), con el siguiente contrato:
         //
         //   GET /CharcLockSet?$filter=ProductAllocationObject eq '<id>'
+        //       and Division eq '<division>'
         //     -> devuelve los locks activos para ese Allocation Object.
         //     Campos esperados por fila: Key (= CHARCVALUECOMBINATIONUUID),
-        //     ProductAllocationObject, LockedBy, LockedByName (opcional),
-        //     LockedAt, IsLockedByMe (boolean, calculado por el backend
-        //     comparando LockedBy contra el usuario de la sesion).
+        //     ProductAllocationObject, Division, LockedBy, LockedByName
+        //     (opcional), LockedAt, IsLockedByMe (boolean, calculado por el
+        //     backend comparando LockedBy contra el usuario de la sesion).
         //
-        //   POST /CharcLockSet  body: { Key, ProductAllocationObject }
+        //   POST /CharcLockSet  body: { Key, ProductAllocationObject, Division }
         //     -> intenta tomar el lock de esa fila:
         //        - si no existe lock previo: lo crea (LockedBy/LockedAt
         //          desde la sesion del backend, nunca desde el cliente) y
@@ -2728,9 +2729,13 @@ sap.ui.define([
             var oModel = this.getView().getModel("detailModel");
             if (!oODataModel || !sProductAllocationObject) { return Promise.resolve(); }
 
+            var sDivision = (oModel.getProperty("/division") || "").trim();
             return new Promise(function (resolve, reject) {
                 oODataModel.read("/CharcLockSet", {
-                    filters: [new Filter("ProductAllocationObject", FilterOperator.EQ, sProductAllocationObject)],
+                    filters: [
+                        new Filter("ProductAllocationObject", FilterOperator.EQ, sProductAllocationObject),
+                        new Filter("Division", FilterOperator.EQ, sDivision)
+                    ],
                     success: function (oData) {
                         var aLocks = (oData && oData.results) ? oData.results : [];
                         var oByKey = {};
@@ -2846,10 +2851,12 @@ sap.ui.define([
         // un Promise.all sin que un conflicto de lock aborte a los demas.
         _acquireLock: function (sKey, sProductAllocationObject) {
             var oODataModel = this.getOwnerComponent().getModel();
+            var sDivision = (this.getView().getModel("detailModel").getProperty("/division") || "").trim();
             return new Promise(function (resolve) {
                 oODataModel.create("/CharcLockSet", {
                     Key: sKey,
-                    ProductAllocationObject: sProductAllocationObject
+                    ProductAllocationObject: sProductAllocationObject,
+                    Division: sDivision
                 }, {
                     success: function (oData) {
                         resolve({ ok: true, key: sKey });
