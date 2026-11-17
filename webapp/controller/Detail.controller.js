@@ -52,25 +52,25 @@ sap.ui.define([
         _aDeletedRows: [],
 
         // ===================================================================
-        // LOCKING (bloqueo optimista por caracteristica / fila)
+        // LOCKING (bloqueo optimista a nivel TABLA)
         // ===================================================================
-        // Para evitar que dos usuarios modifiquen al mismo tiempo la misma
-        // combinacion de valores de caracteristicas (una fila de la tabla
-        // dinamica, identificada por CHARCVALUECOMBINATIONUUID), el backend
-        // debe exponer una entidad OData "CharcLockSet" respaldada por una
-        // tabla Z (ej. ZSD_PAL_LOCK: MANDT, CHARC_UUID, PRODALLOCOBJECT,
-        // DIVISION, LOCKED_BY, LOCKED_AT), con el siguiente contrato:
+        // Para evitar que dos usuarios editen al mismo tiempo la misma tabla
+        // (mismo ProductAllocationObject + Division), el backend debe exponer
+        // una entidad OData "CharcLockSet" respaldada por una tabla Z
+        // (ej. ZSD_PAL_LOCK: MANDT, LOCK_KEY, PRODALLOCOBJECT, DIVISION,
+        // LOCKED_BY, LOCKED_AT), con el siguiente contrato:
         //
         //   GET /CharcLockSet?$filter=ProductAllocationObject eq '<id>'
         //       and Division eq '<division>'
-        //     -> devuelve los locks activos para ese Allocation Object.
-        //     Campos esperados por fila: Key (= CHARCVALUECOMBINATIONUUID),
+        //     -> devuelve los locks activos para ese Allocation Object
+        //        (a lo sumo 1 por tabla). Campos esperados por fila: Key,
         //     ProductAllocationObject, Division, LockedBy, LockedByName
         //     (opcional), LockedAt, IsLockedByMe (boolean, calculado por el
         //     backend comparando LockedBy contra el usuario de la sesion).
         //
         //   POST /CharcLockSet  body: { Key, ProductAllocationObject, Division }
-        //     -> intenta tomar el lock de esa fila:
+        //     -> intenta tomar el lock de la tabla (Key =
+        //        '<ProductAllocationObject>|<Division>'):
         //        - si no existe lock previo: lo crea (LockedBy/LockedAt
         //          desde la sesion del backend, nunca desde el cliente) y
         //          responde 201 con IsLockedByMe = true.
@@ -310,10 +310,9 @@ sap.ui.define([
                 this._loadDynamicFields(sQuotaId, function () {
                     oModel.setProperty("/editMode", true);
                     // Al entrar a modo edicion se intenta tomar el lock de
-                    // cada fila existente; las que ya estan bloqueadas por
-                    // otro usuario quedan marcadas _lockedByOther (solo
-                    // lectura) sin impedir editar el resto de la tabla.
-                    that._acquireLocksForEditableRows();
+                    // la tabla; si ya la edita otro usuario, todas las filas
+                    // quedan marcadas _lockedByOther (solo lectura).
+                    that._acquireTableLock();
                 }, sFilterValue);
             } else {
                 oModel.setProperty("/editMode", true);
@@ -2256,8 +2255,8 @@ sap.ui.define([
                     oModel.setProperty("/editMode", true);
                     // La recarga por ajuste de 'Selection Range' tambien
                     // vuelve a entrar a modo edicion, asi que hay que
-                    // reintentar la toma de locks sobre las filas recargadas.
-                    oControllerForDelete._acquireLocksForEditableRows().then(function (bLocksOk) {
+                    // reintentar la toma del lock de la tabla.
+                    oControllerForDelete._acquireTableLock().then(function (bLocksOk) {
                         // Si el servicio de locks no respondio la funcion ya
                         // mostro el error y reverto a solo lectura: no se
                         // continua con la carga del excel.
@@ -2708,21 +2707,24 @@ sap.ui.define([
             });
         },
 
-        // Devuelve el valor de CHARCVALUECOMBINATIONUUID de una fila existente
-        // (clave del lock), o "" si la fila no tiene uno (ej. fila nueva aun
-        // no guardada, que no participa del mecanismo de lock).
-        _getRowLockKey: function (oRowData) {
-            if (!oRowData || oRowData._isNew) { return ""; }
-            return (oRowData.CHARCVALUECOMBINATIONUUID || "").trim();
+        // Devuelve la clave del lock a nivel tabla: un solo lock por
+        // combinacion ProductAllocationObject + Division. Formato:
+        // '<productAllocationObject>|<division>'. "" si no hay PAO cargado.
+        _getTableLockKey: function () {
+            var oModel = this.getView().getModel("detailModel");
+            var sPao = (oModel.getProperty("/productAllocationObject") || "").trim();
+            if (!sPao) { return ""; }
+            var sDivision = (oModel.getProperty("/division") || "").trim();
+            return sPao + "|" + sDivision;
         },
 
-        // Consulta al backend que filas (por CHARCVALUECOMBINATIONUUID) del
-        // Allocation Object actual estan bloqueadas por otro usuario, y marca
-        // cada fila del modelo con _lockedByOther / _lockedByUser para que la
-        // tabla las muestre en modo solo lectura. No intenta tomar el lock
-        // (eso solo ocurre al entrar a modo edicion), solo informa el estado.
+        // Consulta al backend si la tabla actual (ProductAllocationObject +
+        // Division) esta bloqueada por otro usuario, y marca las filas del
+        // modelo con _lockedByOther / _lockedByUser para que la tabla se
+        // muestre en modo solo lectura. No intenta tomar el lock (eso solo
+        // ocurre al entrar a modo edicion), solo informa el estado.
         // Si la consulta falla la promesa RECHAZA: sin informacion de locks
-        // no es seguro continuar (no se sabe que filas edita otro usuario).
+        // no es seguro continuar (no se sabe si otro usuario edita la tabla).
         _refreshLockStatus: function (sProductAllocationObject) {
             var that = this;
             var oODataModel = this.getOwnerComponent().getModel();
@@ -2755,74 +2757,53 @@ sap.ui.define([
         },
 
         // Aplica el mapa _oLockStatusByKey (ya cargado) a las filas actuales
-        // del modelo, marcando _lockedByOther / _lockedByUser.
+        // del modelo, marcando _lockedByOther / _lockedByUser. Como el lock
+        // es a nivel tabla, el mismo estado aplica a todas las filas.
         _applyLockStatusToRows: function () {
-            var that = this;
             var oModel = this.getView().getModel("detailModel");
             var aRows = oModel.getProperty("/rows") || [];
             var oByKey = this._oLockStatusByKey || {};
+            var sKey = this._getTableLockKey();
+            var oLock = sKey ? oByKey[sKey] : null;
+            var bLockedByOther = !!(oLock && !oLock.IsLockedByMe);
+            var sLockedByUser = bLockedByOther ? (oLock.LockedByName || oLock.LockedBy || "") : "";
             aRows.forEach(function (oRow) {
-                var sKey = that._getRowLockKey(oRow);
-                var oLock = sKey ? oByKey[sKey] : null;
-                var bLockedByOther = !!(oLock && !oLock.IsLockedByMe);
                 oRow._lockedByOther = bLockedByOther;
-                oRow._lockedByUser = bLockedByOther ? (oLock.LockedByName || oLock.LockedBy || "") : "";
+                oRow._lockedByUser = sLockedByUser;
             });
             oModel.setProperty("/rows", aRows);
         },
 
-        // Intenta tomar el lock de todas las filas existentes (no nuevas)
-        // actualmente cargadas, para habilitar su edicion. Las filas cuyo
-        // lock pertenece a otro usuario quedan marcadas como solo lectura
-        // (_lockedByOther = true) sin impedir editar el resto.
+        // Intenta tomar UN lock para toda la tabla (ProductAllocationObject +
+        // Division) al entrar a modo edicion. Si la tabla ya esta bloqueada
+        // por otro usuario, todas las filas quedan marcadas como solo lectura
+        // (_lockedByOther = true).
         // Resuelve true si el servicio de locks respondio (con o sin
-        // conflictos), y false si CharcLockSet no esta disponible: en ese
+        // conflicto), y false si CharcLockSet no esta disponible: en ese
         // caso se muestra un error y se revierte a solo lectura, porque
         // no se puede editar sin garantizar la exclusividad.
-        _acquireLocksForEditableRows: function () {
+        _acquireTableLock: function () {
             var that = this;
             var oModel = this.getView().getModel("detailModel");
             var oBundle = this.getView().getModel("i18n").getResourceBundle();
             var sProductAllocationObject = oModel.getProperty("/productAllocationObject");
-            var aRows = oModel.getProperty("/rows") || [];
+            var sTableKey = this._getTableLockKey();
 
-            // Un lock por cada combinacion unica (CHARCVALUECOMBINATIONUUID +
-            // Division). Division es un solo valor a nivel pantalla, asi que
-            // basta deduplicar por sKey; filas que repitan el mismo UUID no
-            // deben generar POSTs duplicados a /CharcLockSet.
-            var aKeysToLock = [];
-            var oSeenKeys = {};
-            aRows.forEach(function (oRow) {
-                var sKey = that._getRowLockKey(oRow);
-                if (sKey && !oSeenKeys[sKey] && that._aHeldLockKeys.indexOf(sKey) === -1) {
-                    oSeenKeys[sKey] = true;
-                    aKeysToLock.push(sKey);
-                }
-            });
-
-            console.log("[Lock] Entrando a edicion - filas:", aRows.length,
-                "| keys a bloquear:", aKeysToLock.length, aKeysToLock,
+            console.log("[Lock] Entrando a edicion - lock de tabla:", sTableKey,
                 "| division:", (oModel.getProperty("/division") || "").trim());
-            if (aKeysToLock.length === 0) { return Promise.resolve(true); }
+            if (!sTableKey || this._aHeldLockKeys.indexOf(sTableKey) !== -1) {
+                return Promise.resolve(true);
+            }
 
-            return Promise.all(aKeysToLock.map(function (sKey) {
-                return that._acquireLock(sKey, sProductAllocationObject);
-            })).then(function (aResults) {
-                var aLockedByOthers = [];
-                var bUnavailable = false;
-                aResults.forEach(function (oResult) {
-                    if (oResult.ok) {
-                        if (that._aHeldLockKeys.indexOf(oResult.key) === -1) {
-                            that._aHeldLockKeys.push(oResult.key);
-                        }
-                    } else if (oResult.unavailable) {
-                        bUnavailable = true;
-                    } else {
-                        aLockedByOthers.push(oResult);
+            return this._acquireLock(sTableKey, sProductAllocationObject).then(function (oResult) {
+                if (oResult.ok) {
+                    if (that._aHeldLockKeys.indexOf(oResult.key) === -1) {
+                        that._aHeldLockKeys.push(oResult.key);
                     }
-                });
+                    return true;
+                }
 
-                if (bUnavailable) {
+                if (oResult.unavailable) {
                     // El servicio de locks no respondio: no se puede
                     // garantizar la exclusividad, se revierte a solo
                     // lectura y se muestra el error (no se continua).
@@ -2831,33 +2812,20 @@ sap.ui.define([
                     return false;
                 }
 
+                // Conflicto: la tabla completa la edita otro usuario.
+                var aRows = oModel.getProperty("/rows") || [];
                 aRows.forEach(function (oRow) {
-                    var sKey = that._getRowLockKey(oRow);
-                    var oConflict = aLockedByOthers.filter(function (o) { return o.key === sKey; })[0];
-                    if (oConflict) {
-                        oRow._lockedByOther = true;
-                        oRow._lockedByUser = oConflict.lockedByUser || "";
-                    } else if (sKey && that._aHeldLockKeys.indexOf(sKey) !== -1) {
-                        oRow._lockedByOther = false;
-                        oRow._lockedByUser = "";
-                    }
+                    oRow._lockedByOther = true;
+                    oRow._lockedByUser = oResult.lockedByUser || "";
                 });
                 oModel.setProperty("/rows", aRows);
-
-                if (aLockedByOthers.length > 0) {
-                    var aUsers = aLockedByOthers.map(function (o) { return o.lockedByUser; })
-                        .filter(function (v, i, a) { return v && a.indexOf(v) === i; });
-                    MessageToast.show(
-                        oBundle.getText("msgRowsLockedByOthers", [aLockedByOthers.length, aUsers.join(", ")])
-                    );
-                }
+                MessageToast.show(oBundle.getText("msgTableLockedByOther", [oResult.lockedByUser || ""]));
                 return true;
             });
         },
 
-        // Intenta tomar el lock de una fila puntual. Resuelve siempre (nunca
-        // rechaza) con { ok, key, lockedByUser }, para poder usarse dentro de
-        // un Promise.all sin que un conflicto de lock aborte a los demas.
+        // Intenta tomar un lock puntual. Resuelve siempre (nunca rechaza)
+        // con { ok, key, lockedByUser }.
         _acquireLock: function (sKey, sProductAllocationObject) {
             var oODataModel = this.getOwnerComponent().getModel();
             var sDivision = (this.getView().getModel("detailModel").getProperty("/division") || "").trim();
