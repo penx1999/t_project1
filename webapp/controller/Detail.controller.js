@@ -2786,10 +2786,16 @@ sap.ui.define([
             var sProductAllocationObject = oModel.getProperty("/productAllocationObject");
             var aRows = oModel.getProperty("/rows") || [];
 
+            // Un lock por cada combinacion unica (CHARCVALUECOMBINATIONUUID +
+            // Division). Division es un solo valor a nivel pantalla, asi que
+            // basta deduplicar por sKey; filas que repitan el mismo UUID no
+            // deben generar POSTs duplicados a /CharcLockSet.
             var aKeysToLock = [];
+            var oSeenKeys = {};
             aRows.forEach(function (oRow) {
                 var sKey = that._getRowLockKey(oRow);
-                if (sKey && that._aHeldLockKeys.indexOf(sKey) === -1) {
+                if (sKey && !oSeenKeys[sKey] && that._aHeldLockKeys.indexOf(sKey) === -1) {
+                    oSeenKeys[sKey] = true;
                     aKeysToLock.push(sKey);
                 }
             });
