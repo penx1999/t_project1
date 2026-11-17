@@ -2800,6 +2800,9 @@ sap.ui.define([
                 }
             });
 
+            console.log("[Lock] Entrando a edicion - filas:", aRows.length,
+                "| keys a bloquear:", aKeysToLock.length, aKeysToLock,
+                "| division:", (oModel.getProperty("/division") || "").trim());
             if (aKeysToLock.length === 0) { return Promise.resolve(true); }
 
             return Promise.all(aKeysToLock.map(function (sKey) {
@@ -2858,6 +2861,7 @@ sap.ui.define([
         _acquireLock: function (sKey, sProductAllocationObject) {
             var oODataModel = this.getOwnerComponent().getModel();
             var sDivision = (this.getView().getModel("detailModel").getProperty("/division") || "").trim();
+            console.log("[Lock] POST /CharcLockSet", { Key: sKey, ProductAllocationObject: sProductAllocationObject, Division: sDivision });
             return new Promise(function (resolve) {
                 oODataModel.create("/CharcLockSet", {
                     Key: sKey,
@@ -2865,6 +2869,7 @@ sap.ui.define([
                     Division: sDivision
                 }, {
                     success: function (oData) {
+                        console.log("[Lock] Lock tomado OK para " + sKey);
                         resolve({ ok: true, key: sKey });
                     },
                     error: function (oErr) {
