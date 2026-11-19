@@ -133,14 +133,14 @@ sap.ui.define([
                 this._fnLockRequestSent = function (oEvt) {
                     var oP = oEvt.getParameters();
                     if (String(oP.url || "").indexOf("CharcLockSet") !== -1) {
-                        console.log("[Lock][HTTP enviado] " + oP.type + " " + oP.url);
+                        console.log("[Lock][HTTP enviado] " + (oP.method || oP.type || "?") + " " + oP.url);
                     }
                 };
                 this._fnLockRequestCompleted = function (oEvt) {
                     var oP = oEvt.getParameters();
                     if (String(oP.url || "").indexOf("CharcLockSet") !== -1) {
                         var oErr = oP.errorobject;
-                        console.log("[Lock][HTTP completado] " + oP.type + " " + oP.url +
+                        console.log("[Lock][HTTP completado] " + (oP.method || oP.type || "?") + " " + oP.url +
                             " -> " + (oP.success ? "OK" : "ERROR") +
                             (oErr && oErr.statusCode ? " (HTTP " + oErr.statusCode + ")" : ""));
                     }
@@ -2779,6 +2779,7 @@ sap.ui.define([
                     ],
                     success: function (oData) {
                         var aLocks = (oData && oData.results) ? oData.results : [];
+                        console.log("[Lock] GET CharcLockSet devolvio " + aLocks.length + " lock(s):", aLocks);
                         var oByKey = {};
                         aLocks.forEach(function (oLock) {
                             oByKey[oLock.LOCK_KEY] = oLock;
