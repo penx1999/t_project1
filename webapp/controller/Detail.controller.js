@@ -308,11 +308,15 @@ sap.ui.define([
             if (sQuotaId) {
                 oModel.setProperty("/busy", true);
                 this._loadDynamicFields(sQuotaId, function () {
-                    oModel.setProperty("/editMode", true);
-                    // Al entrar a modo edicion se intenta tomar el lock de
-                    // la tabla; si ya la edita otro usuario, todas las filas
-                    // quedan marcadas _lockedByOther (solo lectura).
-                    that._acquireTableLock();
+                    // Se espera la respuesta del lock ANTES de habilitar la
+                    // edicion: solo si se obtuvo (o ya era del mismo usuario)
+                    // la tabla pasa a editable. Si la edita otro usuario o el
+                    // servicio no responde, permanece en solo lectura.
+                    oModel.setProperty("/busy", true);
+                    that._acquireTableLock().then(function (bLockOk) {
+                        oModel.setProperty("/busy", false);
+                        if (bLockOk) { oModel.setProperty("/editMode", true); }
+                    });
                 }, sFilterValue);
             } else {
                 oModel.setProperty("/editMode", true);
@@ -2252,15 +2256,19 @@ sap.ui.define([
                 console.log("Condici\u00f3n no cumplida; " + aConditionMsgs.join(" | "));
                 oModel.setProperty("/busy", true);
                 oControllerForDelete._loadDynamicFields(sProductAllocationObject, function () {
-                    oModel.setProperty("/editMode", true);
                     // La recarga por ajuste de 'Selection Range' tambien
                     // vuelve a entrar a modo edicion, asi que hay que
-                    // reintentar la toma del lock de la tabla.
+                    // reintentar la toma del lock de la tabla y esperar su
+                    // respuesta antes de habilitar la edicion.
+                    oModel.setProperty("/busy", true);
                     oControllerForDelete._acquireTableLock().then(function (bLocksOk) {
-                        // Si el servicio de locks no respondio la funcion ya
-                        // mostro el error y reverto a solo lectura: no se
-                        // continua con la carga del excel.
+                        oModel.setProperty("/busy", false);
+                        // Si el lock no se obtuvo (servicio caido o tabla
+                        // bloqueada por otro usuario) la funcion ya mostro el
+                        // mensaje: queda en solo lectura y no se continua con
+                        // la carga del excel.
                         if (!bLocksOk) { return; }
+                        oModel.setProperty("/editMode", true);
                         aExistingRows = oModel.getProperty("/rows") || [];
                         console.log("[UploadExcel] OData re-ejecutado tras corregir condiciones. Filas recargadas:", aExistingRows.length, "- continuando match de borrado con el mismo criterio.");
                         fnContinueUpload();
@@ -2778,10 +2786,11 @@ sap.ui.define([
         // Division) al entrar a modo edicion. Si la tabla ya esta bloqueada
         // por otro usuario, todas las filas quedan marcadas como solo lectura
         // (_lockedByOther = true).
-        // Resuelve true si el servicio de locks respondio (con o sin
-        // conflicto), y false si CharcLockSet no esta disponible: en ese
-        // caso se muestra un error y se revierte a solo lectura, porque
-        // no se puede editar sin garantizar la exclusividad.
+        // Resuelve true solo si el lock quedo tomado (o ya era propio); el
+        // llamador debe esperar este resultado antes de habilitar la edicion.
+        // Resuelve false si la tabla la edita otro usuario o si CharcLockSet
+        // no esta disponible: en ambos casos se muestra el mensaje y se
+        // permanece en solo lectura.
         _acquireTableLock: function () {
             var that = this;
             var oModel = this.getView().getModel("detailModel");
@@ -2820,7 +2829,7 @@ sap.ui.define([
                 });
                 oModel.setProperty("/rows", aRows);
                 MessageToast.show(oBundle.getText("msgTableLockedByOther", [oResult.lockedByUser || ""]));
-                return true;
+                return false;
             });
         },
 
