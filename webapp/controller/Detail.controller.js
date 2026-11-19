@@ -2888,9 +2888,14 @@ sap.ui.define([
         // Libera (best-effort) un lock puntual.
         _releaseLock: function (sKey) {
             var oODataModel = this.getOwnerComponent().getModel();
+            var sPath = "/CharcLockSet('" + encodeURIComponent(sKey) + "')";
+            console.log("[Lock] DELETE " + sPath);
             return new Promise(function (resolve) {
-                oODataModel.remove("/CharcLockSet('" + encodeURIComponent(sKey) + "')", {
-                    success: function () { resolve(); },
+                oODataModel.remove(sPath, {
+                    success: function () {
+                        console.log("[Lock] Lock liberado OK: " + sKey);
+                        resolve();
+                    },
                     error: function (oErr) {
                         console.warn("[Lock] No se pudo liberar el lock de " + sKey + ":", oErr);
                         resolve();
@@ -2904,6 +2909,7 @@ sap.ui.define([
         _releaseAllHeldLocks: function () {
             var that = this;
             var aKeys = this._aHeldLockKeys || [];
+            console.log("[Lock] Liberar locks - keys tomadas:", aKeys.length, aKeys);
             if (aKeys.length === 0) { return Promise.resolve(); }
             this._aHeldLockKeys = [];
             return Promise.all(aKeys.map(function (sKey) { return that._releaseLock(sKey); }));
