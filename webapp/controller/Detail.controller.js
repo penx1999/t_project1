@@ -63,13 +63,13 @@ sap.ui.define([
         //   GET /CharcLockSet?$filter=ProductAllocationObject eq '<id>'
         //       and Division eq '<division>'
         //     -> devuelve los locks activos para ese Allocation Object
-        //        (a lo sumo 1 por tabla). Campos esperados por fila: Key,
+        //        (a lo sumo 1 por tabla). Campos esperados por fila: LOCK_KEY,
         //     ProductAllocationObject, Division, LockedBy, LockedByName
         //     (opcional), LockedAt, IsLockedByMe (boolean, calculado por el
         //     backend comparando LockedBy contra el usuario de la sesion).
         //
-        //   POST /CharcLockSet  body: { Key, ProductAllocationObject, Division }
-        //     -> intenta tomar el lock de la tabla (Key =
+        //   POST /CharcLockSet  body: { LOCK_KEY, ProductAllocationObject, Division }
+        //     -> intenta tomar el lock de la tabla (LOCK_KEY =
         //        '<ProductAllocationObject>|<Division>'):
         //        - si no existe lock previo: lo crea (LockedBy/LockedAt
         //          desde la sesion del backend, nunca desde el cliente) y
@@ -81,7 +81,7 @@ sap.ui.define([
         //          { error: { message: { value: "Locked by <user>" } } },
         //          igual al patron de errores ya usado en este controller.
         //
-        //   DELETE /CharcLockSet('<Key>')
+        //   DELETE /CharcLockSet('<LOCK_KEY>')
         //     -> libera el lock SOLO si pertenece al usuario de la sesion
         //        (no-op si no existe o pertenece a otro usuario).
         //
@@ -2752,7 +2752,7 @@ sap.ui.define([
                         var aLocks = (oData && oData.results) ? oData.results : [];
                         var oByKey = {};
                         aLocks.forEach(function (oLock) {
-                            oByKey[oLock.Key] = oLock;
+                            oByKey[oLock.LOCK_KEY] = oLock;
                         });
                         that._oLockStatusByKey = oByKey;
                         that._applyLockStatusToRows();
@@ -2846,10 +2846,10 @@ sap.ui.define([
         _acquireLock: function (sKey, sProductAllocationObject) {
             var oODataModel = this.getOwnerComponent().getModel();
             var sDivision = (this.getView().getModel("detailModel").getProperty("/division") || "").trim();
-            console.log("[Lock] POST /CharcLockSet", { Key: sKey, ProductAllocationObject: sProductAllocationObject, Division: sDivision });
+            console.log("[Lock] POST /CharcLockSet", { LOCK_KEY: sKey, ProductAllocationObject: sProductAllocationObject, Division: sDivision });
             return new Promise(function (resolve) {
                 oODataModel.create("/CharcLockSet", {
-                    Key: sKey,
+                    LOCK_KEY: sKey,
                     ProductAllocationObject: sProductAllocationObject,
                     Division: sDivision
                 }, {
