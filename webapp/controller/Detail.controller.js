@@ -2853,12 +2853,13 @@ sap.ui.define([
                     ProductAllocationObject: sProductAllocationObject,
                     Division: sDivision
                 }, {
-                    success: function (oData) {
-                        console.log("[Lock] Lock tomado OK para " + sKey);
+                    success: function (oData, oResponse) {
+                        console.log("[Lock] POST /CharcLockSet ejecutado - HTTP " + (oResponse && oResponse.statusCode) + " - lock tomado OK para " + sKey, oData);
                         resolve({ ok: true, key: sKey });
                     },
                     error: function (oErr) {
                         var sLockedByUser = "";
+                        console.warn("[Lock] POST /CharcLockSet fallo - HTTP " + (oErr && oErr.statusCode) + " para " + sKey);
                         try {
                             var oResp = JSON.parse(oErr.responseText);
                             sLockedByUser = oResp.error.message.value || "";
@@ -2892,8 +2893,8 @@ sap.ui.define([
             console.log("[Lock] DELETE " + sPath);
             return new Promise(function (resolve) {
                 oODataModel.remove(sPath, {
-                    success: function () {
-                        console.log("[Lock] Lock liberado OK: " + sKey);
+                    success: function (oData, oResponse) {
+                        console.log("[Lock] DELETE /CharcLockSet ejecutado - HTTP " + (oResponse && oResponse.statusCode) + " - lock liberado OK: " + sKey);
                         resolve();
                     },
                     error: function (oErr) {
