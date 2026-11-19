@@ -665,6 +665,8 @@ sap.ui.define([
                         // regresa a pantalla 1 (no se permite continuar).
                         console.error("[Lock] CharcLockSet no disponible, se interrumpe la carga:", oErr);
                         MessageBox.error(oBundle.getText("msgLockServiceUnavailable"), {
+                            actions: [MessageBox.Action.OK],
+                            emphasizedAction: MessageBox.Action.OK,
                             onClose: function () {
                                 that.getOwnerComponent().getRouter().navTo("RouteListReport", {}, true);
                             }
@@ -2817,7 +2819,10 @@ sap.ui.define([
                     // garantizar la exclusividad, se revierte a solo
                     // lectura y se muestra el error (no se continua).
                     oModel.setProperty("/editMode", false);
-                    MessageBox.error(oBundle.getText("msgLockServiceUnavailable"));
+                    MessageBox.error(oBundle.getText("msgLockServiceUnavailable"), {
+                        actions: [MessageBox.Action.OK],
+                        emphasizedAction: MessageBox.Action.OK
+                    });
                     return false;
                 }
 
@@ -2828,7 +2833,10 @@ sap.ui.define([
                     oRow._lockedByUser = oResult.lockedByUser || "";
                 });
                 oModel.setProperty("/rows", aRows);
-                MessageToast.show(oBundle.getText("msgTableLockedByOther", [oResult.lockedByUser || ""]));
+                MessageBox.error(oBundle.getText("msgTableLockedByOther", [oResult.lockedByUser || ""]), {
+                    actions: [MessageBox.Action.OK],
+                    emphasizedAction: MessageBox.Action.OK
+                });
                 return false;
             });
         },
