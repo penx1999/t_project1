@@ -124,6 +124,30 @@ sap.ui.define([
 
             var oRouter = this.getOwnerComponent().getRouter();
             oRouter.getRoute("RouteDetail").attachPatternMatched(this._onRouteMatched, this);
+
+            // Registra en consola cada peticion HTTP real que UI5 envia a
+            // CharcLockSet (metodo, URL y estado), para ver si realmente sale
+            // el DELETE/POST de lock.
+            var oODataModel = this.getOwnerComponent().getModel();
+            if (oODataModel) {
+                this._fnLockRequestSent = function (oEvt) {
+                    var oP = oEvt.getParameters();
+                    if (String(oP.url || "").indexOf("CharcLockSet") !== -1) {
+                        console.log("[Lock][HTTP enviado] " + oP.type + " " + oP.url);
+                    }
+                };
+                this._fnLockRequestCompleted = function (oEvt) {
+                    var oP = oEvt.getParameters();
+                    if (String(oP.url || "").indexOf("CharcLockSet") !== -1) {
+                        var oErr = oP.errorobject;
+                        console.log("[Lock][HTTP completado] " + oP.type + " " + oP.url +
+                            " -> " + (oP.success ? "OK" : "ERROR") +
+                            (oErr && oErr.statusCode ? " (HTTP " + oErr.statusCode + ")" : ""));
+                    }
+                };
+                oODataModel.attachRequestSent(this._fnLockRequestSent);
+                oODataModel.attachRequestCompleted(this._fnLockRequestCompleted);
+            }
         },
 
         // Red de seguridad adicional: si la vista se destruye por cualquier
@@ -131,6 +155,11 @@ sap.ui.define([
         // recarga del router, etc.), se liberan igualmente los locks tomados.
         onExit: function () {
             this._releaseAllHeldLocks();
+            var oODataModel = this.getOwnerComponent().getModel();
+            if (oODataModel && this._fnLockRequestSent) {
+                oODataModel.detachRequestSent(this._fnLockRequestSent);
+                oODataModel.detachRequestCompleted(this._fnLockRequestCompleted);
+            }
         },
 
         _formatDateValue: function (oDate) {
