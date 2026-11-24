@@ -2856,6 +2856,30 @@ sap.ui.define([
                     return false;
                 }
 
+                if (oResult.sameUser) {
+                    // El lock vigente es del propio usuario (sesion anterior
+                    // o pestana abierta). Se ofrece descartarlo: "Discard Lock"
+                    // lo libera (DELETE) y vuelve a tomar uno nuevo (POST).
+                    // La promesa se resuelve cuando el usuario cierra el popup.
+                    var sDiscardText = oBundle.getText("btnDiscardLock");
+                    return new Promise(function (resolve) {
+                        MessageBox.error(oBundle.getText("msgTableLockedBySameUser"), {
+                            actions: [sDiscardText, MessageBox.Action.OK],
+                            emphasizedAction: sDiscardText,
+                            onClose: function (sAction) {
+                                if (sAction !== sDiscardText) {
+                                    resolve(false);
+                                    return;
+                                }
+                                console.log("[Lock] Discard Lock: se libera y se vuelve a tomar el lock de " + sTableKey);
+                                that._releaseLock(sTableKey).then(function () {
+                                    return that._acquireTableLock();
+                                }).then(resolve);
+                            }
+                        });
+                    });
+                }
+
                 // Conflicto: la tabla completa la edita otro usuario.
                 var aRows = oModel.getProperty("/rows") || [];
                 aRows.forEach(function (oRow) {
@@ -2889,10 +2913,14 @@ sap.ui.define([
                     },
                     error: function (oErr) {
                         var sLockedByUser = "";
+                        var bSameUser = false;
                         console.warn("[Lock] POST /CharcLockSet fallo - HTTP " + (oErr && oErr.statusCode) + " para " + sKey);
                         try {
                             var oResp = JSON.parse(oErr.responseText);
                             sLockedByUser = oResp.error.message.value || "";
+                            // El backend marca con error.code = LOCK_SAME_USER
+                            // que el lock vigente pertenece al propio usuario.
+                            bSameUser = oResp.error.code === "LOCK_SAME_USER";
                         } catch (e) { /* ignore */ }
 
                         // Solo un 409 (conflicto real de lock) debe marcar la
@@ -2910,7 +2938,7 @@ sap.ui.define([
                         }
 
                         console.warn("[Lock] No se pudo tomar el lock de " + sKey + ":", sLockedByUser || oErr);
-                        resolve({ ok: false, key: sKey, lockedByUser: sLockedByUser });
+                        resolve({ ok: false, key: sKey, lockedByUser: sLockedByUser, sameUser: bSameUser });
                     }
                 });
             });
