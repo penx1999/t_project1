@@ -2918,9 +2918,12 @@ sap.ui.define([
                         try {
                             var oResp = JSON.parse(oErr.responseText);
                             sLockedByUser = oResp.error.message.value || "";
-                            // El backend marca con error.code = LOCK_SAME_USER
-                            // que el lock vigente pertenece al propio usuario.
-                            bSameUser = oResp.error.code === "LOCK_SAME_USER";
+                            // El backend marca que el lock vigente pertenece al
+                            // propio usuario con la marca [LOCK_SAME_USER] en el
+                            // texto del mensaje (o error.code = LOCK_SAME_USER).
+                            bSameUser = oResp.error.code === "LOCK_SAME_USER" ||
+                                sLockedByUser.indexOf("[LOCK_SAME_USER]") !== -1;
+                            sLockedByUser = sLockedByUser.replace("[LOCK_SAME_USER]", "").trim();
                         } catch (e) { /* ignore */ }
 
                         // Solo un 409 (conflicto real de lock) debe marcar la
