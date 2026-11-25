@@ -3732,7 +3732,7 @@ sap.ui.define([
             }).concat(this._aDeletedRows.map(function (oDel) {
                 return { rowIndex: oDel.rowIndex, reason: "eliminada", columns: [] };
             }));
-            console.log("[onSave] Líneas enviadas al OData y razón:", aSentRowsInfo);
+            // console.log("[onSave] Líneas enviadas al OData y razón:", aSentRowsInfo);
 
             oModel.setProperty("/busy", true);
             MessageToast.show(oBundle.getText("msgSaving"));
@@ -3982,7 +3982,7 @@ sap.ui.define([
         },
 
         _executePost: function (aPayload) {
-            console.log("[DynamicTable] _executePost llamado con " + (aPayload ? aPayload.length : 0) + " FieldSet(s)");
+            // console.log("[DynamicTable] _executePost llamado con " + (aPayload ? aPayload.length : 0) + " FieldSet(s)");
 
             var oODataModel = this.getOwnerComponent().getModel();
 
@@ -4002,8 +4002,8 @@ sap.ui.define([
                 });
             });
 
-            console.log("[DynamicTable] Ejecutando POST /DynamicFieldSet");
-            console.log("[DynamicTable] Total DataSetAsoc items: " + (oData.DataSetAsoc ? oData.DataSetAsoc.length : 0));
+            // console.log("[DynamicTable] Ejecutando POST /DynamicFieldSet");
+            // console.log("[DynamicTable] Total DataSetAsoc items: " + (oData.DataSetAsoc ? oData.DataSetAsoc.length : 0));
             // try {
             //     console.log("[DynamicTable] Payload enviado al servicio ODATA /DynamicFieldSet:\n" + JSON.stringify(oData, null, 2));
             // } catch (e) {
