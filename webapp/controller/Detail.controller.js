@@ -4004,15 +4004,15 @@ sap.ui.define([
 
             console.log("[DynamicTable] Ejecutando POST /DynamicFieldSet");
             console.log("[DynamicTable] Total DataSetAsoc items: " + (oData.DataSetAsoc ? oData.DataSetAsoc.length : 0));
-            try {
-                console.log("[DynamicTable] Payload enviado al servicio ODATA /DynamicFieldSet:\n" + JSON.stringify(oData, null, 2));
-            } catch (e) {
-                console.log("[DynamicTable] No se pudo serializar payload a JSON", e);
-            }
+            // try {
+            //     console.log("[DynamicTable] Payload enviado al servicio ODATA /DynamicFieldSet:\n" + JSON.stringify(oData, null, 2));
+            // } catch (e) {
+            //     console.log("[DynamicTable] No se pudo serializar payload a JSON", e);
+            // }
             if (typeof window !== "undefined") {
                 window._lastZqPayload = oData;
                 window._lastODataPayload = oData;
-                console.log("[DynamicTable] Payload ODATA accesible en window._lastODataPayload");
+                // console.log("[DynamicTable] Payload ODATA accesible en window._lastODataPayload");
             }
 
             return new Promise(function (resolve, reject) {
