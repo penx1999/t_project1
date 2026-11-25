@@ -2796,6 +2796,48 @@ sap.ui.define([
             });
         },
 
+        _normalizeLockedAt: function (vLockedAt) {
+            if (vLockedAt instanceof Date) { return String(vLockedAt.getTime()); }
+            return (vLockedAt === undefined || vLockedAt === null) ? "" : String(vLockedAt);
+        },
+
+        // Verifica en el backend que el lock de la tabla sigue siendo el de
+        // ESTA sesion. Resuelve "ok", "lost" (el lock ya no existe o su
+        // LockedAt es distinto: otra sesion lo descarto y tomo uno nuevo) o
+        // "unavailable" (el servicio de locks fallo).
+        _verifyHeldLock: function () {
+            var that = this;
+            var sKey = this._getTableLockKey();
+            if (!sKey || this._aHeldLockKeys.indexOf(sKey) === -1) { return Promise.resolve("ok"); }
+
+            var oODataModel = this.getOwnerComponent().getModel();
+            var oModel = this.getView().getModel("detailModel");
+            var sPao = oModel.getProperty("/productAllocationObject");
+            var sDivision = (oModel.getProperty("/division") || "").trim();
+            var sHeldAt = (this._oHeldLockedAt || {})[sKey] || "";
+
+            return new Promise(function (resolve) {
+                oODataModel.read("/CharcLockSet", {
+                    filters: [
+                        new Filter("ProductAllocationObject", FilterOperator.EQ, sPao),
+                        new Filter("Division", FilterOperator.EQ, sDivision)
+                    ],
+                    success: function (oData) {
+                        var oLock = ((oData && oData.results) || []).filter(function (o) { return o.LOCK_KEY === sKey; })[0];
+                        var sBackendAt = oLock ? that._normalizeLockedAt(oLock.LockedAt) : "";
+                        var bMine = !!oLock && (!sHeldAt || sBackendAt === sHeldAt);
+                        console.log("[Lock] Verificacion al guardar - lock en backend:", !!oLock,
+                            "| LockedAt sesion:", sHeldAt, "| LockedAt backend:", sBackendAt, "| es mio:", bMine);
+                        resolve(bMine ? "ok" : "lost");
+                    },
+                    error: function (oErr) {
+                        console.error("[Lock] No se pudo verificar el lock al guardar:", oErr);
+                        resolve("unavailable");
+                    }
+                });
+            });
+        },
+
         // Aplica el mapa _oLockStatusByKey (ya cargado) a las filas actuales
         // del modelo, marcando _lockedByOther / _lockedByUser. Como el lock
         // es a nivel tabla, el mismo estado aplica a todas las filas.
@@ -2841,6 +2883,11 @@ sap.ui.define([
                     if (that._aHeldLockKeys.indexOf(oResult.key) === -1) {
                         that._aHeldLockKeys.push(oResult.key);
                     }
+                    // Se guarda el LockedAt de ESTA sesion: al guardar se
+                    // compara con el del backend para detectar si otra sesion
+                    // descarto este lock y tomo uno nuevo.
+                    that._oHeldLockedAt = that._oHeldLockedAt || {};
+                    that._oHeldLockedAt[oResult.key] = that._normalizeLockedAt(oResult.lockedAt);
                     return true;
                 }
 
@@ -2909,7 +2956,7 @@ sap.ui.define([
                 }, {
                     success: function (oData, oResponse) {
                         console.log("[Lock] POST /CharcLockSet ejecutado - HTTP " + (oResponse && oResponse.statusCode) + " - lock tomado OK para " + sKey, oData);
-                        resolve({ ok: true, key: sKey });
+                        resolve({ ok: true, key: sKey, lockedAt: oData ? oData.LockedAt : undefined });
                     },
                     error: function (oErr) {
                         var sLockedByUser = "";
@@ -2971,6 +3018,7 @@ sap.ui.define([
         _releaseAllHeldLocks: function () {
             var that = this;
             var aKeys = this._aHeldLockKeys || [];
+            this._oHeldLockedAt = {};
             console.log("[Lock] Liberar locks - keys tomadas:", aKeys.length, aKeys);
             if (aKeys.length === 0) { return Promise.resolve(); }
             this._aHeldLockKeys = [];
@@ -3325,6 +3373,44 @@ sap.ui.define([
                 return;
             }
 
+            var that = this;
+            // Antes de guardar se confirma que el lock sigue siendo de esta
+            // sesion: si otra sesion lo descarto (Discard Lock), no se guarda
+            // y la tabla vuelve a solo lectura.
+            this._verifyHeldLock().then(function (sState) {
+                if (sState === "ok") {
+                    that._saveAfterLockCheck(aChangedRows);
+                    return;
+                }
+                if (sState === "unavailable") {
+                    MessageBox.error(oBundle.getText("msgLockServiceUnavailable"), {
+                        actions: [MessageBox.Action.OK],
+                        emphasizedAction: MessageBox.Action.OK
+                    });
+                    return;
+                }
+                MessageBox.error(oBundle.getText("msgLockDiscardedElsewhere"), {
+                    actions: [MessageBox.Action.OK],
+                    emphasizedAction: MessageBox.Action.OK,
+                    onClose: function () {
+                        // El lock ya no es de esta sesion: solo se limpia el
+                        // estado local. NO se llama a _releaseAllHeldLocks
+                        // porque su DELETE borraria el lock nuevo de la otra
+                        // sesion (mismo usuario).
+                        that._aHeldLockKeys = [];
+                        that._oHeldLockedAt = {};
+                        oModel.setProperty("/hasChanges", false);
+                        oModel.setProperty("/editMode", false);
+                        var sQuotaId = oModel.getProperty("/productAllocationObject");
+                        var sFilterValue = (oModel.getProperty("/allocationObjectFilter") || "").trim();
+                        that._executeGoFilter(sQuotaId, sFilterValue);
+                    }
+                });
+            });
+        },
+
+        _saveAfterLockCheck: function (aChangedRows) {
+            var oModel = this.getView().getModel("detailModel");
             var that = this;
             // La validacion de Plant contra el search help no se ejecuta si el
             // guardado incluye filas eliminadas (boton DELETE, sea una fila ya
