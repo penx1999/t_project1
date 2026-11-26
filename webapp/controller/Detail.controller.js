@@ -683,8 +683,12 @@ sap.ui.define([
                     // de una edicion anterior sobre este mismo Allocation Object
                     // ya no aplica; se libera y se consulta el estado vigente
                     // (solo informativo, no intenta tomar locks).
-                    that._releaseAllHeldLocks();
-                    that._refreshLockStatus(sProductAllocationObject).then(function () {
+                    // La consulta de estado espera a que termine la liberacion
+                    // (incluida una ya iniciada por Cancel): si no, el GET puede
+                    // adelantarse al DELETE y ver un lock que ya se esta borrando.
+                    that._releaseAllHeldLocks().then(function () {
+                        return that._refreshLockStatus(sProductAllocationObject);
+                    }).then(function () {
                         if (typeof fnAfterSuccess === "function") {
                             fnAfterSuccess();
                         }
@@ -3027,18 +3031,24 @@ sap.ui.define([
             var oHeldAt = this._oHeldLockedAt || {};
             this._oHeldLockedAt = {};
             console.log("[Lock] Liberar locks - keys tomadas:", aKeys.length, aKeys);
-            if (aKeys.length === 0) { return Promise.resolve(); }
+            // Sin locks propios se devuelve la liberacion que ya este en curso
+            // (si la hay), para que quien llame pueda esperarla.
+            if (aKeys.length === 0) { return this._pRelease || Promise.resolve(); }
             this._aHeldLockKeys = [];
             // Solo se borra el lock si sigue siendo de ESTA sesion: si otra
             // sesion del mismo usuario lo descarto y tomo uno nuevo, un DELETE
             // borraria el lock de esa otra sesion. Si no se puede verificar,
             // no se borra (el lock vence solo por antiguedad).
-            return Promise.all(aKeys.map(function (sKey) {
+            var pRelease = Promise.all(aKeys.map(function (sKey) {
                 return that._checkLockOwnership(sKey, oHeldAt[sKey] || "").then(function (sState) {
                     if (sState === "ok") { return that._releaseLock(sKey); }
                     console.log("[Lock] No se libera " + sKey + ": estado de propiedad = " + sState);
                 });
-            }));
+            })).then(function () {
+                if (that._pRelease === pRelease) { that._pRelease = null; }
+            });
+            this._pRelease = pRelease;
+            return pRelease;
         },
 
         _isRocKeyValid: function (sValue) {
