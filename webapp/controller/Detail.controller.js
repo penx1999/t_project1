@@ -2806,15 +2806,21 @@ sap.ui.define([
         // LockedAt es distinto: otra sesion lo descarto y tomo uno nuevo) o
         // "unavailable" (el servicio de locks fallo).
         _verifyHeldLock: function () {
-            var that = this;
             var sKey = this._getTableLockKey();
             if (!sKey || this._aHeldLockKeys.indexOf(sKey) === -1) { return Promise.resolve("ok"); }
+            return this._checkLockOwnership(sKey, (this._oHeldLockedAt || {})[sKey] || "");
+        },
 
+        // Comprueba en el backend si el lock sKey sigue siendo el que tomo
+        // ESTA sesion (mismo LockedAt). El PAO y la Division se obtienen de la
+        // propia clave ('<PAO>|<DIV>') para poder usarla aunque la pantalla ya
+        // apunte a otra tabla. Resuelve "ok", "lost" o "unavailable".
+        _checkLockOwnership: function (sKey, sHeldAt) {
+            var that = this;
             var oODataModel = this.getOwnerComponent().getModel();
-            var oModel = this.getView().getModel("detailModel");
-            var sPao = oModel.getProperty("/productAllocationObject");
-            var sDivision = (oModel.getProperty("/division") || "").trim();
-            var sHeldAt = (this._oHeldLockedAt || {})[sKey] || "";
+            var iSep = sKey.lastIndexOf("|");
+            var sPao = iSep === -1 ? sKey : sKey.substring(0, iSep);
+            var sDivision = iSep === -1 ? "" : sKey.substring(iSep + 1);
 
             return new Promise(function (resolve) {
                 oODataModel.read("/CharcLockSet", {
@@ -3018,11 +3024,21 @@ sap.ui.define([
         _releaseAllHeldLocks: function () {
             var that = this;
             var aKeys = this._aHeldLockKeys || [];
+            var oHeldAt = this._oHeldLockedAt || {};
             this._oHeldLockedAt = {};
             console.log("[Lock] Liberar locks - keys tomadas:", aKeys.length, aKeys);
             if (aKeys.length === 0) { return Promise.resolve(); }
             this._aHeldLockKeys = [];
-            return Promise.all(aKeys.map(function (sKey) { return that._releaseLock(sKey); }));
+            // Solo se borra el lock si sigue siendo de ESTA sesion: si otra
+            // sesion del mismo usuario lo descarto y tomo uno nuevo, un DELETE
+            // borraria el lock de esa otra sesion. Si no se puede verificar,
+            // no se borra (el lock vence solo por antiguedad).
+            return Promise.all(aKeys.map(function (sKey) {
+                return that._checkLockOwnership(sKey, oHeldAt[sKey] || "").then(function (sState) {
+                    if (sState === "ok") { return that._releaseLock(sKey); }
+                    console.log("[Lock] No se libera " + sKey + ": estado de propiedad = " + sState);
+                });
+            }));
         },
 
         _isRocKeyValid: function (sValue) {
