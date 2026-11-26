@@ -2918,10 +2918,11 @@ sap.ui.define([
                     // o pestana abierta). Se ofrece descartarlo: "Discard Lock"
                     // lo libera (DELETE) y vuelve a tomar uno nuevo (POST).
                     // La promesa se resuelve cuando el usuario cierra el popup.
-                    var sDiscardText = oBundle.getText("btnDiscardLock");
+                    var sDiscardText = oBundle.getText("btnRemoveLock");
+                    var sKeepText = oBundle.getText("btnKeepLock");
                     return new Promise(function (resolve) {
                         MessageBox.error(oBundle.getText("msgTableLockedBySameUser"), {
-                            actions: [sDiscardText, MessageBox.Action.OK],
+                            actions: [sDiscardText, sKeepText],
                             emphasizedAction: sDiscardText,
                             onClose: function (sAction) {
                                 if (sAction !== sDiscardText) {
